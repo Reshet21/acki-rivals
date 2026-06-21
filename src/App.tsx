@@ -84,6 +84,19 @@ function App() {
           </div>
 
           <button
+            onClick={() => setScreen('pvp')}
+            disabled={deck.length !== 4}
+            className={`w-full max-w-xs py-4 rounded-xl font-bold text-lg
+              transition-all duration-150
+              ${deck.length === 4
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(255,0,0,0.3)] hover:opacity-90 active:scale-95'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            🌐 PvP Бой
+          </button>
+
+          <button
             onClick={() => setScreen('battle')}
             disabled={deck.length !== 4}
             className={`
@@ -95,7 +108,7 @@ function App() {
               }
             `}
           >
-            ⚔️ Бой
+            ⚔️ Бой с ИИ
           </button>
           {deck.length !== 4 && (
             <div className="text-[10px] text-white/30 -mt-2">Сначала соберите колоду из 4 карт</div>
@@ -154,19 +167,6 @@ function App() {
               transition-all duration-150"
           >
             ⛏️ Майнинг
-          </button>
-
-          <button
-            onClick={() => setScreen('pvp')}
-            disabled={deck.length !== 4}
-            className={`w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              transition-all duration-150
-              ${deck.length === 4
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(255,0,0,0.3)] hover:opacity-90 active:scale-95'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              }`}
-          >
-            🌐 PvP Бой
           </button>
         </div>
       )}
