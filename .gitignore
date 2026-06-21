@@ -2,3 +2,4 @@ node_modules/
 dist/
 acki-rivals.zip
 *.log
+.env
