@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="100%" style="stop-color:#1a0a2e"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4ff"/>
+      <stop offset="50%" style="stop-color:#b742ff"/>
+      <stop offset="100%" style="stop-color:#ff2d95"/>
+    </linearGradient>
+    <linearGradient id="sword" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e0e0e0"/>
+      <stop offset="100%" style="stop-color:#808080"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-strong">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="64" fill="url(#bg)"/>
+
+  <!-- Decorative circuit lines -->
+  <g stroke="#00d4ff" stroke-width="1" opacity="0.15" fill="none">
+    <path d="M50,256 L150,256 L180,200 L256,200"/>
+    <path d="M462,256 L362,256 L332,312 L256,312"/>
+    <path d="M256,50 L256,150 L200,180"/>
+    <path d="M256,462 L256,362 L312,332"/>
+    <circle cx="256" cy="200" r="4" fill="#00d4ff" opacity="0.3"/>
+    <circle cx="256" cy="312" r="4" fill="#b742ff" opacity="0.3"/>
+    <circle cx="200" cy="180" r="3" fill="#ff2d95" opacity="0.3"/>
+    <circle cx="312" cy="332" r="3" fill="#ff2d95" opacity="0.3"/>
+  </g>
+
+  <!-- Crossed swords -->
+  <g transform="translate(256,240)" filter="url(#glow)">
+    <!-- Left sword -->
+    <g transform="rotate(-30)">
+      <rect x="-4" y="-90" width="8" height="100" rx="2" fill="url(#sword)" opacity="0.9"/>
+      <rect x="-12" y="5" width="24" height="6" rx="2" fill="#b742ff"/>
+      <rect x="-3" y="11" width="6" height="20" rx="1" fill="#666"/>
+      <circle cx="0" cy="-90" r="4" fill="#00d4ff" filter="url(#glow)"/>
+    </g>
+    <!-- Right sword -->
+    <g transform="rotate(30)">
+      <rect x="-4" y="-90" width="8" height="100" rx="2" fill="url(#sword)" opacity="0.9"/>
+      <rect x="-12" y="5" width="24" height="6" rx="2" fill="#ff2d95"/>
+      <rect x="-3" y="11" width="6" height="20" rx="1" fill="#666"/>
+      <circle cx="0" cy="-90" r="4" fill="#ff2d95" filter="url(#glow)"/>
+    </g>
+  </g>
+
+  <!-- Shield center -->
+  <g transform="translate(256,240)" filter="url(#glow-strong)">
+    <path d="M0,-35 L25,-20 L25,15 L0,30 L-25,15 L-20,-20 Z" fill="none" stroke="url(#neon)" stroke-width="3"/>
+    <text x="0" y="8" text-anchor="middle" font-family="monospace" font-weight="900" font-size="28" fill="url(#neon)" filter="url(#glow)">AR</text>
+  </g>
+
+  <!-- Title -->
+  <text x="256" y="370" text-anchor="middle" font-family="monospace" font-weight="900" font-size="48" fill="url(#neon)" filter="url(#glow)">ACKI RIVALS</text>
+
+  <!-- Subtitle -->
+  <text x="256" y="405" text-anchor="middle" font-family="monospace" font-weight="400" font-size="16" fill="#ffffff" opacity="0.5" letter-spacing="8">CARD BATTLE</text>
+
+  <!-- Bottom accent line -->
+  <line x1="156" y1="430" x2="356" y2="430" stroke="url(#neon)" stroke-width="2" opacity="0.4"/>
+
+  <!-- Corner decorations -->
+  <g stroke="#00d4ff" stroke-width="2" fill="none" opacity="0.3">
+    <path d="M30,30 L30,70 M30,30 L70,30"/>
+    <path d="M482,30 L482,70 M482,30 L442,30"/>
+    <path d="M30,482 L30,442 M30,482 L70,482"/>
+    <path d="M482,482 L482,442 M482,482 L442,482"/>
+  </g>
+</svg>

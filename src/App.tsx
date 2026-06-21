@@ -10,8 +10,9 @@ import WalletPanel from './components/WalletPanel';
 import MiningPanel from './components/MiningPanel';
 import DeckBuilder from './components/DeckBuilder';
 import UpgradeScreen from './components/UpgradeScreen';
+import PvpLobby from './components/PvpLobby';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade';
+type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp';
 
 function App() {
   const {
@@ -154,6 +155,19 @@ function App() {
           >
             ⛏️ Майнинг
           </button>
+
+          <button
+            onClick={() => setScreen('pvp')}
+            disabled={deck.length !== 4}
+            className={`w-full max-w-xs py-4 rounded-xl font-bold text-lg
+              transition-all duration-150
+              ${deck.length === 4
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(255,0,0,0.3)] hover:opacity-90 active:scale-95'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            🌐 PvP Бой
+          </button>
         </div>
       )}
 
@@ -220,6 +234,20 @@ function App() {
           <UpgradeScreen
             collection={collection}
             onUpgrade={upgradeCard}
+            onBack={() => setScreen('menu')}
+          />
+        </div>
+      )}
+
+      {screen === 'pvp' && (
+        <div className="flex-1">
+          <PvpLobby
+            playerId={walletConnection?.walletName || 'player_' + Date.now()}
+            deck={deck}
+            onStartBattle={(_game, _isHost) => {
+              // TODO: start PvP battle with game state
+              setScreen('battle');
+            }}
             onBack={() => setScreen('menu')}
           />
         </div>

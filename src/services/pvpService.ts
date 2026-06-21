@@ -1,0 +1,231 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Card } from '../types';
+
+const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+
+let supabase: SupabaseClient | null = null;
+
+function getClient(): SupabaseClient | null {
+  if (!supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return supabase;
+}
+
+// ─── Types ──────────────────────────────────────────────
+
+export interface GameState {
+  phase: 'waiting' | 'select' | 'resolve' | 'ended';
+  round: number;
+  hostHP: number;
+  guestHP: number;
+  hostPillz: number;
+  guestPillz: number;
+  currentRound?: {
+    hostCard?: Card;
+    hostPillz: number;
+    guestCard?: Card;
+    guestPillz: number;
+    result?: { winner: 'host' | 'guest' | 'draw'; damage: number; hostAttack: number; guestAttack: number };
+  };
+}
+
+export interface Game {
+  id: string;
+  host_id: string;
+  guest_id: string | null;
+  host_deck: Card[];
+  guest_deck: Card[] | null;
+  state: GameState;
+  status: string;
+  created_at: string;
+}
+
+export interface Move {
+  id: string;
+  game_id: string;
+  player_id: string;
+  round: number;
+  card_id: number;
+  pillz: number;
+}
+
+// ─── Game actions ────────────────────────────────────────
+
+export async function createGame(hostId: string, hostDeck: Card[]): Promise<Game | null> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env');
+
+  const { data, error } = await client
+    .from('games')
+    .insert({
+      host_id: hostId,
+      host_deck: hostDeck,
+      status: 'waiting',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function joinGame(gameId: string, guestId: string, guestDeck: Card[]): Promise<Game | null> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { data, error } = await client
+    .from('games')
+    .update({
+      guest_id: guestId,
+      guest_deck: guestDeck,
+      status: 'active',
+    })
+    .eq('id', gameId)
+    .eq('status', 'waiting')
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getGame(gameId: string): Promise<Game | null> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { data, error } = await client
+    .from('games')
+    .select('*')
+    .eq('id', gameId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getWaitingGames(): Promise<Game[]> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { data, error } = await client
+    .from('games')
+    .select('*')
+    .eq('status', 'waiting')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getMyGames(playerId: string): Promise<Game[]> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { data, error } = await client
+    .from('games')
+    .select('*')
+    .or(`host_id.eq.${playerId},guest_id.eq.${playerId}`)
+    .in('status', ['active', 'waiting'])
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function submitMove(
+  gameId: string,
+  playerId: string,
+  round: number,
+  cardId: number,
+  pillz: number,
+): Promise<Move | null> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { data, error } = await client
+    .from('moves')
+    .insert({
+      game_id: gameId,
+      player_id: playerId,
+      round,
+      card_id: cardId,
+      pillz,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getRoundMoves(gameId: string, round: number): Promise<Move[]> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { data, error } = await client
+    .from('moves')
+    .select('*')
+    .eq('game_id', gameId)
+    .eq('round', round)
+    .order('created_at');
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateGameState(gameId: string, state: GameState): Promise<void> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { error } = await client
+    .from('games')
+    .update({ state, status: state.phase === 'ended' ? 'finished' : 'active' })
+    .eq('id', gameId);
+
+  if (error) throw error;
+}
+
+export async function finishGame(gameId: string): Promise<void> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { error } = await client
+    .from('games')
+    .update({ status: 'finished' })
+    .eq('id', gameId);
+
+  if (error) throw error;
+}
+
+// ─── Real-time subscriptions ─────────────────────────────
+
+export function subscribeToGame(
+  gameId: string,
+  onMove: (move: Move) => void,
+  onStateChange: (game: Game) => void,
+) {
+  const client = getClient();
+  if (!client) return () => {};
+
+  const movesSub = client
+    .channel(`moves:${gameId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'moves', filter: `game_id=eq.${gameId}` }, (payload) => {
+      onMove(payload.new as Move);
+    })
+    .subscribe();
+
+  const gamesSub = client
+    .channel(`games:${gameId}`)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` }, (payload) => {
+      onStateChange(payload.new as Game);
+    })
+    .subscribe();
+
+  return () => {
+    movesSub.unsubscribe();
+    gamesSub.unsubscribe();
+  };
+}
