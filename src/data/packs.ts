@@ -1,0 +1,47 @@
+import type { Rarity } from '../types';
+
+export interface PackConfig {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  cardCount: number;
+  /** rarity → drop weight (not percentage, relative weights) */
+  rarityWeights: Partial<Record<Rarity, number>>;
+  /** If true, only these rarities can drop */
+  allowedRarities?: Rarity[];
+}
+
+export const PACKS: PackConfig[] = [
+  {
+    id: 'basic',
+    name: 'Базовый набор',
+    description: '5 карт. Обычные и необычные.',
+    price: 500,
+    cardCount: 5,
+    rarityWeights: { common: 80, uncommon: 20 },
+    allowedRarities: ['common', 'uncommon'],
+  },
+  {
+    id: 'standard',
+    name: 'Стандартный набор',
+    description: '5 карт. Обычные, необычные, редкие.',
+    price: 700,
+    cardCount: 5,
+    rarityWeights: { common: 60, uncommon: 30, rare: 10 },
+    allowedRarities: ['common', 'uncommon', 'rare'],
+  },
+  {
+    id: 'advanced',
+    name: 'Продвинутый набор',
+    description: '5 карт. Необычные, редкие, легендарные.',
+    price: 1000,
+    cardCount: 5,
+    rarityWeights: { uncommon: 65, rare: 25, legendary: 10 },
+    allowedRarities: ['uncommon', 'rare', 'legendary'],
+  },
+];
+
+export function getPackById(id: string): PackConfig | undefined {
+  return PACKS.find((p) => p.id === id);
+}

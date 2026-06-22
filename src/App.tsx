@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGameState } from './hooks/useGameState';
-import { openPack } from './utils/packGenerator';
+import { openPack as openPackCards } from './utils/packGenerator';
+import { getPackById } from './data/packs';
 import type { Card } from './types';
 import type { WalletConnection } from './services/beeEngine';
 import { getStoredSession } from './services/beeEngine';
@@ -45,10 +46,11 @@ function App() {
     setScreen('menu');
   }, [recordWin, recordLoss]);
 
-  const handleBuyPack = useCallback(() => {
-    if (credits < 100) return;
-    addCredits(-100);
-    const newCards = openPack();
+  const handleBuyPack = useCallback((packId: string) => {
+    const pack = getPackById(packId);
+    if (!pack || credits < pack.price) return;
+    addCredits(-pack.price);
+    const newCards = openPackCards(packId);
     newCards.forEach((c) => addCard(c));
   }, [credits, addCredits, addCard]);
 

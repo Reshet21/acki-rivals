@@ -1,5 +1,5 @@
 export type Clan = 'Неоновые Наемники' | 'Цифровые Монахи';
-export type Rarity = 'common' | 'rare' | 'legendary';
+export type Rarity = 'common' | 'uncommon' | 'rare' | 'legendary';
 
 export interface Card {
   id: number;
