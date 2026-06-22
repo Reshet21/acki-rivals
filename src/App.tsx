@@ -72,7 +72,14 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto bg-dark-bg text-white flex flex-col">
+    <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto bg-game-menu text-white flex flex-col relative">
+      {/* Ambient particles for menu */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute w-1 h-1 bg-neon-purple/20 rounded-full animate-drift" style={{ top: '15%', left: '10%' }} />
+        <div className="absolute w-1.5 h-1.5 bg-neon-blue/15 rounded-full animate-drift" style={{ top: '40%', right: '20%', animationDelay: '3s' }} />
+        <div className="absolute w-1 h-1 bg-neon-pink/10 rounded-full animate-drift" style={{ top: '70%', left: '85%', animationDelay: '5s' }} />
+        <div className="absolute w-1 h-1 bg-neon-green/10 rounded-full animate-drift" style={{ top: '25%', right: '80%', animationDelay: '1s' }} />
+      </div>
       {screen === 'menu' && (
         <div className="flex flex-col items-center flex-1 gap-3 p-4 pt-10 overflow-y-auto">
           {/* Title */}

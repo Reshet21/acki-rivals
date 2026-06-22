@@ -11,6 +11,10 @@ body {
   user-select: none;
 }
 
+/* ═══════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════ */
+
 @keyframes fade-in {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
@@ -41,33 +45,95 @@ body {
   50% { transform: translateY(-4px); }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out both;
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out both;
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
 }
 
-.animate-glow-pulse {
-  animation: glow-pulse 2s ease-in-out infinite;
+@keyframes drift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(10px, -5px) rotate(1deg); }
+  50% { transform: translate(-5px, 10px) rotate(-1deg); }
+  75% { transform: translate(-10px, -3px) rotate(0.5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
 }
 
-.animate-border-glow {
-  animation: border-glow 2s ease-in-out infinite;
+@keyframes battle-flash {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes damage-number {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-20px) scale(1.3); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+}
+
+.animate-fade-in { animation: fade-in 0.3s ease-out both; }
+.animate-slide-up { animation: slide-up 0.3s ease-out both; }
+.animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+.animate-border-glow { animation: border-glow 2s ease-in-out infinite; }
 .animate-shimmer {
   background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-rotate-slow { animation: rotate-slow 20s linear infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-drift { animation: drift 8s ease-in-out infinite; }
+.animate-battle-flash { animation: battle-flash 0.5s ease-out; }
+.animate-shake { animation: shake 0.3s ease-in-out; }
+.animate-damage { animation: damage-number 1s ease-out forwards; }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* ═══════════════════════════════════════
+   CARD BACKGROUNDS (SVG patterns)
+   ═══════════════════════════════════════ */
+
+/* Neon Mercenaries — cyberpunk circuit pattern */
+.card-bg-neon {
+  background:
+    radial-gradient(circle at 20% 80%, rgba(168,85,247,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0,212,255,0.1) 0%, transparent 50%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(0,212,255,0.03) 10px,
+      rgba(0,212,255,0.03) 11px
+    ),
+    linear-gradient(180deg, rgba(88,28,135,0.4) 0%, rgba(30,10,60,0.8) 100%);
 }
 
-/* Card rarity borders */
+/* Digital Monks — zen/mystical pattern */
+.card-bg-monk {
+  background:
+    radial-gradient(circle at 50% 30%, rgba(16,185,129,0.15) 0%, transparent 60%),
+    radial-gradient(circle at 30% 70%, rgba(6,182,212,0.1) 0%, transparent 40%),
+    repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg 85deg,
+      rgba(16,185,129,0.03) 85deg 90deg
+    ),
+    linear-gradient(180deg, rgba(6,78,59,0.4) 0%, rgba(5,30,30,0.8) 100%);
+}
+
+/* ═══════════════════════════════════════
+   CARD RARITY BORDERS
+   ═══════════════════════════════════════ */
+
 .card-border-common { border-color: rgba(156,163,175,0.4); }
 .card-border-uncommon { border-color: rgba(74,222,128,0.5); }
 .card-border-rare { border-color: rgba(96,165,250,0.6); }
@@ -80,7 +146,37 @@ body {
 .card-glow-epic { box-shadow: 0 0 18px rgba(168,85,247,0.35), inset 0 0 20px rgba(168,85,247,0.08); }
 .card-glow-legendary { box-shadow: 0 0 22px rgba(250,204,21,0.4), inset 0 0 25px rgba(250,204,21,0.08); }
 
-/* Scrollbar */
+/* ═══════════════════════════════════════
+   GAME BACKGROUNDS
+   ═══════════════════════════════════════ */
+
+.bg-game-menu {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(168,85,247,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(0,212,255,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(236,72,153,0.05) 0%, transparent 60%),
+    #0a0a1a;
+}
+
+.bg-battle {
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(255,53,53,0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 70%, rgba(0,212,255,0.06) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(168,85,247,0.04) 0%, transparent 50%),
+    #0a0a1a;
+}
+
+.bg-shop {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(236,72,153,0.08) 0%, transparent 40%),
+    #0a0a1a;
+}
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════ */
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }

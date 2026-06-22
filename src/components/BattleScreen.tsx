@@ -261,7 +261,16 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
     'text-neon-red';
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden">
+    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
+      {/* Ambient particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute w-1 h-1 bg-neon-blue/20 rounded-full animate-drift" style={{ top: '10%', left: '20%' }} />
+        <div className="absolute w-1.5 h-1.5 bg-neon-purple/15 rounded-full animate-drift" style={{ top: '30%', right: '15%', animationDelay: '2s' }} />
+        <div className="absolute w-1 h-1 bg-neon-pink/10 rounded-full animate-drift" style={{ top: '60%', left: '10%', animationDelay: '4s' }} />
+        <div className="absolute w-1.5 h-1.5 bg-neon-green/10 rounded-full animate-drift" style={{ top: '80%', right: '25%', animationDelay: '6s' }} />
+        <div className="absolute w-1 h-1 bg-yellow-400/10 rounded-full animate-drift" style={{ top: '45%', left: '80%', animationDelay: '3s' }} />
+      </div>
+
       {/* Header */}
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
         <span className="text-xs text-white/60">Р {round}/{TOTAL_ROUNDS}</span>

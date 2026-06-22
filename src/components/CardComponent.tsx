@@ -7,6 +7,11 @@ interface Props {
   compact?: boolean;
 }
 
+const clanBg: Record<string, string> = {
+  'Неоновые Наемники': 'card-bg-neon',
+  'Цифровые Монахи': 'card-bg-monk',
+};
+
 const clanGradients: Record<string, string> = {
   'Неоновые Наемники': 'from-purple-950 via-purple-800 to-purple-600',
   'Цифровые Монахи': 'from-emerald-950 via-emerald-800 to-emerald-600',
@@ -73,6 +78,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
   const clan = card.clan || 'Неоновые Наемники';
   const rarity = card.rarity || 'common';
   const config = rarityConfig[rarity] || rarityConfig.common;
+  const bgClass = clanBg[clan] || '';
 
   if (compact) {
     return (
@@ -81,14 +87,19 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         className={`
           relative w-full rounded-xl overflow-hidden
           bg-gradient-to-br ${clanGradients[clan] || 'from-gray-800 to-gray-900'}
+          ${bgClass}
           border ${config.border} ${config.glow}
           transition-all duration-200
           active:scale-95 flex flex-col
           ${isSelected ? 'scale-[1.03] border-yellow-400 shadow-[0_0_16px_rgba(250,204,21,0.5)]' : ''}
         `}
       >
-        {/* Shimmer overlay for legendary */}
-        {rarity === 'legendary' && <div className="absolute inset-0 animate-shimmer pointer-events-none" />}
+        {/* Shimmer overlay */}
+        {rarity === 'legendary' && <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-xl" />}
+
+        {/* Decorative corner accent */}
+        <div className="absolute top-0 left-0 w-8 h-8 bg-gradient-to-br from-white/5 to-transparent rounded-tl-xl" />
+        <div className="absolute bottom-0 right-0 w-6 h-6 bg-gradient-to-tl from-white/3 to-transparent rounded-br-xl" />
 
         {/* Rarity badge */}
         <div className="absolute top-1 right-1 z-10">
@@ -97,7 +108,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
           </span>
         </div>
 
-        <div className="p-1.5 flex flex-col gap-0.5 flex-1">
+        <div className="p-1.5 flex flex-col gap-0.5 flex-1 relative z-10">
           {/* Emoji + Name */}
           <div className="text-center">
             <div className="text-base mb-px animate-float">{clanEmojis[clan] || '🃏'}</div>
@@ -108,7 +119,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
           </div>
 
           {/* Ability */}
-          <div className="bg-black/40 rounded-md px-1.5 py-0.5 text-center backdrop-blur-sm">
+          <div className="bg-black/40 rounded-md px-1.5 py-0.5 text-center backdrop-blur-sm border border-white/5">
             <div className="text-[8px] text-white/50 font-medium leading-tight truncate">
               {getAbilityName(card.ability)}
             </div>
@@ -143,6 +154,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       className={`
         relative w-40 rounded-2xl overflow-hidden
         bg-gradient-to-br ${clanGradients[clan] || 'from-gray-800 to-gray-900'}
+        ${bgClass}
         border-2 ${config.border} ${config.glow}
         transition-all duration-200
         hover:scale-105 active:scale-95
@@ -153,6 +165,10 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       {/* Shimmer overlay */}
       {rarity === 'legendary' && <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-2xl" />}
 
+      {/* Decorative accents */}
+      <div className="absolute top-0 left-0 w-12 h-12 bg-gradient-to-br from-white/5 to-transparent rounded-tl-2xl" />
+      <div className="absolute bottom-0 right-0 w-8 h-8 bg-gradient-to-tl from-white/3 to-transparent rounded-br-2xl" />
+
       {/* Rarity badge */}
       <div className="absolute top-2 right-2 z-10">
         <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold ${config.badge}`}>
@@ -160,7 +176,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         </span>
       </div>
 
-      <div className="p-3 flex flex-col gap-1.5 flex-1">
+      <div className="p-3 flex flex-col gap-1.5 flex-1 relative z-10">
         {/* Emoji + Name */}
         <div className="text-center">
           <div className="text-2xl mb-0.5 animate-float">{clanEmojis[clan] || '🃏'}</div>
