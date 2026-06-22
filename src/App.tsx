@@ -73,108 +73,72 @@ function App() {
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto bg-dark-bg text-white flex flex-col">
       {screen === 'menu' && (
-        <div className="flex flex-col items-center flex-1 gap-3 p-6 pt-12">
-          <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink mb-4">
-            ACKI RIVALS
+        <div className="flex flex-col items-center flex-1 gap-3 p-4 pt-10 overflow-y-auto">
+          {/* Title */}
+          <div className="text-center mb-2">
+            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink">
+              ACKI RIVALS
+            </div>
+            <div className="text-[10px] text-white/30 mt-1">CARD BATTLE</div>
           </div>
 
-          <div className="text-xs text-white/30 mb-4">
-            💰 {credits} кредитов · 🏆 {battlesWon}W / {battlesLost}L
-            {walletConnection && (
-              <span className="ml-2 text-neon-green">· 🔗 {walletConnection.walletName}</span>
-            )}
+          {/* Stats bar */}
+          <div className="flex items-center justify-center gap-3 text-[10px] text-white/40 mb-2">
+            <span>💰 {credits}</span>
+            <span>🏆 {battlesWon}W / {battlesLost}L</span>
+            {walletConnection && <span className="text-neon-green">🔗</span>}
           </div>
 
-          <button
-            onClick={() => setScreen('pvp')}
-            disabled={deck.length !== 4}
-            className={`w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              transition-all duration-150
-              ${deck.length === 4
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(255,0,0,0.3)] hover:opacity-90 active:scale-95'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              }`}
-          >
-            🌐 PvP Бой
-          </button>
+          {/* Main actions - 2 columns */}
+          <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
+            <button onClick={() => setScreen('pvp')} disabled={deck.length !== 4}
+              className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-red-600 to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
+              <span className="text-lg">🌐</span>
+              <span>PvP</span>
+            </button>
+            <button onClick={() => setScreen('battle')} disabled={deck.length !== 4}
+              className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-neon-red to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
+              <span className="text-lg">⚔️</span>
+              <span>Бой ИИ</span>
+            </button>
+            <button onClick={() => setScreen('deck')}
+              className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-neon-purple to-neon-blue text-white shadow-lg active:scale-95 transition-all">
+              <span className="text-lg">📚</span>
+              <span>Колода</span>
+            </button>
+            <button onClick={() => setScreen('shop')}
+              className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-neon-pink to-purple-500 text-white shadow-lg active:scale-95 transition-all">
+              <span className="text-lg">🛒</span>
+              <span>Магазин</span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => setScreen('battle')}
-            disabled={deck.length !== 4}
-            className={`
-              w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              transition-all duration-150
-              ${deck.length === 4
-                ? 'bg-gradient-to-r from-neon-red to-orange-500 text-white shadow-[0_0_20px_rgba(255,51,51,0.3)] hover:opacity-90 active:scale-95'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              }
-            `}
-          >
-            ⚔️ Бой с ИИ
-          </button>
           {deck.length !== 4 && (
-            <div className="text-[10px] text-white/30 -mt-2">Сначала соберите колоду из 4 карт</div>
+            <div className="text-[10px] text-white/30">Соберите колоду из 4 карт</div>
           )}
 
-          <button
-            onClick={() => setScreen('deck')}
-            className="w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              bg-gradient-to-r from-neon-purple to-neon-blue text-white
-              shadow-[0_0_20px_rgba(183,66,255,0.3)]
-              hover:opacity-90 active:scale-95
-              transition-all duration-150"
-          >
-            📚 Колода
-          </button>
+          {/* Secondary actions - 3 columns */}
+          <div className="grid grid-cols-3 gap-2 w-full max-w-xs mt-1">
+            <button onClick={() => setScreen('upgrade')}
+              className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+              <span>⚒️</span>
+              <span>Улучшить</span>
+            </button>
+            <button onClick={() => setScreen('wallet')}
+              className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+              <span>👛</span>
+              <span>Кошелёк</span>
+            </button>
+            <button onClick={() => setScreen('mining')}
+              className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+              <span>⛏️</span>
+              <span>Майнинг</span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => setScreen('shop')}
-            className="w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              bg-gradient-to-r from-neon-pink to-purple-500 text-white
-              shadow-[0_0_20px_rgba(255,45,149,0.3)]
-              hover:opacity-90 active:scale-95
-              transition-all duration-150"
-          >
-            🛒 Магазин
-          </button>
-
-          <button
-            onClick={() => setScreen('upgrade')}
-            className="w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              bg-gradient-to-r from-yellow-400 to-orange-500 text-black
-              shadow-[0_0_20px_rgba(255,165,0,0.3)]
-              hover:opacity-90 active:scale-95
-              transition-all duration-150"
-          >
-            ⚒️ Улучшить карты
-          </button>
-
-          <button
-            onClick={() => setScreen('wallet')}
-            className="w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              bg-gradient-to-r from-neon-blue to-cyan-500 text-white
-              shadow-[0_0_20px_rgba(0,212,255,0.3)]
-              hover:opacity-90 active:scale-95
-              transition-all duration-150"
-          >
-            👛 Кошелек {walletConnection && '✅'}
-          </button>
-
-          <button
-            onClick={() => setScreen('mining')}
-            className="w-full max-w-xs py-4 rounded-xl font-bold text-lg
-              bg-gradient-to-r from-neon-green to-emerald-500 text-white
-              shadow-[0_0_20px_rgba(0,255,159,0.3)]
-              hover:opacity-90 active:scale-95
-              transition-all duration-150"
-          >
-              ⛏️ Майнинг
-          </button>
-
-          <button
-            onClick={() => { localStorage.clear(); location.reload(); }}
-            className="w-full max-w-xs py-2 rounded-lg text-xs text-white/30 border border-white/5 hover:text-white/50 hover:border-white/10 active:scale-95 transition-all mt-4"
-          >
+          {/* Reset */}
+          <button onClick={() => { localStorage.clear(); location.reload(); }}
+            className="text-[10px] text-white/20 hover:text-white/40 mt-2">
             🔄 Сбросить данные
           </button>
         </div>
