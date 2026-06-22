@@ -43,11 +43,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     forceUpdate((n) => n + 1);
   }, []);
 
+  // Translations are stored as flat keys: { 'menu.pvp': 'PvP', 'menu.ai': 'AI Battle' }
   const t = useCallback((key: string): string => {
-    const keys = key.split('.');
-    let val: any = translations[lang];
-    for (const k of keys) { val = val?.[k]; }
-    return val ?? key;
+    const langTranslations = translations[lang];
+    if (!langTranslations) return key;
+    return langTranslations[key] ?? key;
   }, [lang]);
 
   return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
