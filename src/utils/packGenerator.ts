@@ -23,13 +23,8 @@ function rollRarity(config: PackConfig): Rarity {
   return entries[entries.length - 1][0];
 }
 
-function getRandomCardByRarity(rarity: Rarity, excludeIds: Set<number>): Card | null {
-  const pool = cards.filter((c) => c.rarity === rarity && !excludeIds.has(c.id));
-  if (pool.length === 0) {
-    // Fallback: allow duplicates if pool is empty
-    const allPool = cards.filter((c) => c.rarity === rarity);
-    return allPool.length > 0 ? pickRandom(allPool) : null;
-  }
+function getRandomCardByRarity(rarity: Rarity): Card {
+  const pool = cards.filter((c) => c.rarity === rarity);
   return pickRandom(pool);
 }
 
@@ -38,15 +33,10 @@ export function openPack(packId: string): Card[] {
   if (!config) return [];
 
   const result: Card[] = [];
-  const usedIds = new Set<number>();
-
   for (let i = 0; i < config.cardCount; i++) {
     const rarity = rollRarity(config);
-    const card = getRandomCardByRarity(rarity, usedIds);
-    if (card) {
-      result.push({ ...card });
-      usedIds.add(card.id);
-    }
+    const card = getRandomCardByRarity(rarity);
+    result.push({ ...card });
   }
   return result;
 }
