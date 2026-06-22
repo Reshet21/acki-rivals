@@ -73,7 +73,7 @@ function App() {
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto bg-dark-bg text-white flex flex-col">
       {screen === 'menu' && (
-        <div className="flex flex-col items-center justify-center flex-1 gap-4 p-6">
+        <div className="flex flex-col items-center flex-1 gap-3 p-6 pt-12">
           <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink mb-4">
             ACKI RIVALS
           </div>
@@ -173,7 +173,7 @@ function App() {
 
           <button
             onClick={() => { localStorage.clear(); location.reload(); }}
-            className="text-[10px] text-white/20 hover:text-white/40 transition-colors mt-2"
+            className="w-full max-w-xs py-2 rounded-lg text-xs text-white/30 border border-white/5 hover:text-white/50 hover:border-white/10 active:scale-95 transition-all mt-4"
           >
             🔄 Сбросить данные
           </button>
