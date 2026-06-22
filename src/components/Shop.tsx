@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Card, Rarity } from '../types';
 import { PACKS, getPackById } from '../data/packs';
 import { openPack } from '../utils/packGenerator';
@@ -9,12 +9,12 @@ interface Props {
   onBack: () => void;
 }
 
-const rarityStyles: Record<Rarity, { border: string; bg: string; text: string; label: string }> = {
-  common: { border: 'border-gray-400', bg: 'bg-gray-500/10', text: 'text-gray-300', label: 'Обычная' },
-  uncommon: { border: 'border-green-400', bg: 'bg-green-500/10', text: 'text-green-300', label: 'Необычная' },
-  rare: { border: 'border-blue-400', bg: 'bg-blue-500/10', text: 'text-blue-300', label: 'Редкая' },
-  epic: { border: 'border-purple-400', bg: 'bg-purple-500/10', text: 'text-purple-300', label: 'Эпическая' },
-  legendary: { border: 'border-yellow-400', bg: 'bg-yellow-500/10', text: 'text-yellow-300', label: 'Легендарная' },
+const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; text: string; label: string }> = {
+  common: { border: 'border-gray-400', bg: 'bg-gray-500/10', glow: '', text: 'text-gray-300', label: 'Обычная' },
+  uncommon: { border: 'border-green-400', bg: 'bg-green-500/10', glow: 'shadow-[0_0_12px_rgba(74,222,128,0.3)]', text: 'text-green-300', label: 'Необычная' },
+  rare: { border: 'border-blue-400', bg: 'bg-blue-500/10', glow: 'shadow-[0_0_15px_rgba(96,165,250,0.4)]', text: 'text-blue-300', label: 'Редкая' },
+  epic: { border: 'border-purple-400', bg: 'bg-purple-500/10', glow: 'shadow-[0_0_18px_rgba(168,85,247,0.4)]', text: 'text-purple-300', label: 'Эпическая' },
+  legendary: { border: 'border-yellow-400', bg: 'bg-yellow-500/10', glow: 'shadow-[0_0_20px_rgba(250,204,21,0.5)]', text: 'text-yellow-300', label: 'Легендарная' },
 };
 
 const clanEmojis: Record<string, string> = {
@@ -22,52 +22,91 @@ const clanEmojis: Record<string, string> = {
   'Цифровые Монахи': '🧘',
 };
 
+type Phase = 'shop' | 'opening' | 'result';
+
 export default function Shop({ credits, onBuyPack, onBack }: Props) {
-  const [openedCards, setOpenedCards] = useState<Card[] | null>(null);
-  const [isOpening, setIsOpening] = useState(false);
+  const [phase, setPhase] = useState<Phase>('shop');
+  const [openedCards, setOpenedCards] = useState<Card[]>([]);
+  const [revealIndex, setRevealIndex] = useState(-1);
 
-  const handleBuyAndOpen = (packId: string) => {
+  // Reveal cards one by one
+  useEffect(() => {
+    if (phase !== 'opening' || openedCards.length === 0) return;
+
+    let idx = 0;
+    const interval = setInterval(() => {
+      idx++;
+      setRevealIndex(idx);
+      if (idx >= openedCards.length) {
+        clearInterval(interval);
+        setTimeout(() => setPhase('result'), 400);
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [phase, openedCards.length]);
+
+  const handleBuy = (packId: string) => {
     const pack = getPackById(packId);
-    if (!pack || credits < pack.price || isOpening) return;
+    if (!pack || credits < pack.price) return;
 
-    setIsOpening(true);
-    // Deduct credits
+    // Deduct credits and generate cards BEFORE setting phase
     onBuyPack(packId);
-    // Generate cards with delay for animation
-    setTimeout(() => {
-      const cards = openPack(packId);
-      setOpenedCards(cards);
-      setIsOpening(false);
-    }, 600);
+    const cards = openPack(packId);
+    setOpenedCards(cards);
+    setRevealIndex(-1);
+    setPhase('opening');
   };
 
-  const handleCloseResult = () => {
-    setOpenedCards(null);
+  const handleCollect = () => {
+    setPhase('shop');
+    setOpenedCards([]);
+    setRevealIndex(-1);
   };
 
-  // Result overlay
-  if (openedCards) {
+  // ═══ Opening animation ═══
+  if (phase === 'opening' || phase === 'result') {
     return (
-      <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
-        <div className="text-xl font-bold text-white">🎉 Набор открыт!</div>
+      <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4 h-[100dvh]">
+        {/* Title */}
+        <div className="text-xl font-bold text-white shrink-0">
+          {phase === 'opening' ? '✨ Открываю...' : '🎉 Набор открыт!'}
+        </div>
 
-        <div className="grid grid-cols-3 gap-2 w-full">
+        {/* Cards grid */}
+        <div className="grid grid-cols-3 gap-2.5 w-full flex-1 min-h-0 overflow-y-auto">
           {openedCards.map((card, i) => {
+            const revealed = i <= revealIndex;
             const style = rarityStyles[card.rarity];
             return (
               <div
                 key={i}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 ${style.border} ${style.bg}`}
-                style={{ animation: `fade-in 0.3s ease-out ${i * 0.1}s both` }}
+                className={`
+                  flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-300
+                  ${revealed ? `${style.border} ${style.bg} ${style.glow} scale-100 opacity-100` : 'border-white/5 bg-white/5 scale-90 opacity-0'}
+                `}
               >
-                <div className="text-lg">{clanEmojis[card.clan]}</div>
-                <div className={`text-[10px] font-bold text-center leading-tight ${style.text}`}>
+                {/* Clan emoji */}
+                <div className="text-xl">{clanEmojis[card.clan]}</div>
+
+                {/* Name */}
+                <div className={`text-[11px] font-bold text-center leading-tight ${style.text}`}>
                   {card.name}
                 </div>
-                <div className="text-[8px] text-white/40">
-                  {card.power}⚡ {card.damage}💥
+
+                {/* Stats */}
+                <div className="flex gap-2 text-[10px]">
+                  <span className="text-white/60">⚡{card.power}</span>
+                  <span className="text-red-300/80">💥{card.damage}</span>
                 </div>
-                <div className={`text-[7px] font-bold px-1.5 py-0.5 rounded-full ${style.bg} ${style.text} border ${style.border}`}>
+
+                {/* Ability */}
+                <div className="text-[8px] text-white/40 text-center leading-tight px-1">
+                  {card.ability}
+                </div>
+
+                {/* Rarity badge */}
+                <div className={`text-[7px] font-bold px-2 py-0.5 rounded-full border ${style.border} ${style.text}`}>
                   {style.label}
                 </div>
               </div>
@@ -75,19 +114,22 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
           })}
         </div>
 
-        <button
-          onClick={handleCloseResult}
-          className="w-full py-3 rounded-xl font-bold text-sm bg-white/10 text-white active:scale-95 transition-all"
-        >
-          Забрать карты
-        </button>
+        {/* Collect button */}
+        {phase === 'result' && (
+          <button
+            onClick={handleCollect}
+            className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 transition-all shrink-0"
+          >
+            Забрать карты
+          </button>
+        )}
       </div>
     );
   }
 
-  // Shop view
+  // ═══ Shop ═══
   return (
-    <div className="flex flex-col gap-4 w-full max-w-sm mx-auto p-4">
+    <div className="flex flex-col gap-3 w-full max-w-sm mx-auto p-4">
       <div className="flex justify-between items-center">
         <div className="text-lg font-bold text-white">🛒 Магазин</div>
         <div className="text-sm text-neon-blue font-bold">💰 {credits}</div>
@@ -102,7 +144,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
             <div
               key={pack.id}
               className={`rounded-xl border p-3 transition-all ${
-                canBuy ? 'border-white/10 bg-white/5' : 'border-white/5 bg-white/[0.02] opacity-60'
+                canBuy ? 'border-white/10 bg-white/5' : 'border-white/5 bg-white/[0.02] opacity-50'
               }`}
             >
               <div className="flex justify-between items-start mb-2">
@@ -110,7 +152,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
                   <div className="text-sm font-bold text-white">{pack.name}</div>
                   <div className="text-[10px] text-white/40">{pack.description}</div>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0 ml-2">
                   <div className={`text-sm font-bold ${canBuy ? 'text-neon-blue' : 'text-white/30'}`}>
                     💰 {pack.price}
                   </div>
@@ -135,17 +177,16 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
                 })}
               </div>
 
-              {/* Buy button */}
               <button
-                onClick={() => handleBuyAndOpen(pack.id)}
-                disabled={!canBuy || isOpening}
+                onClick={() => handleBuy(pack.id)}
+                disabled={!canBuy}
                 className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all ${
-                  canBuy && !isOpening
+                  canBuy
                     ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.2)]'
                     : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
                 }`}
               >
-                {isOpening ? 'Открытие...' : canBuy ? `Купить за ${pack.price} 💰` : 'Недостаточно'}
+                {canBuy ? `Купить за ${pack.price} 💰` : 'Недостаточно'}
               </button>
             </div>
           );

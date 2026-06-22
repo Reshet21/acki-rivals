@@ -87,6 +87,17 @@ export const cards: Card[] = [
     rarity: 'rare',
   },
 
+  // Epic (1)
+  {
+    id: 17,
+    name: 'Неоновый Император',
+    clan: 'Неоновые Наемники',
+    power: 7,
+    damage: 5,
+    ability: '+3 power',
+    rarity: 'epic',
+  },
+
   // Legendary (1)
   {
     id: 8,
@@ -167,6 +178,17 @@ export const cards: Card[] = [
     damage: 5,
     ability: '-2 opponent power',
     rarity: 'rare',
+  },
+
+  // Epic (1)
+  {
+    id: 18,
+    name: 'Космический Страж',
+    clan: 'Цифровые Монахи',
+    power: 6,
+    damage: 6,
+    ability: 'heal 3',
+    rarity: 'epic',
   },
 
   // Legendary (1)
