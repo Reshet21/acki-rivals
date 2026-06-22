@@ -13,6 +13,7 @@ const rarityStyles: Record<Rarity, { border: string; bg: string; text: string; l
   common: { border: 'border-gray-400', bg: 'bg-gray-500/10', text: 'text-gray-300', label: 'Обычная' },
   uncommon: { border: 'border-green-400', bg: 'bg-green-500/10', text: 'text-green-300', label: 'Необычная' },
   rare: { border: 'border-blue-400', bg: 'bg-blue-500/10', text: 'text-blue-300', label: 'Редкая' },
+  epic: { border: 'border-purple-400', bg: 'bg-purple-500/10', text: 'text-purple-300', label: 'Эпическая' },
   legendary: { border: 'border-yellow-400', bg: 'bg-yellow-500/10', text: 'text-yellow-300', label: 'Легендарная' },
 };
 
@@ -23,21 +24,20 @@ const clanEmojis: Record<string, string> = {
 
 export default function Shop({ credits, onBuyPack, onBack }: Props) {
   const [openedCards, setOpenedCards] = useState<Card[] | null>(null);
-  const [openingPack, setOpeningPack] = useState<string | null>(null);
+  const [isOpening, setIsOpening] = useState(false);
 
-  const handleBuy = (packId: string) => {
+  const handleBuyAndOpen = (packId: string) => {
     const pack = getPackById(packId);
-    if (!pack || credits < pack.price) return;
-    onBuyPack(packId);
-  };
+    if (!pack || credits < pack.price || isOpening) return;
 
-  const handleOpen = (packId: string) => {
-    setOpeningPack(packId);
-    const cards = openPack(packId);
-    // Simulate opening animation
+    setIsOpening(true);
+    // Deduct credits
+    onBuyPack(packId);
+    // Generate cards with delay for animation
     setTimeout(() => {
+      const cards = openPack(packId);
       setOpenedCards(cards);
-      setOpeningPack(null);
+      setIsOpening(false);
     }, 600);
   };
 
@@ -45,7 +45,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
     setOpenedCards(null);
   };
 
-  // Pack opening result overlay
+  // Result overlay
   if (openedCards) {
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
@@ -57,8 +57,8 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
             return (
               <div
                 key={i}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 ${style.border} ${style.bg} animate-fade-in`}
-                style={{ animationDelay: `${i * 100}ms` }}
+                className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 ${style.border} ${style.bg}`}
+                style={{ animation: `fade-in 0.3s ease-out ${i * 0.1}s both` }}
               >
                 <div className="text-lg">{clanEmojis[card.clan]}</div>
                 <div className={`text-[10px] font-bold text-center leading-tight ${style.text}`}>
@@ -85,6 +85,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
     );
   }
 
+  // Shop view
   return (
     <div className="flex flex-col gap-4 w-full max-w-sm mx-auto p-4">
       <div className="flex justify-between items-center">
@@ -95,7 +96,6 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
       <div className="flex flex-col gap-3">
         {PACKS.map((pack) => {
           const canBuy = credits >= pack.price;
-          const isOpening = openingPack === pack.id;
           const rarities = Object.entries(pack.rarityWeights);
 
           return (
@@ -135,31 +135,18 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
                 })}
               </div>
 
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleBuy(pack.id)}
-                  disabled={!canBuy || isOpening}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                    canBuy && !isOpening
-                      ? 'bg-neon-blue/20 text-neon-blue border border-neon-blue/30 active:scale-95'
-                      : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
-                  }`}
-                >
-                  Купить
-                </button>
-                <button
-                  onClick={() => handleOpen(pack.id)}
-                  disabled={!canBuy || isOpening}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                    canBuy && !isOpening
-                      ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/30 active:scale-95'
-                      : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
-                  }`}
-                >
-                  {isOpening ? 'Открытие...' : 'Открыть'}
-                </button>
-              </div>
+              {/* Buy button */}
+              <button
+                onClick={() => handleBuyAndOpen(pack.id)}
+                disabled={!canBuy || isOpening}
+                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all ${
+                  canBuy && !isOpening
+                    ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.2)]'
+                    : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
+                }`}
+              >
+                {isOpening ? 'Открытие...' : canBuy ? `Купить за ${pack.price} 💰` : 'Недостаточно'}
+              </button>
             </div>
           );
         })}

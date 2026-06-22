@@ -19,13 +19,17 @@ const clanEmojis: Record<string, string> = {
 
 const rarityColors: Record<string, string> = {
   common: 'bg-gray-500',
+  uncommon: 'bg-green-500',
   rare: 'bg-blue-500',
+  epic: 'bg-purple-500',
   legendary: 'bg-yellow-400 text-yellow-900',
 };
 
 const rarityLabels: Record<string, string> = {
   common: 'Обыч.',
+  uncommon: 'Необыч.',
   rare: 'Редк.',
+  epic: 'Эпич.',
   legendary: 'Леген.',
 };
 

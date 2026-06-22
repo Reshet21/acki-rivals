@@ -6,9 +6,7 @@ export interface PackConfig {
   description: string;
   price: number;
   cardCount: number;
-  /** rarity → drop weight (not percentage, relative weights) */
   rarityWeights: Partial<Record<Rarity, number>>;
-  /** If true, only these rarities can drop */
   allowedRarities?: Rarity[];
 }
 
@@ -34,11 +32,11 @@ export const PACKS: PackConfig[] = [
   {
     id: 'advanced',
     name: 'Продвинутый набор',
-    description: '5 карт. Необычные, редкие, легендарные.',
+    description: '5 карт. Необычные, редкие, эпические, легендарные.',
     price: 1000,
     cardCount: 5,
-    rarityWeights: { uncommon: 65, rare: 25, legendary: 10 },
-    allowedRarities: ['uncommon', 'rare', 'legendary'],
+    rarityWeights: { uncommon: 50, rare: 25, epic: 15, legendary: 10 },
+    allowedRarities: ['uncommon', 'rare', 'epic', 'legendary'],
   },
 ];
 
