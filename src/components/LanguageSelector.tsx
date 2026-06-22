@@ -5,12 +5,12 @@ interface Props {
 }
 
 export default function LanguageSelector({ onBack }: Props) {
-  const { lang, setLang } = useI18n();
+  const { lang, setLang, t } = useI18n();
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden">
       <div className="shrink-0 px-3 pt-3 pb-2">
-        <div className="text-sm font-bold text-white mb-2">🌐 Язык / Language</div>
+        <div className="text-sm font-bold text-white mb-2">🌐 {t('menu.rules')}</div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
@@ -38,7 +38,7 @@ export default function LanguageSelector({ onBack }: Props) {
           onClick={onBack}
           className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all"
         >
-          Назад
+          {t('deck.back')}
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import translations from './translations';
 
 type Lang = 'ru' | 'en' | 'es' | 'pt' | 'ar' | 'zh' | 'tr' | 'uk' | 'de' | 'fr' | 'hi' | 'id' | 'ja' | 'ko' | 'pl';
@@ -35,18 +35,20 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     try { return (localStorage.getItem('acki-lang') as Lang) || 'ru'; } catch { return 'ru'; }
   });
+  const [, forceUpdate] = useState(0);
 
-  const setLang = (l: Lang) => {
+  const setLang = useCallback((l: Lang) => {
     setLangState(l);
     localStorage.setItem('acki-lang', l);
-  };
+    forceUpdate((n) => n + 1);
+  }, []);
 
-  const t = (key: string): string => {
+  const t = useCallback((key: string): string => {
     const keys = key.split('.');
     let val: any = translations[lang];
     for (const k of keys) { val = val?.[k]; }
     return val ?? key;
-  };
+  }, [lang]);
 
   return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
 }
