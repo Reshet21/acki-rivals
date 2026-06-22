@@ -3,6 +3,7 @@ import type { Card } from '../types';
 import { cards as allCards } from '../data/cards';
 import { resolveRound } from '../utils/battleLogic';
 import CardComponent from './CardComponent';
+import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
 
 interface Props {
@@ -50,6 +51,7 @@ const VS_DURATION = 2000;
 const DAMAGE_DURATION = 2000;
 
 export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
+  const { t } = useI18n();
   const [playerHP, setPlayerHP] = useState(TOTAL_HP);
   const [aiHP, setAiHP] = useState(TOTAL_HP);
   const [playerPillz, setPlayerPillz] = useState(12);
@@ -280,7 +282,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           onClick={handleSurrender}
           className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/40 active:text-white/70 active:bg-white/10 transition-all"
         >
-          Сдаться
+          {t('battle.surrender')}
         </button>
 
         {battlePhase === 'select' && (
@@ -360,9 +362,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                   ${currentResult.winner === 'ai' ? 'text-neon-red' : ''}
                   ${currentResult.winner === 'draw' ? 'text-white/50' : ''}
                 `}>
-                  {currentResult.winner === 'player' && '⚔️ ПОБЕДА'}
-                  {currentResult.winner === 'ai' && '⚔️ ПОРАЖЕНИЕ'}
-                  {currentResult.winner === 'draw' && '⚔️ НИЧЬЯ'}
+                  {currentResult.winner === 'player' && `⚔️ ${t('battle.victory')}`}
+                  {currentResult.winner === 'ai' && `⚔️ ${t('battle.defeat')}`}
+                  {currentResult.winner === 'draw' && `⚔️ ${t('battle.draw')}`}
                 </div>
                 {/* Secondary effects */}
                 <div className="flex flex-wrap gap-1 justify-center">
@@ -432,9 +434,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
               ${battleResult === 'loss' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
               ${battleResult === 'draw' ? 'text-white bg-white/5 border border-white/10' : ''}
             `}>
-              {battleResult === 'win' && 'ПОБЕДА!'}
-              {battleResult === 'loss' && 'ПОРАЖЕНИЕ'}
-              {battleResult === 'draw' && 'НИЧЬЯ'}
+              {battleResult === 'win' && t('battle.victory') + '!'}
+              {battleResult === 'loss' && t('battle.defeat')}
+              {battleResult === 'draw' && t('battle.draw')}
             </div>
 
             <div className="text-xs text-white/50 text-center">
@@ -447,14 +449,14 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                 <div key={i} className="bg-white/5 rounded-lg px-2 py-2 text-[10px]">
                   {/* Header: round + result */}
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-white/40 font-bold">Раунд {entry.round}</span>
+                    <span className="text-white/40 font-bold">{t('battle.round')} {entry.round}</span>
                     <span className={`
                       font-bold text-[9px] px-1.5 py-0.5 rounded
                       ${entry.winner === 'player' ? 'text-neon-green bg-neon-green/10' : ''}
                       ${entry.winner === 'ai' ? 'text-neon-red bg-neon-red/10' : ''}
                       ${entry.winner === 'draw' ? 'text-white/40 bg-white/5' : ''}
                     `}>
-                      {entry.winner === 'player' ? 'ПОБЕДА' : entry.winner === 'ai' ? 'ПОРАЖЕНИЕ' : 'НИЧЬЯ'}
+                      {entry.winner === 'player' ? t('battle.victory') : entry.winner === 'ai' ? t('battle.defeat') : t('battle.draw')}
                     </span>
                   </div>
 
@@ -536,7 +538,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                 shadow-[0_0_16px_rgba(183,66,255,0.3)]
                 text-white"
             >
-              Назад
+              {t('deck.back')}
             </button>
           </div>
         )}

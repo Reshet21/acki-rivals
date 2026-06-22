@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Card } from '../types';
+import { useI18n } from '../i18n';
 
 interface Props {
   collection: Card[];
@@ -21,6 +22,7 @@ const rarityLabels: Record<string, string> = {
 };
 
 export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) {
+  const { t } = useI18n();
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -65,7 +67,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
       {/* Header */}
       <div className="shrink-0 px-3 pt-3 pb-2">
         <div className="flex justify-between items-center text-sm mb-1">
-          <div className="text-neon-purple font-bold">⚒️ Улучшение карт</div>
+          <div className="text-neon-purple font-bold">⚒️ {t('upgrade.title')}</div>
           <div className="text-white/40 text-xs">{collection.length} карт</div>
         </div>
         <div className="text-[10px] text-white/30">
@@ -103,7 +105,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             <div className="mt-2 flex items-center justify-between">
               <div className="text-[10px] text-white/40">
                 Доп. копий: <span className="text-white/70 font-bold">{selectedGroup.copies.length - 1}</span>
-                <span className="text-white/30 ml-1">(нужно {selectedGroup.stars === 0 ? 1 : selectedGroup.stars})</span>
+                <span className="text-white/30 ml-1">({t('upgrade.needed')} {selectedGroup.stars === 0 ? 1 : selectedGroup.stars})</span>
               </div>
               <button
                 onClick={handleUpgrade}
@@ -119,7 +121,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             </div>
           ) : (
             <div className="mt-2 text-center text-xs text-yellow-400 font-bold">
-              ★ Максимальный уровень
+              ★ {t('upgrade.max')}
             </div>
           )}
         </div>
@@ -174,7 +176,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
 
                 <div className="flex flex-col items-end gap-0.5 shrink-0">
                   <div className="text-[10px] text-white/50">
-                    <span className="font-bold text-white/70">{extras}</span> доп.
+                    <span className="font-bold text-white/70">{extras}</span> {t('upgrade.copies')}
                   </div>
                   {stars < MAX_STARS && (
                     <div className={`text-[9px] px-1.5 py-0.5 rounded ${
@@ -204,7 +206,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             active:bg-white/10 active:scale-[0.98]
             transition-all duration-150"
         >
-          Назад
+          {t('deck.back')}
         </button>
       </div>
     </div>

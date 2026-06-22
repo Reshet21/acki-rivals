@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Card, Rarity } from '../types';
 import { PACKS, getPackById } from '../data/packs';
 import { openPack } from '../utils/packGenerator';
+import { useI18n } from '../i18n';
 
 interface Props {
   credits: number;
@@ -25,6 +26,7 @@ const clanEmojis: Record<string, string> = {
 type Phase = 'shop' | 'opening' | 'result';
 
 export default function Shop({ credits, onBuyPack, onBack }: Props) {
+  const { t } = useI18n();
   const [phase, setPhase] = useState<Phase>('shop');
   const [openedCards, setOpenedCards] = useState<Card[]>([]);
   const [revealIndex, setRevealIndex] = useState(-1);
@@ -70,7 +72,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
       <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4 h-[100dvh]">
         {/* Title */}
         <div className="text-xl font-bold text-white shrink-0">
-          {phase === 'opening' ? '✨ Открываю...' : '🎉 Набор открыт!'}
+          {phase === 'opening' ? `✨ ${t('shop.opening')}` : `🎉 ${t('shop.opened')}`}
         </div>
 
         {/* Cards grid */}
@@ -120,7 +122,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
             onClick={handleCollect}
             className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 transition-all shrink-0"
           >
-            Забрать карты
+            {t('shop.collect')}
           </button>
         )}
       </div>
@@ -131,7 +133,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
   return (
     <div className="flex flex-col gap-3 w-full max-w-sm mx-auto p-4">
       <div className="flex justify-between items-center">
-        <div className="text-lg font-bold text-white">🛒 Магазин</div>
+        <div className="text-lg font-bold text-white">{t('shop.title')}</div>
         <div className="text-sm text-neon-blue font-bold">💰 {credits}</div>
       </div>
 
@@ -186,7 +188,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
                     : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
                 }`}
               >
-                {canBuy ? `Купить за ${pack.price} 💰` : 'Недостаточно'}
+                {canBuy ? `${t('shop.buy')} ${pack.price} 💰` : t('shop.notEnough')}
               </button>
             </div>
           );
@@ -200,7 +202,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
           active:bg-white/10 active:scale-[0.98]
           transition-all duration-150"
       >
-        Назад
+        {t('deck.back')}
       </button>
     </div>
   );

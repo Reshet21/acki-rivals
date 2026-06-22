@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Card, Rarity } from '../types';
 import CardComponent from './CardComponent';
+import { useI18n } from '../i18n';
 
 interface Props {
   collection: Card[];
@@ -9,13 +10,13 @@ interface Props {
   onBack: () => void;
 }
 
-const RARITY_FILTERS: { value: Rarity | 'all'; label: string; color: string }[] = [
-  { value: 'all', label: 'Все', color: 'text-white' },
-  { value: 'common', label: 'Обыч.', color: 'text-gray-400' },
-  { value: 'uncommon', label: 'Необыч.', color: 'text-green-400' },
-  { value: 'rare', label: 'Редк.', color: 'text-blue-400' },
-  { value: 'epic', label: 'Эпич.', color: 'text-purple-400' },
-  { value: 'legendary', label: 'Леген.', color: 'text-yellow-400' },
+const RARITY_FILTERS: { value: Rarity | 'all'; labelKey: string; color: string }[] = [
+  { value: 'all', labelKey: 'deck.all', color: 'text-white' },
+  { value: 'common', labelKey: 'deck.common', color: 'text-gray-400' },
+  { value: 'uncommon', labelKey: 'deck.uncommon', color: 'text-green-400' },
+  { value: 'rare', labelKey: 'deck.rare', color: 'text-blue-400' },
+  { value: 'epic', labelKey: 'deck.epic', color: 'text-purple-400' },
+  { value: 'legendary', labelKey: 'deck.legendary', color: 'text-yellow-400' },
 ];
 
 const clanEmojis: Record<string, string> = {
@@ -24,6 +25,7 @@ const clanEmojis: Record<string, string> = {
 };
 
 export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: Props) {
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
   const deckUids = new Set(deck.map((c) => c.uid));
@@ -49,7 +51,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
       <div className="shrink-0 px-3 pt-3 pb-2">
         <div className="flex justify-between items-center text-sm mb-2">
           <div className="text-neon-purple font-bold">
-            📚 Коллекция ({collection.length})
+            📚 {t('deck.title')} ({collection.length})
           </div>
           <div className={`font-bold ${deck.length >= 4 ? 'text-neon-green' : 'text-white/60'}`}>
             ⚔️ {deck.length}/4
@@ -62,7 +64,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск карт..."
+            placeholder={t('deck.search')}
             className="w-full px-3 py-2 pl-8 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder-white/30 focus:outline-none focus:border-neon-blue/50"
           />
           <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,14 +84,14 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
                   : `${f.color} border border-transparent`
                 }`}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
 
         {deck.length < 4 && (
           <div className="text-[10px] text-white/30 text-center mt-1">
-            Выберите {4 - deck.length} карт{deck.length === 3 ? 'у' : deck.length < 3 ? 'ы' : ''}
+            {t('deck.select')} {4 - deck.length} {t('deck.cards')}
           </div>
         )}
       </div>
@@ -97,7 +99,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
       {/* Card grid */}
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
         {filtered.length === 0 ? (
-          <div className="text-center text-xs text-white/30 py-8">Нет карт по фильтру</div>
+          <div className="text-center text-xs text-white/30 py-8">{t('deck.search')}</div>
         ) : (
           <div className="grid grid-cols-2 gap-2 justify-items-center">
             {filtered.map((card) => {
@@ -145,7 +147,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
         )}
         <div className="px-3 pt-1.5 pb-1">
           <button onClick={onBack} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all">
-            Назад
+            {t('deck.back')}
           </button>
         </div>
       </div>
