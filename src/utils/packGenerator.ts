@@ -6,10 +6,6 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/**
- * Roll rarity based on pack weights.
- * Returns a rarity that is both in the weights AND (if specified) in allowedRarities.
- */
 function rollRarity(config: PackConfig): Rarity {
   const entries = Object.entries(config.rarityWeights).filter(([r]) => {
     if (!config.allowedRarities) return true;
@@ -27,26 +23,30 @@ function rollRarity(config: PackConfig): Rarity {
   return entries[entries.length - 1][0];
 }
 
-/**
- * Get a random card of the given rarity.
- */
-function getRandomCardByRarity(rarity: Rarity): Card {
-  const pool = cards.filter((c) => c.rarity === rarity);
+function getRandomCardByRarity(rarity: Rarity, excludeIds: Set<number>): Card | null {
+  const pool = cards.filter((c) => c.rarity === rarity && !excludeIds.has(c.id));
+  if (pool.length === 0) {
+    // Fallback: allow duplicates if pool is empty
+    const allPool = cards.filter((c) => c.rarity === rarity);
+    return allPool.length > 0 ? pickRandom(allPool) : null;
+  }
   return pickRandom(pool);
 }
 
-/**
- * Open a pack and return the cards.
- */
 export function openPack(packId: string): Card[] {
   const config = getPackById(packId);
   if (!config) return [];
 
   const result: Card[] = [];
+  const usedIds = new Set<number>();
+
   for (let i = 0; i < config.cardCount; i++) {
     const rarity = rollRarity(config);
-    const card = getRandomCardByRarity(rarity);
-    result.push({ ...card }); // clone so each gets its own uid later
+    const card = getRandomCardByRarity(rarity, usedIds);
+    if (card) {
+      result.push({ ...card });
+      usedIds.add(card.id);
+    }
   }
   return result;
 }
