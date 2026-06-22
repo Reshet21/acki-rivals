@@ -12,8 +12,9 @@ import MiningPanel from './components/MiningPanel';
 import DeckBuilder from './components/DeckBuilder';
 import UpgradeScreen from './components/UpgradeScreen';
 import PvpLobby from './components/PvpLobby';
+import InfoScreen from './components/InfoScreen';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp';
+type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'info';
 
 function App() {
   const {
@@ -136,11 +137,17 @@ function App() {
             </button>
           </div>
 
-          {/* Reset */}
-          <button onClick={() => { localStorage.clear(); location.reload(); }}
-            className="text-[10px] text-white/20 hover:text-white/40 mt-2">
-            🔄 Сбросить данные
-          </button>
+          {/* Info + Reset row */}
+          <div className="flex gap-2 w-full max-w-xs mt-1">
+            <button onClick={() => setScreen('info')}
+              className="flex-1 py-2 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+              📖 Правила
+            </button>
+            <button onClick={() => { localStorage.clear(); location.reload(); }}
+              className="flex-1 py-2 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+              🔄 Сброс
+            </button>
+          </div>
         </div>
       )}
 
@@ -223,6 +230,12 @@ function App() {
             }}
             onBack={() => setScreen('menu')}
           />
+        </div>
+      )}
+
+      {screen === 'info' && (
+        <div className="flex-1">
+          <InfoScreen onBack={() => setScreen('menu')} />
         </div>
       )}
     </div>
