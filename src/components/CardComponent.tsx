@@ -10,6 +10,12 @@ interface Props {
 const cardIllustrations: Record<number, string> = {
   5: '/cards/cyber-wolf.svg',
   14: '/cards/star-master.svg',
+  8: '/cards/block-keeper.avif',
+  16: '/cards/an-characters.avif',
+  17: '/cards/blocks-mobile.avif',
+  18: '/cards/blocks-mobile.avif',
+  28: '/cards/an-characters.avif',
+  34: '/cards/an-characters.avif',
 };
 
 const clanBg: Record<string, string> = {
