@@ -33,6 +33,36 @@ const rarityLabels: Record<string, string> = {
   legendary: 'Леген.',
 };
 
+const abilityNames: Record<string, string> = {
+  '+1 power': 'Укрепление',
+  '+2 power': 'Боевой дух',
+  '+3 power': 'Трансценденция',
+  '+4 power': 'Абсолютная сила',
+  '+1 damage': 'Усиление удара',
+  '+2 damage': 'Критический удар',
+  '+1 pillz': 'Запас',
+  '+3 pillz': 'Арсенал',
+  '-1 opponent power': 'Ослабление',
+  '-2 opponent power': 'Подавление',
+  '-2 opponent damage': 'Броня',
+  'heal 1': 'Первая помощь',
+  'heal 2': 'Регенерация',
+  'heal 3': 'Божественное исцеление',
+  'poison 1': 'Токсин',
+  'poison 2': 'Яд',
+  'poison 3': 'Чума',
+  'life steal 1': 'Вытягивание жизни',
+  'life steal 2': 'Кража жизни',
+  'life steal 3': 'Вампиризм',
+  'stop opponent ability': 'Глушитель',
+  'double damage': 'Двойной удар',
+};
+
+function getAbilityName(ability: string | undefined): string {
+  if (!ability) return '—';
+  return abilityNames[ability] || ability;
+}
+
 function StarDisplay({ stars, size = 'sm' }: { stars: number; size?: 'sm' | 'xs' }) {
   if (stars <= 0) return null;
   const cls = size === 'sm' ? 'text-[9px]' : 'text-[7px]';
@@ -45,15 +75,13 @@ function StarDisplay({ stars, size = 'sm' }: { stars: number; size?: 'sm' | 'xs'
   );
 }
 
-function getStarBonus(stars: number): { power: number; damage: number } {
-  return { power: stars, damage: stars };
-}
-
 export default function CardComponent({ card, isSelected, onClick, compact }: Props) {
   const stars = card.stars ?? 0;
-  const bonus = getStarBonus(stars);
-  const displayPower = card.power + bonus.power;
-  const displayDamage = card.damage + bonus.damage;
+  const bonus = stars;
+  const displayPower = (card.power ?? 0) + bonus;
+  const displayDamage = (card.damage ?? 0) + bonus;
+  const clan = card.clan || 'Неоновые Наемники';
+  const rarity = card.rarity || 'common';
 
   if (compact) {
     return (
@@ -61,7 +89,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         onClick={onClick}
         className={`
           relative w-full rounded-lg overflow-hidden
-          bg-gradient-to-b ${clanGradients[card.clan]}
+          bg-gradient-to-b ${clanGradients[clan] || 'from-gray-800 to-gray-900'}
           border ${isSelected ? 'border-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.5)]' : 'border-white/10'}
           transition-transform duration-150
           active:scale-95
@@ -70,23 +98,23 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         `}
       >
         <div className="absolute top-1 right-1">
-          <span className={`text-[7px] px-1 py-px rounded-full font-bold ${rarityColors[card.rarity]}`}>
-            {rarityLabels[card.rarity]}
+          <span className={`text-[7px] px-1 py-px rounded-full font-bold ${rarityColors[rarity] || 'bg-gray-500'}`}>
+            {rarityLabels[rarity] || 'Обыч.'}
           </span>
         </div>
 
         <div className="p-1.5 flex flex-col gap-1 flex-1">
           <div className="text-center">
-            <div className="text-sm mb-px">{clanEmojis[card.clan]}</div>
+            <div className="text-sm mb-px">{clanEmojis[clan] || '🃏'}</div>
             <div className="font-bold text-[11px] leading-tight text-white drop-shadow-lg truncate">
-              {card.name}
+              {card.name || '???'}
             </div>
             <StarDisplay stars={stars} size="xs" />
           </div>
 
           <div className="bg-black/30 rounded p-1 text-center">
             <div className="text-[7px] text-white/40 uppercase tracking-wider">Спос.</div>
-            <div className="text-[9px] text-white font-medium leading-tight truncate">{card.ability}</div>
+            <div className="text-[9px] text-white font-medium leading-tight truncate">{getAbilityName(card.ability)}</div>
           </div>
 
           <div className="flex justify-between items-center px-1">
@@ -113,7 +141,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       onClick={onClick}
       className={`
         relative w-40 rounded-xl overflow-hidden
-        bg-gradient-to-b ${clanGradients[card.clan]}
+        bg-gradient-to-b ${clanGradients[clan] || 'from-gray-800 to-gray-900'}
         border-2 ${isSelected ? 'border-yellow-400 shadow-[0_0_16px_rgba(250,204,21,0.5)]' : 'border-white/10'}
         transition-transform duration-150
         hover:scale-105 active:scale-95
@@ -122,24 +150,24 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       `}
     >
       <div className="absolute top-1.5 right-1.5">
-        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${rarityColors[card.rarity]}`}>
-          {rarityLabels[card.rarity]}
+        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${rarityColors[rarity] || 'bg-gray-500'}`}>
+          {rarityLabels[rarity] || 'Обыч.'}
         </span>
       </div>
 
       <div className="p-3 flex flex-col gap-2 flex-1">
         <div className="text-center">
-          <div className="text-lg mb-0.5">{clanEmojis[card.clan]}</div>
+          <div className="text-lg mb-0.5">{clanEmojis[clan] || '🃏'}</div>
           <div className="font-bold text-sm leading-tight text-white drop-shadow-lg">
-            {card.name}
+            {card.name || '???'}
           </div>
           <StarDisplay stars={stars} />
-          <div className="text-[10px] text-white/60 mt-0.5">{card.clan}</div>
+          <div className="text-[10px] text-white/60 mt-0.5">{clan}</div>
         </div>
 
         <div className="bg-black/30 rounded-lg p-2 text-center">
           <div className="text-[10px] text-white/50 uppercase tracking-wider">Способность</div>
-          <div className="text-xs text-white font-medium mt-0.5">{card.ability}</div>
+          <div className="text-xs text-white font-medium mt-0.5">{getAbilityName(card.ability)}</div>
         </div>
 
         <div className="flex justify-between items-center">

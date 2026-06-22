@@ -23,16 +23,32 @@ const defaultState: GameState = {
   battlesLost: 0,
 };
 
+function isValidCard(card: Card): boolean {
+  return (
+    typeof card === 'object' &&
+    card !== null &&
+    typeof card.id === 'number' &&
+    typeof card.name === 'string' &&
+    card.name.length > 0 &&
+    typeof card.power === 'number' &&
+    !isNaN(card.power) &&
+    typeof card.damage === 'number' &&
+    !isNaN(card.damage)
+  );
+}
+
 function ensureUniqueUids(cards: Card[]): Card[] {
   const seen = new Set<string>();
-  return cards.map((card) => {
-    let uid = card.uid;
-    if (!uid || seen.has(uid)) {
-      uid = crypto.randomUUID();
-    }
-    seen.add(uid);
-    return { ...card, uid, stars: card.stars ?? 0 };
-  });
+  return cards
+    .filter(isValidCard)
+    .map((card) => {
+      let uid = card.uid;
+      if (!uid || seen.has(uid)) {
+        uid = crypto.randomUUID();
+      }
+      seen.add(uid);
+      return { ...card, uid, stars: card.stars ?? 0 };
+    });
 }
 
 function migrateData(data: GameState): GameState {
