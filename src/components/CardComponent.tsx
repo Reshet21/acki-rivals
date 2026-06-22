@@ -7,6 +7,11 @@ interface Props {
   compact?: boolean;
 }
 
+const cardIllustrations: Record<number, string> = {
+  5: '/cards/cyber-wolf.svg',
+  14: '/cards/star-master.svg',
+};
+
 const clanBg: Record<string, string> = {
   'Неоновые Наемники': 'card-bg-neon',
   'Цифровые Монахи': 'card-bg-monk',
@@ -109,9 +114,13 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         </div>
 
         <div className="p-1.5 flex flex-col gap-0.5 flex-1 relative z-10">
-          {/* Emoji + Name */}
+          {/* Illustration or Emoji */}
           <div className="text-center">
-            <div className="text-base mb-px animate-float">{clanEmojis[clan] || '🃏'}</div>
+            {cardIllustrations[card.id] ? (
+              <img src={cardIllustrations[card.id]} alt={card.name} className="w-10 h-10 mx-auto object-contain animate-float drop-shadow-lg" />
+            ) : (
+              <div className="text-base mb-px animate-float">{clanEmojis[clan] || '🃏'}</div>
+            )}
             <div className="font-bold text-[11px] leading-tight text-white drop-shadow-md truncate px-0.5">
               {card.name || '???'}
             </div>
@@ -177,9 +186,13 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       </div>
 
       <div className="p-3 flex flex-col gap-1.5 flex-1 relative z-10">
-        {/* Emoji + Name */}
+        {/* Illustration or Emoji */}
         <div className="text-center">
-          <div className="text-2xl mb-0.5 animate-float">{clanEmojis[clan] || '🃏'}</div>
+          {cardIllustrations[card.id] ? (
+            <img src={cardIllustrations[card.id]} alt={card.name} className="w-16 h-16 mx-auto object-contain animate-float drop-shadow-lg" />
+          ) : (
+            <div className="text-2xl mb-0.5 animate-float">{clanEmojis[clan] || '🃏'}</div>
+          )}
           <div className="font-bold text-sm leading-tight text-white drop-shadow-lg">
             {card.name || '???'}
           </div>
