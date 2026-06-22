@@ -168,7 +168,14 @@ function App() {
               hover:opacity-90 active:scale-95
               transition-all duration-150"
           >
-            ⛏️ Майнинг
+              ⛏️ Майнинг
+          </button>
+
+          <button
+            onClick={() => { localStorage.clear(); location.reload(); }}
+            className="text-[10px] text-white/20 hover:text-white/40 transition-colors mt-2"
+          >
+            🔄 Сбросить данные
           </button>
         </div>
       )}
