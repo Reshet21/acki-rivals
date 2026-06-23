@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0a0020"/><stop offset="100%" stop-color="#1a0040"/></linearGradient>
+    <linearGradient id="bl1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#c0c0c0"/><stop offset="100%" stop-color="#606060"/></linearGradient>
+    <filter id="g1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg1)"/>
+  <g opacity="0.1" stroke="#00d4ff" stroke-width="0.5" fill="none"><path d="M30,180 L70,100 L130,100"/><path d="M170,180 L130,100"/></g>
+  <!-- Robot body -->
+  <g transform="translate(100,100)" filter="url(#g1)">
+    <rect x="-18" y="-30" width="36" height="45" rx="4" fill="#1a1a3a" stroke="#00d4ff" stroke-width="1.5"/>
+    <circle cx="-6" cy="-18" r="4" fill="#ff3366"/><circle cx="6" cy="-18" r="4" fill="#00d4ff"/>
+    <rect x="-3" y="-10" width="6" height="3" rx="1" fill="#333"/>
+    <rect x="-22" y="-5" width="6" height="12" rx="2" fill="#2a2a4a" stroke="#00d4ff" stroke-width="0.5"/>
+    <rect x="16" y="-5" width="6" height="12" rx="2" fill="#2a2a4a" stroke="#00d4ff" stroke-width="0.5"/>
+    <rect x="-12" y="15" width="8" height="20" rx="2" fill="#1a1a3a" stroke="#666" stroke-width="0.5"/>
+    <rect x="4" y="15" width="8" height="20" rx="2" fill="#1a1a3a" stroke="#666" stroke-width="0.5"/>
+    <circle cx="0" cy="-5" r="3" fill="#00d4ff" opacity="0.8" filter="url(#g1)"/>
+  </g>
+  <rect x="40" y="185" width="120" height="12" rx="3" fill="rgba(0,0,0,0.6)"/>
+  <text x="100" y="194" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="7" fill="#00d4ff">АКИ-ДРОН</text>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#001a0a"/><stop offset="100%" stop-color="#003315"/></linearGradient>
+    <filter id="g2"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg2)"/>
+  <g opacity="0.08" stroke="#10b981" stroke-width="0.5" fill="none"><circle cx="100" cy="100" r="50"/><circle cx="100" cy="100" r="70"/></g>
+  <!-- Monk figure -->
+  <g transform="translate(100,95)" filter="url(#g2)">
+    <ellipse cx="0" cy="25" rx="22" ry="18" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+    <circle cx="0" cy="-10" r="14" fill="#d4a574" stroke="#b8860b" stroke-width="0.8"/>
+    <path d="M-5,-13 Q-3,-15 -1,-13" stroke="#1a1a1a" stroke-width="1.2" fill="none"/>
+    <path d="M1,-13 Q3,-15 5,-13" stroke="#1a1a1a" stroke-width="1.2" fill="none"/>
+    <ellipse cx="0" cy="-22" rx="16" ry="4" fill="none" stroke="#10b981" stroke-width="0.8" opacity="0.5" filter="url(#g2)"/>
+    <ellipse cx="-15" cy="15" rx="6" ry="5" fill="#d4a574"/>
+    <ellipse cx="15" cy="15" rx="6" ry="5" fill="#d4a574"/>
+    <circle cx="-16" cy="13" r="4" fill="#10b981" opacity="0.5" filter="url(#g2)"/>
+    <circle cx="16" cy="13" r="4" fill="#10b981" opacity="0.5" filter="url(#g2)"/>
+  </g>
+  <rect x="30" y="185" width="140" height="12" rx="3" fill="rgba(0,0,0,0.6)"/>
+  <text x="100" y="194" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="7" fill="#10b981">ЗВЁЗДНЫЙ МАСТЕР</text>
+</svg>

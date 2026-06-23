@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg8" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2a0a00"/><stop offset="100%" stop-color="#4a1500"/></linearGradient>
+    <linearGradient id="fire" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ff3300"/><stop offset="50%" stop-color="#ff6600"/><stop offset="100%" stop-color="#ffcc00"/></linearGradient>
+    <filter id="g8"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg8)"/>
+  <!-- Berserker -->
+  <g transform="translate(100,95)" filter="url(#g2)">
+    <rect x="-20" y="-35" width="40" height="50" rx="5" fill="#2a1a0a" stroke="#ff6600" stroke-width="1.5"/>
+    <circle cx="0" cy="-20" r="16" fill="#3a2a1a" stroke="#ff6600" stroke-width="1"/>
+    <ellipse cx="-6" cy="-22" rx="4" ry="3" fill="#ff3300"/><ellipse cx="6" cy="-22" rx="4" ry="3" fill="#ff3300"/>
+    <circle cx="-6" cy="-22" r="1.5" fill="#fff"/><circle cx="6" cy="-22" r="1.5" fill="#fff"/>
+    <polygon points="-12,-35 -6,-22 -18,-28" fill="#1a0a00" stroke="#ff6600" stroke-width="0.8"/>
+    <polygon points="12,-35 6,-22 18,-28" fill="#1a0a00" stroke="#ff6600" stroke-width="0.8"/>
+    <path d="M-25,-10 L-35,-25 M-22,-5 L-32,-22" stroke="#ff3300" stroke-width="2" stroke-linecap="round" filter="url(#g8)"/>
+    <path d="M25,-10 L35,-25 M22,-5 L32,-22" stroke="#ff3300" stroke-width="2" stroke-linecap="round" filter="url(#g8)"/>
+    <circle cx="-28" cy="-18" r="5" fill="#ff6600" opacity="0.4" filter="url(#g8)"/>
+    <circle cx="28" cy="-18" r="5" fill="#ff6600" opacity="0.4" filter="url(#g8)"/>
+  </g>
+  <rect x="25" y="185" width="150" height="12" rx="3" fill="rgba(0,0,0,0.6)"/>
+  <text x="100" y="194" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="7" fill="#ff6600">СТАЛЬНОЙ БЕРСЕРК</text>
+</svg>

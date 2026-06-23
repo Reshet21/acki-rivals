@@ -45,40 +45,40 @@ const abilityNames: Record<string, string> = {
 };
 
 const cardArt: Record<number, string> = {
-  1: '/cards/block-keeper.avif',
-  2: '/cards/an-characters.avif',
-  3: '/cards/blocks-mobile.avif',
-  4: '/cards/block-keeper.avif',
-  5: '/cards/cyber-wolf.svg',
-  6: '/cards/an-characters.avif',
-  7: '/cards/blocks-mobile.avif',
-  8: '/cards/block-keeper.avif',
-  9: '/cards/an-characters.avif',
-  10: '/cards/an-characters.avif',
-  11: '/cards/blocks-mobile.avif',
-  12: '/cards/blocks-mobile.avif',
-  13: '/cards/an-characters.avif',
-  14: '/cards/star-master.svg',
-  15: '/cards/blocks-mobile.avif',
-  16: '/cards/an-characters.avif',
-  17: '/cards/block-keeper.avif',
-  18: '/cards/blocks-mobile.avif',
-  19: '/cards/an-characters.avif',
-  20: '/cards/blocks-mobile.avif',
-  21: '/cards/an-characters.avif',
-  22: '/cards/blocks-mobile.avif',
-  23: '/cards/block-keeper.avif',
-  24: '/cards/an-characters.avif',
-  25: '/cards/blocks-mobile.avif',
-  26: '/cards/an-characters.avif',
-  27: '/cards/block-keeper.avif',
-  28: '/cards/an-characters.avif',
-  29: '/cards/an-characters.avif',
-  30: '/cards/blocks-mobile.avif',
-  31: '/cards/an-characters.avif',
-  32: '/cards/blocks-mobile.avif',
-  33: '/cards/block-keeper.avif',
-  34: '/cards/an-characters.avif',
+  1: '/cards/card-01.svg',   // Ржавый Дрон — робот
+  2: '/cards/card-04.svg',   // Патрульный — снайпер
+  3: '/cards/card-04.svg',   // Взломщик — снайпер
+  4: '/cards/card-04.svg',   // Неоновый Снайпер
+  5: '/cards/card-05.svg',   // Кибер-Волк — волк
+  6: '/cards/card-04.svg',   // Рыцарь — снайпер
+  7: '/cards/card-07.svg',   // Тень — тень
+  8: '/cards/card-08.svg',   // Берсерк — берсерк
+  9: '/cards/card-14.svg',   // Светлячок — монах
+  10: '/cards/card-14.svg',  // Медитативный — монах
+  11: '/cards/card-01.svg',  // Послушник — робот
+  12: '/cards/card-07.svg',  // Тотем — тень
+  13: '/cards/card-14.svg',  // Дзен-Воин — монах
+  14: '/cards/card-14.svg',  // Мастер — монах
+  15: '/cards/card-07.svg',  // Страж — тень
+  16: '/cards/card-16.svg',  // Император — император
+  17: '/cards/card-08.svg',  // Неоновый Император — берсерк
+  18: '/cards/card-16.svg',  // Космический Страж — император
+  19: '/cards/card-07.svg',  // Фантом — тень
+  20: '/cards/card-05.svg',  // Убийца — волк
+  21: '/cards/card-14.svg',  // Дзен-Воин 2 — монах
+  22: '/cards/card-01.svg',  // Страж Храма — робот
+  23: '/cards/card-01.svg',  // Курьер — робот
+  24: '/cards/card-05.svg',  // Рейдер — волк
+  25: '/cards/card-04.svg',  // Диверсант — снайпер
+  26: '/cards/card-04.svg',  // Убийца 2 — снайпер
+  27: '/cards/card-08.svg',  // Паладин — берсерк
+  28: '/cards/card-16.svg',  // Неоновый Бог — император
+  29: '/cards/card-14.svg',  // Монах-Страж — монах
+  30: '/cards/card-14.svg',  // Целитель — монах
+  31: '/cards/card-07.svg',  // Отравитель — тень
+  32: '/cards/card-07.svg',  // Дух Предков — тень
+  33: '/cards/card-08.svg',  // Архонт — берсерк
+  34: '/cards/card-16.svg',  // Будда Машин — император
 };
 
 const clanBg: Record<string, string> = {
