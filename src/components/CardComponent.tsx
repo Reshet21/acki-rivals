@@ -7,55 +7,30 @@ interface Props {
   compact?: boolean;
 }
 
-// Character illustrations mapped by card ID
-const cardArt: Record<number, string> = {
-  1: '/cards/block-keeper.avif',  // Ржавый Дрон
-  2: '/cards/an-characters.avif', // Патрульный
-  3: '/cards/blocks-mobile.avif', // Взломщик
-  4: '/cards/block-keeper.avif',  // Снайпер
-  5: '/cards/cyber-wolf.svg',     // Кибер-Волк
-  6: '/cards/an-characters.avif', // Рыцарь
-  7: '/cards/blocks-mobile.avif', // Тень
-  8: '/cards/block-keeper.avif',  // Берсерк
-  9: '/cards/an-characters.avif', // Светлячок
-  10: '/cards/an-characters.avif', // Медитативный
-  11: '/cards/blocks-mobile.avif', // Послушник
-  12: '/cards/blocks-mobile.avif', // Тотем
-  13: '/cards/an-characters.avif', // Дзен-Воин
-  14: '/cards/star-master.svg',   // Мастер
-  15: '/cards/blocks-mobile.avif', // Страж
-  16: '/cards/an-characters.avif', // Император
-  17: '/cards/block-keeper.avif',  // Неоновый Император
-  18: '/cards/blocks-mobile.avif', // Космический Страж
-  19: '/cards/an-characters.avif', // Фантом
-  20: '/cards/blocks-mobile.avif', // Убийца
-  21: '/cards/an-characters.avif', // Дзен-Воин 2
-  22: '/cards/blocks-mobile.avif', // Страж Храма
-  23: '/cards/block-keeper.avif',  // Курьер
-  24: '/cards/an-characters.avif', // Рейдер
-  25: '/cards/blocks-mobile.avif', // Диверсант
-  26: '/cards/an-characters.avif', // Убийца 2
-  27: '/cards/block-keeper.avif',  // Паладин
-  28: '/cards/an-characters.avif', // Неоновый Бог
-  29: '/cards/an-characters.avif', // Монах-Страж
-  30: '/cards/blocks-mobile.avif', // Целитель
-  31: '/cards/an-characters.avif', // Отравитель
-  32: '/cards/blocks-mobile.avif', // Дух Предков
-  33: '/cards/block-keeper.avif',  // Архонт
-  34: '/cards/an-characters.avif', // Будда Машин
-};
-
-const clanBg: Record<string, string> = {
-  'Неоновые Наемники': 'card-bg-neon',
-  'Цифровые Монахи': 'card-bg-monk',
-};
-
-const rarityConfig: Record<string, { badge: string; border: string; glow: string; shimmer: string; accent: string }> = {
-  common: { badge: 'bg-gray-600/80 text-gray-200', border: 'border-gray-500/30', glow: '', shimmer: '', accent: 'from-gray-600/20 to-transparent' },
-  uncommon: { badge: 'bg-green-600/80 text-green-100', border: 'border-green-500/40', glow: 'card-glow-uncommon', shimmer: '', accent: 'from-green-500/20 to-transparent' },
-  rare: { badge: 'bg-blue-600/80 text-blue-100', border: 'border-blue-500/50', glow: 'card-glow-rare', shimmer: '', accent: 'from-blue-500/20 to-transparent' },
-  epic: { badge: 'bg-purple-600/80 text-purple-100', border: 'border-purple-500/50', glow: 'card-glow-epic', shimmer: '', accent: 'from-purple-500/25 to-transparent' },
-  legendary: { badge: 'bg-yellow-500/90 text-yellow-900', border: 'border-yellow-400/60', glow: 'card-glow-legendary', shimmer: 'animate-shimmer', accent: 'from-yellow-500/20 to-transparent' },
+// Ability visual info: icon + short description
+const abilityInfo: Record<string, { icon: string; desc: string; color: string }> = {
+  '+1 power':          { icon: '⚔️', desc: '+1 к силе', color: 'text-blue-400' },
+  '+2 power':          { icon: '⚔️', desc: '+2 к силе', color: 'text-blue-300' },
+  '+3 power':          { icon: '⚔️', desc: '+3 к силе', color: 'text-blue-200' },
+  '+4 power':          { icon: '⚔️', desc: '+4 к силе', color: 'text-cyan-300' },
+  '+1 damage':         { icon: '💥', desc: '+1 к урону', color: 'text-red-400' },
+  '+2 damage':         { icon: '💥', desc: '+2 к урону', color: 'text-red-300' },
+  '+1 pillz':          { icon: '💊', desc: '+1 пиллз', color: 'text-green-400' },
+  '+3 pillz':          { icon: '💊', desc: '+3 пиллз', color: 'text-green-300' },
+  '-1 opponent power': { icon: '🛡️', desc: '-1 врагу к силе', color: 'text-orange-400' },
+  '-2 opponent power': { icon: '🛡️', desc: '-2 врагу к силе', color: 'text-orange-300' },
+  '-2 opponent damage':{ icon: '🛡️', desc: '-2 к урону врага', color: 'text-orange-400' },
+  'heal 1':           { icon: '💚', desc: '+1 HP при проигрыше', color: 'text-green-400' },
+  'heal 2':           { icon: '💚', desc: '+2 HP при проигрыше', color: 'text-green-300' },
+  'heal 3':           { icon: '💚', desc: '+3 HP при проигрыше', color: 'text-green-200' },
+  'poison 1':         { icon: '☠️', desc: '+1 урон врагу', color: 'text-yellow-400' },
+  'poison 2':         { icon: '☠️', desc: '+2 урон врагу', color: 'text-yellow-300' },
+  'poison 3':         { icon: '☠️', desc: '+3 урон врагу', color: 'text-yellow-200' },
+  'life steal 1':     { icon: '🩸', desc: '+1 HP при победе', color: 'text-purple-400' },
+  'life steal 2':     { icon: '🩸', desc: '+2 HP при победе', color: 'text-purple-300' },
+  'life steal 3':     { icon: '🩸', desc: '+3 HP при победе', color: 'text-purple-200' },
+  'stop opponent ability': { icon: '🚫', desc: 'Отменяет способность', color: 'text-red-400' },
+  'double damage':    { icon: '⚡', desc: 'Двойной урон', color: 'text-yellow-300' },
 };
 
 const abilityNames: Record<string, string> = {
@@ -69,10 +44,55 @@ const abilityNames: Record<string, string> = {
   'stop opponent ability': 'Глушитель', 'double damage': 'Двойной удар',
 };
 
-function getAbilityName(ability: string | undefined): string {
-  if (!ability) return '—';
-  return abilityNames[ability] || ability;
-}
+const cardArt: Record<number, string> = {
+  1: '/cards/block-keeper.avif',
+  2: '/cards/an-characters.avif',
+  3: '/cards/blocks-mobile.avif',
+  4: '/cards/block-keeper.avif',
+  5: '/cards/cyber-wolf.svg',
+  6: '/cards/an-characters.avif',
+  7: '/cards/blocks-mobile.avif',
+  8: '/cards/block-keeper.avif',
+  9: '/cards/an-characters.avif',
+  10: '/cards/an-characters.avif',
+  11: '/cards/blocks-mobile.avif',
+  12: '/cards/blocks-mobile.avif',
+  13: '/cards/an-characters.avif',
+  14: '/cards/star-master.svg',
+  15: '/cards/blocks-mobile.avif',
+  16: '/cards/an-characters.avif',
+  17: '/cards/block-keeper.avif',
+  18: '/cards/blocks-mobile.avif',
+  19: '/cards/an-characters.avif',
+  20: '/cards/blocks-mobile.avif',
+  21: '/cards/an-characters.avif',
+  22: '/cards/blocks-mobile.avif',
+  23: '/cards/block-keeper.avif',
+  24: '/cards/an-characters.avif',
+  25: '/cards/blocks-mobile.avif',
+  26: '/cards/an-characters.avif',
+  27: '/cards/block-keeper.avif',
+  28: '/cards/an-characters.avif',
+  29: '/cards/an-characters.avif',
+  30: '/cards/blocks-mobile.avif',
+  31: '/cards/an-characters.avif',
+  32: '/cards/blocks-mobile.avif',
+  33: '/cards/block-keeper.avif',
+  34: '/cards/an-characters.avif',
+};
+
+const clanBg: Record<string, string> = {
+  'Неоновые Наемники': 'card-bg-neon',
+  'Цифровые Монахи': 'card-bg-monk',
+};
+
+const rarityConfig: Record<string, { badge: string; border: string; glow: string; shimmer: string }> = {
+  common: { badge: 'bg-gray-600/80 text-gray-200', border: 'border-gray-500/30', glow: '', shimmer: '' },
+  uncommon: { badge: 'bg-green-600/80 text-green-100', border: 'border-green-500/40', glow: 'card-glow-uncommon', shimmer: '' },
+  rare: { badge: 'bg-blue-600/80 text-blue-100', border: 'border-blue-500/50', glow: 'card-glow-rare', shimmer: '' },
+  epic: { badge: 'bg-purple-600/80 text-purple-100', border: 'border-purple-500/50', glow: 'card-glow-epic', shimmer: '' },
+  legendary: { badge: 'bg-yellow-500/90 text-yellow-900', border: 'border-yellow-400/60', glow: 'card-glow-legendary', shimmer: 'animate-shimmer' },
+};
 
 function StarDisplay({ stars }: { stars: number }) {
   if (stars <= 0) return null;
@@ -94,6 +114,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
   const config = rarityConfig[rarity] || rarityConfig.common;
   const bgClass = clanBg[clan] || '';
   const artSrc = cardArt[card.id];
+  const ability = abilityInfo[card.ability] || { icon: '❓', desc: card.ability || '—', color: 'text-white/50' };
 
   if (compact) {
     return (
@@ -110,15 +131,14 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       >
         {rarity === 'legendary' && <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-xl" />}
 
-        {/* Character art area */}
+        {/* Character art */}
         <div className="relative w-full h-16 overflow-hidden bg-black/30">
           {artSrc ? (
             <img src={artSrc} alt="" className="w-full h-full object-cover opacity-80" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl opacity-30">🃏</div>
+            <div className="w-full h-full flex items-center justify-center text-3xl opacity-20">🃏</div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
-          {/* Rarity badge */}
           <div className="absolute top-1 right-1 z-10">
             <span className={`text-[6px] px-1.5 py-0.5 rounded-full font-bold ${config.badge}`}>
               {rarity === 'common' ? 'ОБЫЧ' : rarity === 'uncommon' ? 'НЕОБЫЧ' : rarity === 'rare' ? 'РЕДК' : rarity === 'epic' ? 'ЭПИЧ' : 'ЛЕГЕНДА'}
@@ -134,9 +154,14 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
             <StarDisplay stars={stars} />
           </div>
 
-          <div className="bg-black/40 rounded-md px-1.5 py-0.5 text-center backdrop-blur-sm border border-white/5">
-            <div className="text-[8px] text-white/50 font-medium leading-tight truncate">
-              {getAbilityName(card.ability)}
+          {/* Ability with icon + description */}
+          <div className="bg-black/40 rounded-md px-1.5 py-0.5 flex items-center gap-1 backdrop-blur-sm border border-white/5">
+            <span className="text-[9px]">{ability.icon}</span>
+            <div className="flex-1 min-w-0">
+              <div className={`text-[8px] font-bold leading-tight truncate ${ability.color}`}>
+                {abilityNames[card.ability] || card.ability}
+              </div>
+              <div className="text-[7px] text-white/40 leading-tight truncate">{ability.desc}</div>
             </div>
           </div>
 
@@ -175,7 +200,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
     >
       {rarity === 'legendary' && <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-2xl" />}
 
-      {/* Character art area */}
+      {/* Character art */}
       <div className="relative w-full h-24 overflow-hidden bg-black/30">
         {artSrc ? (
           <img src={artSrc} alt="" className="w-full h-full object-cover opacity-80" />
@@ -183,7 +208,6 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
           <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🃏</div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
-        {/* Rarity badge */}
         <div className="absolute top-2 right-2 z-10">
           <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold ${config.badge}`}>
             {rarity === 'common' ? 'ОБЫЧ' : rarity === 'uncommon' ? 'НЕОБЫЧ' : rarity === 'rare' ? 'РЕДК' : rarity === 'epic' ? 'ЭПИЧ' : 'ЛЕГЕНДА'}
@@ -200,9 +224,15 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
           <div className="text-[9px] text-white/50 mt-0.5">{clan}</div>
         </div>
 
-        <div className="bg-black/30 rounded-lg p-1.5 text-center backdrop-blur-sm border border-white/5">
-          <div className="text-[8px] text-white/40 uppercase tracking-wider mb-0.5">Способность</div>
-          <div className="text-[10px] text-white font-semibold">{getAbilityName(card.ability)}</div>
+        {/* Ability with icon + description */}
+        <div className="bg-black/30 rounded-lg p-2 text-center backdrop-blur-sm border border-white/5">
+          <div className="flex items-center justify-center gap-1 mb-0.5">
+            <span className="text-sm">{ability.icon}</span>
+            <span className={`text-[10px] font-bold ${ability.color}`}>
+              {abilityNames[card.ability] || card.ability}
+            </span>
+          </div>
+          <div className="text-[9px] text-white/50">{ability.desc}</div>
         </div>
 
         <div className="flex justify-between items-center mt-auto">

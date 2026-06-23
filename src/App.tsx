@@ -15,8 +15,9 @@ import UpgradeScreen from './components/UpgradeScreen';
 import PvpLobby from './components/PvpLobby';
 import InfoScreen from './components/InfoScreen';
 import LanguageSelector from './components/LanguageSelector';
+import Leaderboard from './components/Leaderboard';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'info' | 'lang';
+type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'info' | 'lang' | 'leaderboard';
 
 function AppInner() {
   const { t } = useI18n();
@@ -147,19 +148,23 @@ function AppInner() {
             </button>
           </div>
 
-          {/* Info + Lang + Reset row */}
-          <div className="flex gap-2 w-full max-w-xs mt-1">
+          {/* Info + Lang + Reset + Leaderboard row */}
+          <div className="grid grid-cols-4 gap-1.5 w-full max-w-xs mt-1">
             <button onClick={() => setScreen('info')}
-              className="flex-1 py-2 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
-              📖 {t('menu.rules')}
+              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+              📖<span>{t('menu.rules')}</span>
             </button>
             <button onClick={() => setScreen('lang')}
-              className="flex-1 py-2 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
-              🌐 Язык
+              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+              🌐<span>Язык</span>
+            </button>
+            <button onClick={() => setScreen('leaderboard')}
+              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+              🏆<span>Топ</span>
             </button>
             <button onClick={() => { localStorage.clear(); location.reload(); }}
-              className="flex-1 py-2 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
-              🔄 {t('menu.reset')}
+              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+              🔄<span>{t('menu.reset')}</span>
             </button>
           </div>
         </div>
@@ -256,6 +261,15 @@ function AppInner() {
       {screen === 'lang' && (
         <div className="flex-1">
           <LanguageSelector onBack={() => setScreen('menu')} />
+        </div>
+      )}
+
+      {screen === 'leaderboard' && (
+        <div className="flex-1">
+          <Leaderboard
+            walletAddress={walletConnection?.walletName || null}
+            onBack={() => setScreen('menu')}
+          />
         </div>
       )}
     </div>
