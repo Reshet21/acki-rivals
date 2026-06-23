@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" width="200" height="280">
+  <defs>
+    <linearGradient id="bg8" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0A0A1A"/><stop offset="50%" stop-color="#12122A"/><stop offset="100%" stop-color="#0D0D22"/></linearGradient>
+    <linearGradient id="glow8" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FF6B9D"/><stop offset="100%" stop-color="#7B61FF"/></linearGradient>
+    <filter id="neon"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="neon-strong"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="200" height="280" rx="16" fill="url(#bg8)"/>
+  <rect x="1" y="1" width="198" height="278" rx="15" fill="none" stroke="url(#glow8)" stroke-width="1.5" opacity="0.4"/>
+  <g stroke="#FF6B9D" stroke-width="0.3" opacity="0.1" fill="none">
+    <path d="M20,40 L40,40 L60,20 L100,20"/><path d="M180,40 L160,40 L140,20 L100,20"/>
+  </g>
+  <!-- Berserker -->
+  <g transform="translate(100,125)">
+    <rect x="-22" y="-40" width="44" height="60" rx="6" fill="#1A1A3A" stroke="#FF6B9D" stroke-width="1.5"/>
+    <circle cx="0" cy="-25" r="16" fill="#12122A" stroke="#FF6B9D" stroke-width="1"/>
+    <circle cx="-6" cy="-27" r="5" fill="#FF3366" filter="url(#neon)"/>
+    <circle cx="6" cy="-27" r="5" fill="#FF3366" filter="url(#neon)"/>
+    <circle cx="-6" cy="-27" r="2" fill="#fff"/><circle cx="6" cy="-27" r="2" fill="#fff"/>
+    <polygon points="-12,-40 -6,-28 -18,-32" fill="#0A0A1A" stroke="#FF6B9D" stroke-width="0.8"/>
+    <polygon points="12,-40 6,-28 18,-32" fill="#0A0A1A" stroke="#FF6B9D" stroke-width="0.8"/>
+    <path d="M-28,-15 L-38,-30 M-25,-10 L-35,-25" stroke="#FF3366" stroke-width="2" stroke-linecap="round" filter="url(#neon)"/>
+    <path d="M28,-15 L38,-30 M25,-10 L35,-25" stroke="#FF3366" stroke-width="2" stroke-linecap="round" filter="url(#neon)"/>
+    <circle cx="-32" cy="-22" r="6" fill="#FF6B9D" opacity="0.3" filter="url(#neon-strong)"/>
+    <circle cx="32" cy="-22" r="6" fill="#FF6B9D" opacity="0.3" filter="url(#neon-strong)"/>
+  </g>
+  <rect x="5" y="5" width="35" height="16" rx="4" fill="#FF6B9D" opacity="0.8"/>
+  <text x="22" y="16" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="8" fill="#fff">AN</text>
+  <rect x="10" y="200" width="180" height="70" rx="8" fill="rgba(0,0,0,0.5)"/>
+  <text x="100" y="218" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="10" fill="#EEEEFF">СТАЛЬНОЙ БЕРСЕРК</text>
+  <text x="100" y="232" text-anchor="middle" font-family="monospace" font-size="8" fill="#A0A0C8">Неоновые Наемники</text>
+  <rect x="20" y="242" width="160" height="1" fill="#FF6B9D" opacity="0.2"/>
+  <text x="30" y="258" font-family="monospace" font-size="8" fill="#7B61FF">⚡ 8</text>
+  <text x="90" y="258" font-family="monospace" font-size="8" fill="#FF6B9D">💥 5</text>
+  <text x="140" y="258" font-family="monospace" font-size="7" fill="#00E5FF">stop ability</text>
+  <circle cx="185" cy="15" r="4" fill="#FFB800"/>
+</svg>

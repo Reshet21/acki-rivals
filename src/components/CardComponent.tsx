@@ -44,41 +44,42 @@ const abilityNames: Record<string, string> = {
   'stop opponent ability': 'Глушитель', 'double damage': 'Двойной удар',
 };
 
+// AN-style character illustrations
 const cardArt: Record<number, string> = {
-  1: '/cards/card-01.svg',   // Ржавый Дрон — робот
-  2: '/cards/card-04.svg',   // Патрульный — снайпер
-  3: '/cards/card-04.svg',   // Взломщик — снайпер
-  4: '/cards/card-04.svg',   // Неоновый Снайпер
-  5: '/cards/card-05.svg',   // Кибер-Волк — волк
-  6: '/cards/card-04.svg',   // Рыцарь — снайпер
-  7: '/cards/card-07.svg',   // Тень — тень
-  8: '/cards/card-08.svg',   // Берсерк — берсерк
-  9: '/cards/card-14.svg',   // Светлячок — монах
-  10: '/cards/card-14.svg',  // Медитативный — монах
-  11: '/cards/card-01.svg',  // Послушник — робот
-  12: '/cards/card-07.svg',  // Тотем — тень
-  13: '/cards/card-14.svg',  // Дзен-Воин — монах
-  14: '/cards/card-14.svg',  // Мастер — монах
-  15: '/cards/card-07.svg',  // Страж — тень
-  16: '/cards/card-16.svg',  // Император — император
-  17: '/cards/card-08.svg',  // Неоновый Император — берсерк
-  18: '/cards/card-16.svg',  // Космический Страж — император
-  19: '/cards/card-07.svg',  // Фантом — тень
-  20: '/cards/card-05.svg',  // Убийца — волк
-  21: '/cards/card-14.svg',  // Дзен-Воин 2 — монах
-  22: '/cards/card-01.svg',  // Страж Храма — робот
-  23: '/cards/card-01.svg',  // Курьер — робот
-  24: '/cards/card-05.svg',  // Рейдер — волк
-  25: '/cards/card-04.svg',  // Диверсант — снайпер
-  26: '/cards/card-04.svg',  // Убийца 2 — снайпер
-  27: '/cards/card-08.svg',  // Паладин — берсерк
-  28: '/cards/card-16.svg',  // Неоновый Бог — император
-  29: '/cards/card-14.svg',  // Монах-Страж — монах
-  30: '/cards/card-14.svg',  // Целитель — монах
-  31: '/cards/card-07.svg',  // Отравитель — тень
-  32: '/cards/card-07.svg',  // Дух Предков — тень
-  33: '/cards/card-08.svg',  // Архонт — берсерк
-  34: '/cards/card-16.svg',  // Будда Машин — император
+  1: '/cards/card-01-AN.svg',   // Ржавый Дрон — робот AN
+  2: '/cards/card-04.svg',      // Патрульный — снайпер
+  3: '/cards/card-04.svg',      // Взломщик — снайпер
+  4: '/cards/card-04.svg',      // Неоновый Снайпер
+  5: '/cards/card-05-AN.svg',   // Кибер-Волк — волк AN
+  6: '/cards/card-04.svg',      // Рыцарь — снайпер
+  7: '/cards/card-07.svg',      // Тень — тень
+  8: '/cards/card-08-AN.svg',   // Берсерк — берсерк AN
+  9: '/cards/card-14.svg',      // Светлячок — монах
+  10: '/cards/card-14.svg',     // Медитативный — монах
+  11: '/cards/card-01.svg',     // Послушник — робот
+  12: '/cards/card-07.svg',     // Тотем — тень
+  13: '/cards/card-14.svg',     // Дзен-Воин — монах
+  14: '/cards/card-14.svg',     // Мастер — монах
+  15: '/cards/card-07.svg',     // Страж — тень
+  16: '/cards/card-16-AN.svg',  // Император — император AN
+  17: '/cards/card-08.svg',     // Неоновый Император — берсерк
+  18: '/cards/card-16.svg',     // Космический Страж — император
+  19: '/cards/card-07.svg',     // Фантом — тень
+  20: '/cards/card-05.svg',     // Убийца — волк
+  21: '/cards/card-14.svg',     // Дзен-Воин 2 — монах
+  22: '/cards/card-01.svg',     // Страж Храма — робот
+  23: '/cards/card-01.svg',     // Курьер — робот
+  24: '/cards/card-05.svg',     // Рейдер — волк
+  25: '/cards/card-04.svg',     // Диверсант — снайпер
+  26: '/cards/card-04.svg',     // Убийца 2 — снайпер
+  27: '/cards/card-08.svg',     // Паладин — берсерк
+  28: '/cards/card-16.svg',     // Неоновый Бог — император
+  29: '/cards/card-14.svg',     // Монах-Страж — монах
+  30: '/cards/card-14.svg',     // Целитель — монах
+  31: '/cards/card-07.svg',     // Отравитель — тень
+  32: '/cards/card-07.svg',     // Дух Предков — тень
+  33: '/cards/card-08.svg',     // Архонт — берсерк
+  34: '/cards/card-16.svg',     // Будда Машин — император
 };
 
 const clanBg: Record<string, string> = {

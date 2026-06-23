@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" width="200" height="280">
+  <defs>
+    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0A0A1A"/><stop offset="50%" stop-color="#12122A"/><stop offset="100%" stop-color="#0D0D22"/></linearGradient>
+    <linearGradient id="glow5" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7B61FF"/><stop offset="100%" stop-color="#00E5FF"/></linearGradient>
+    <filter id="neon"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="neon-strong"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="200" height="280" rx="16" fill="url(#bg5)"/>
+  <rect x="1" y="1" width="198" height="278" rx="15" fill="none" stroke="url(#glow5)" stroke-width="1.5" opacity="0.3"/>
+  <g stroke="#7B61FF" stroke-width="0.3" opacity="0.1" fill="none">
+    <path d="M20,40 L40,40 L60,20 L100,20"/><path d="M180,40 L160,40 L140,20 L100,20"/>
+  </g>
+  <!-- Wolf -->
+  <g transform="translate(100,125)">
+    <ellipse cx="0" cy="15" rx="35" ry="22" fill="#1A1A3A" stroke="#7B61FF" stroke-width="1.5"/>
+    <ellipse cx="0" cy="-20" rx="22" ry="18" fill="#12122A" stroke="#00E5FF" stroke-width="1"/>
+    <ellipse cx="-8" cy="-22" rx="5" ry="4" fill="#7B61FF" filter="url(#neon)"/>
+    <ellipse cx="8" cy="-22" rx="5" ry="4" fill="#00E5FF" filter="url(#neon)"/>
+    <circle cx="-8" cy="-22" r="2" fill="#fff"/><circle cx="8" cy="-22" r="2" fill="#fff"/>
+    <polygon points="-14,-38 -8,-24 -20,-28" fill="#0A0A1A" stroke="#7B61FF" stroke-width="0.8"/>
+    <polygon points="14,-38 8,-24 20,-28" fill="#0A0A1A" stroke="#7B61FF" stroke-width="0.8"/>
+    <ellipse cx="0" cy="-12" rx="8" ry="5" fill="#12122A"/>
+    <ellipse cx="0" cy="-13" rx="3" ry="2" fill="#0A0A1A"/>
+    <path d="M-30,10 L-38,20 M-28,12 L-35,22 M-26,13 L-32,21" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round" filter="url(#neon)"/>
+    <path d="M30,10 L38,20 M28,12 L35,22 M26,13 L32,21" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round" filter="url(#neon)"/>
+  </g>
+  <rect x="5" y="5" width="35" height="16" rx="4" fill="#7B61FF" opacity="0.8"/>
+  <text x="22" y="16" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="8" fill="#fff">AN</text>
+  <rect x="10" y="200" width="180" height="70" rx="8" fill="rgba(0,0,0,0.5)"/>
+  <text x="100" y="218" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="10" fill="#EEEEFF">КИБЕР-ВОЛК</text>
+  <text x="100" y="232" text-anchor="middle" font-family="monospace" font-size="8" fill="#A0A0C8">Неоновые Наемники</text>
+  <rect x="20" y="242" width="160" height="1" fill="#7B61FF" opacity="0.2"/>
+  <text x="30" y="258" font-family="monospace" font-size="8" fill="#7B61FF">⚡ 6</text>
+  <text x="90" y="258" font-family="monospace" font-size="8" fill="#FF6B9D">💥 3</text>
+  <text x="140" y="258" font-family="monospace" font-size="7" fill="#00E5FF">+2 power</text>
+  <circle cx="185" cy="15" r="4" fill="#60A5FA"/>
+</svg>

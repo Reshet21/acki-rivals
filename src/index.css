@@ -99,8 +99,22 @@ body {
 .animate-damage { animation: damage-number 1s ease-out forwards; }
 
 /* ═══════════════════════════════════════
-   CARD BACKGROUNDS (SVG patterns)
+   ACKI NACKI BRAND COLORS
    ═══════════════════════════════════════ */
+
+:root {
+  --an-purple: #7B61FF;
+  --an-cyan: #00E5FF;
+  --an-pink: #FF6B9D;
+  --an-dark: #0A0A1A;
+  --an-card: #12122A;
+  --an-card-hover: #1A1A3A;
+  --an-surface: #16162E;
+  --an-border: rgba(123, 97, 255, 0.12);
+  --an-text: #EEEEFF;
+  --an-text-secondary: #A0A0C8;
+  --an-text-muted: #60608A;
+}
 
 /* Neon Mercenaries — cyberpunk circuit pattern */
 .card-bg-neon {
