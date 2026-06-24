@@ -13,11 +13,13 @@ import MiningPanel from './components/MiningPanel';
 import DeckBuilder from './components/DeckBuilder';
 import UpgradeScreen from './components/UpgradeScreen';
 import PvpLobby from './components/PvpLobby';
+import PvpBattleScreen from './components/PvpBattleScreen';
 import InfoScreen from './components/InfoScreen';
 import LanguageSelector from './components/LanguageSelector';
 import Leaderboard from './components/Leaderboard';
+import type { Game } from './services/pvpService';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'info' | 'lang' | 'leaderboard';
+type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'lang' | 'leaderboard';
 
 function AppInner() {
   const { t } = useI18n();
@@ -40,6 +42,8 @@ function AppInner() {
   const [walletConnection, setWalletConnection] = useState<WalletConnection | null>(() =>
     getStoredSession()
   );
+  const [pvpGame, setPvpGame] = useState<Game | null>(null);
+  const [pvpIsHost, setPvpIsHost] = useState(false);
 
   useEffect(() => {
     saveToStorage();
@@ -243,11 +247,33 @@ function AppInner() {
           <PvpLobby
             playerId={walletConnection?.walletName || 'player_' + Date.now()}
             deck={deck}
-            onStartBattle={(_game, _isHost) => {
-              // TODO: start PvP battle with game state
-              setScreen('battle');
+            onStartBattle={(game, isHost) => {
+              setPvpGame(game);
+              setPvpIsHost(isHost);
+              setScreen('pvp_battle');
             }}
             onBack={() => setScreen('menu')}
+          />
+        </div>
+      )}
+
+      {screen === 'pvp_battle' && pvpGame && (
+        <div className="flex-1">
+          <PvpBattleScreen
+            game={pvpGame}
+            playerId={walletConnection?.walletName || 'player_' + Date.now()}
+            isHost={pvpIsHost}
+            onBattleEnd={(result) => {
+              if (result === 'win') recordWin();
+              else if (result === 'loss') recordLoss();
+              setPvpGame(null);
+              setScreen('menu');
+            }}
+            onSurrender={() => {
+              recordLoss();
+              setPvpGame(null);
+              setScreen('menu');
+            }}
           />
         </div>
       )}
