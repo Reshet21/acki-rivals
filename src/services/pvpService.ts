@@ -1,8 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Card } from '../types';
 
-const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = 'https://thbmbtcffojdxuqjdgtb.supabase.co';
+const SUPABASE_ANON_KEY = '***REMOVED***';
 
 let supabase: SupabaseClient | null = null;
 
