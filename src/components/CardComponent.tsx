@@ -73,53 +73,6 @@ const cardArt: Record<number, string> = {
   34: '/cards/card-malicious-block.jpeg',
 };
 
-// Unique visual treatment per card ID (hue, brightness, contrast, saturate, overlay color)
-const cardVisuals: Record<number, { hue: number; bright: number; contrast: number; saturate: number; overlay: string }> = {
-  1:  { hue: 0, bright: 0.9, contrast: 1.1, saturate: 1.2, overlay: 'rgba(100,80,60,0.15)' },
-  2:  { hue: 15, bright: 1.0, contrast: 1.0, saturate: 1.0, overlay: 'rgba(60,120,180,0.1)' },
-  3:  { hue: -10, bright: 0.85, contrast: 1.15, saturate: 1.3, overlay: 'rgba(0,200,100,0.1)' },
-  4:  { hue: 20, bright: 1.05, contrast: 1.1, saturate: 0.9, overlay: 'rgba(0,150,255,0.12)' },
-  5:  { hue: -20, bright: 0.95, contrast: 1.2, saturate: 1.4, overlay: 'rgba(200,50,50,0.1)' },
-  6:  { hue: 30, bright: 1.0, contrast: 1.05, saturate: 1.1, overlay: 'rgba(150,100,200,0.12)' },
-  7:  { hue: -30, bright: 0.8, contrast: 1.3, saturate: 0.8, overlay: 'rgba(50,0,100,0.2)' },
-  8:  { hue: 0, bright: 1.1, contrast: 1.15, saturate: 1.5, overlay: 'rgba(255,200,0,0.1)' },
-  9:  { hue: 45, bright: 1.0, contrast: 1.0, saturate: 1.2, overlay: 'rgba(0,200,150,0.12)' },
-  10: { hue: -45, bright: 0.9, contrast: 1.1, saturate: 0.9, overlay: 'rgba(100,200,100,0.1)' },
-  11: { hue: 60, bright: 0.95, contrast: 1.2, saturate: 1.3, overlay: 'rgba(200,150,50,0.1)' },
-  12: { hue: -60, bright: 1.05, contrast: 1.1, saturate: 1.0, overlay: 'rgba(150,50,200,0.12)' },
-  13: { hue: 90, bright: 0.85, contrast: 1.25, saturate: 1.4, overlay: 'rgba(50,150,200,0.1)' },
-  14: { hue: -90, bright: 1.0, contrast: 1.15, saturate: 1.1, overlay: 'rgba(200,100,100,0.1)' },
-  15: { hue: 120, bright: 0.9, contrast: 1.2, saturate: 1.2, overlay: 'rgba(100,200,50,0.1)' },
-  16: { hue: -120, bright: 1.05, contrast: 1.1, saturate: 1.3, overlay: 'rgba(50,100,200,0.12)' },
-  17: { hue: 150, bright: 0.85, contrast: 1.3, saturate: 1.5, overlay: 'rgba(200,50,100,0.12)' },
-  18: { hue: -150, bright: 0.95, contrast: 1.15, saturate: 1.0, overlay: 'rgba(100,50,200,0.1)' },
-  19: { hue: 180, bright: 0.9, contrast: 1.2, saturate: 0.8, overlay: 'rgba(0,100,150,0.15)' },
-  20: { hue: -180, bright: 1.0, contrast: 1.1, saturate: 1.4, overlay: 'rgba(200,100,50,0.1)' },
-  21: { hue: 200, bright: 0.85, contrast: 1.25, saturate: 1.2, overlay: 'rgba(50,200,100,0.1)' },
-  22: { hue: -200, bright: 1.05, contrast: 1.15, saturate: 1.1, overlay: 'rgba(150,150,50,0.12)' },
-  23: { hue: 220, bright: 0.95, contrast: 1.2, saturate: 1.3, overlay: 'rgba(100,50,150,0.1)' },
-  24: { hue: -220, bright: 0.9, contrast: 1.1, saturate: 1.0, overlay: 'rgba(200,150,100,0.1)' },
-  25: { hue: 240, bright: 1.0, contrast: 1.3, saturate: 1.5, overlay: 'rgba(50,100,200,0.12)' },
-  26: { hue: -240, bright: 0.85, contrast: 1.15, saturate: 0.9, overlay: 'rgba(150,50,100,0.1)' },
-  27: { hue: 270, bright: 0.95, contrast: 1.2, saturate: 1.2, overlay: 'rgba(100,150,200,0.1)' },
-  28: { hue: -270, bright: 1.05, contrast: 1.1, saturate: 1.4, overlay: 'rgba(200,50,150,0.12)' },
-  29: { hue: 300, bright: 0.9, contrast: 1.25, saturate: 1.1, overlay: 'rgba(50,200,200,0.1)' },
-  30: { hue: -300, bright: 1.0, contrast: 1.15, saturate: 1.3, overlay: 'rgba(150,100,50,0.1)' },
-  31: { hue: 330, bright: 0.85, contrast: 1.3, saturate: 1.5, overlay: 'rgba(200,100,200,0.12)' },
-  32: { hue: -330, bright: 0.95, contrast: 1.2, saturate: 1.0, overlay: 'rgba(100,200,150,0.1)' },
-  33: { hue: 360, bright: 1.05, contrast: 1.1, saturate: 1.2, overlay: 'rgba(50,150,250,0.1)' },
-  34: { hue: -360, bright: 0.9, contrast: 1.25, saturate: 1.4, overlay: 'rgba(250,150,50,0.12)' },
-};
-
-// Rarity-specific overlay colors
-const rarityOverlay: Record<string, string> = {
-  common: 'rgba(150,150,150,0.05)',
-  uncommon: 'rgba(74,222,128,0.08)',
-  rare: 'rgba(96,165,250,0.1)',
-  epic: 'rgba(168,85,247,0.12)',
-  legendary: 'rgba(250,204,21,0.15)',
-};
-
 const clanBg: Record<string, string> = {
   'Неоновые Наемники': 'card-bg-neon',
   'Цифровые Монахи': 'card-bg-monk',
@@ -155,9 +108,6 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
   const bgClass = clanBg[clan] || '';
   const artSrc = cardArt[card.id];
   const ability = abilityInfo[card.ability] || { icon: '❓', desc: card.ability || '—', color: 'text-white/50' };
-  const visual = cardVisuals[card.id] || cardVisuals[1];
-  const rOverlay = rarityOverlay[rarity] || '';
-  const imgFilter = `hue-rotate(${visual.hue}deg) brightness(${visual.bright}) contrast(${visual.contrast}) saturate(${visual.saturate})`;
 
   const cardName = getCardName(lang, card.id);
   const abilityName = getAbilityName(lang, card.ability);
@@ -184,12 +134,10 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         {/* Character art */}
         <div className="relative w-full h-16 overflow-hidden bg-black/30">
           {artSrc ? (
-            <img src={artSrc} alt="" className="w-full h-full object-cover" style={{ filter: imgFilter }} loading="lazy" />
+            <img src={artSrc} alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'center top' }} loading="lazy" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-3xl opacity-20">🃏</div>
           )}
-          <div className="absolute inset-0" style={{ background: visual.overlay }} />
-          <div className="absolute inset-0" style={{ background: rOverlay }} />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
           <div className="absolute top-1 right-1 z-10">
             <span className={`text-[6px] px-1.5 py-0.5 rounded-full font-bold ${config.badge}`}>
@@ -255,12 +203,10 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       {/* Character art */}
       <div className="relative w-full h-24 overflow-hidden bg-black/30">
         {artSrc ? (
-          <img src={artSrc} alt="" className="w-full h-full object-cover" style={{ filter: imgFilter }} loading="lazy" />
+          <img src={artSrc} alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'center top' }} loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🃏</div>
         )}
-        <div className="absolute inset-0" style={{ background: visual.overlay }} />
-        <div className="absolute inset-0" style={{ background: rOverlay }} />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
         <div className="absolute top-2 right-2 z-10">
           <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold ${config.badge}`}>
