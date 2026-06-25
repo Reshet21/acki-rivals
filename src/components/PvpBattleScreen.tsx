@@ -306,28 +306,21 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     try {
       await submitMove(game.id, playerId, round, card.id, pillz);
 
+      const myMoveData = { card_id: card.id, pillz, round, player_id: playerId };
       const myMoveKey = `move_${round}_${playerId}`;
-      sessionStorage.setItem(myMoveKey, JSON.stringify({ card_id: card.uid, pillz, round, player_id: playerId }));
+      sessionStorage.setItem(myMoveKey, JSON.stringify(myMoveData));
 
       setBattlePhase('waiting_opponent');
 
+      // Check immediately if opponent already played
       const moves = await getRoundMoves(game.id, round);
       const oppMove = moves.find((m) => m.player_id !== playerId);
 
       if (oppMove) {
         sessionStorage.removeItem(myMoveKey);
-        const myStored = sessionStorage.getItem(myMoveKey);
-        if (myStored) {
-          const myMove = JSON.parse(myStored);
-          sessionStorage.removeItem(myMoveKey);
-          resolveAndAnimate(myMove, oppMove);
-        } else {
-          resolveAndAnimate(
-            { card_id: Number(card.uid), pillz, round, player_id: playerId, game_id: game.id, id: '' },
-            oppMove,
-          );
-        }
+        resolveAndAnimate({ ...myMoveData, game_id: game.id, id: '' } as Move, oppMove);
       }
+      // Otherwise the polling/subscription will pick it up
     } catch (e) {
       console.error('Failed to submit move:', e);
       setBattlePhase('select');
