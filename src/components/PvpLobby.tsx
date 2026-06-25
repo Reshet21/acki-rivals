@@ -60,9 +60,11 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     return () => clearInterval(i);
   }, [randomQueue]);
 
-  // Random matchmaking
+  // Random matchmaking — if no room found after 3s, create one automatically
   useEffect(() => {
     if (!randomQueue) return;
+    let createdOwn = false;
+
     const check = async () => {
       try {
         const games = await getWaitingGames();
@@ -70,13 +72,18 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
         if (avail.length > 0) {
           const updated = await joinGame(avail[0].id, playerId, deck);
           if (updated) { setRandomQueue(false); setRoom(updated); }
+        } else if (!createdOwn && searchTimer >= 3) {
+          // No rooms found after 3s — create one automatically
+          createdOwn = true;
+          const g = await createGame(playerId, deck);
+          if (g) { setRandomQueue(false); setRoom(g); }
         }
       } catch {}
     };
     check();
     const i = setInterval(check, 2000);
     return () => clearInterval(i);
-  }, [randomQueue, playerId, deck]);
+  }, [randomQueue, playerId, deck, searchTimer]);
 
   const handleCreate = async () => {
     if (deck.length !== 4) return;
