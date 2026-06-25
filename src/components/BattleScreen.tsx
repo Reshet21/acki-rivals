@@ -44,9 +44,11 @@ interface RoundLogEntry {
   opponentDamageReduction: number;
 }
 
-const TOTAL_HP = 30;
+const TOTAL_HP = 12;
 const TOTAL_ROUNDS = 4;
-const TURN_TIME = 45;
+const TURN_TIME = 30;
+const STARTING_PILLZ = 12;
+const FREE_PILLZ_PER_ROUND = 1;
 const VS_DURATION = 2000;
 const DAMAGE_DURATION = 2000;
 
@@ -54,8 +56,8 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
   const { t } = useI18n();
   const [playerHP, setPlayerHP] = useState(TOTAL_HP);
   const [aiHP, setAiHP] = useState(TOTAL_HP);
-  const [playerPillz, setPlayerPillz] = useState(12);
-  const [aiPillz, setAiPillz] = useState(12);
+  const [playerPillz, setPlayerPillz] = useState(STARTING_PILLZ);
+  const [aiPillz, setAiPillz] = useState(STARTING_PILLZ);
   const [round, setRound] = useState(1);
 
   const [aiDeck] = useState<Card[]>(() =>
@@ -222,6 +224,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           setBattlePhase('ended');
         } else {
           setRound(nextRound);
+          // Urban Rivals: +1 free pillz per round
+          setPlayerPillz((p) => Math.min(STARTING_PILLZ, p + FREE_PILLZ_PER_ROUND));
+          setAiPillz((p) => Math.min(STARTING_PILLZ, p + FREE_PILLZ_PER_ROUND));
           setCurrentPlayerCard(null);
           setCurrentAiCard(null);
           setCurrentResult(null);

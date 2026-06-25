@@ -1,12 +1,13 @@
 import type { Card, RoundResult } from '../types';
 import { getAbility } from '../data/abilities';
 
+// Urban Rivals: Attack = Power × Pillz × random(0.9, 1.1)
 function randomFactor(): number {
   return 0.9 + Math.random() * 0.2;
 }
 
 export function calculateRoundAttack(power: number, pillz: number): number {
-  return Math.round(power * (1 + pillz) * randomFactor());
+  return Math.round(power * pillz * randomFactor());
 }
 
 export function resolveRound(
@@ -44,7 +45,7 @@ export function resolveRound(
     playerAbilityResult = undefined;
   }
 
-  // Apply power modifiers (self + opponent debuff)
+  // Apply power modifiers
   if (playerAbilityResult) {
     playerPower += playerAbilityResult.powerModifier ?? 0;
     playerPower += playerAbilityResult.opponentPowerModifier ?? 0;
@@ -89,23 +90,17 @@ export function resolveRound(
   let opponentDamageReduction = 0;
 
   if (winner === 'player') {
-    // Player won — apply their heal on loss (no, heal is on LOSS), lifeSteal on WIN
     lifeStealAmount = playerAbilityResult?.lifeStealModifier ?? 0;
-    // AI's heal on loss
     healAmount = aiAbilityResult?.healModifier ?? 0;
-    // AI's poison on loss
     poisonAmount = aiAbilityResult?.poisonModifier ?? 0;
-    // AI's opponent damage reduction (reduces player's damage)
     opponentDamageReduction = aiAbilityResult?.opponentDamageModifier ?? 0;
   } else if (winner === 'ai') {
-    // AI won — AI lifeSteal, player heal on loss, player poison on loss
     lifeStealAmount = aiAbilityResult?.lifeStealModifier ?? 0;
     healAmount = playerAbilityResult?.healModifier ?? 0;
     poisonAmount = playerAbilityResult?.poisonModifier ?? 0;
     opponentDamageReduction = playerAbilityResult?.opponentDamageModifier ?? 0;
   }
 
-  // Apply opponent damage reduction to the winning damage
   damage = Math.max(0, damage + opponentDamageReduction);
 
   return {

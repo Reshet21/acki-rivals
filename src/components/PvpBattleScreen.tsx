@@ -22,9 +22,11 @@ interface Props {
   onSurrender: () => void;
 }
 
-const TOTAL_HP = 30;
+const TOTAL_HP = 12;
 const TOTAL_ROUNDS = 4;
-const TURN_TIME = 45;
+const TURN_TIME = 30;
+const STARTING_PILLZ = 12;
+const FREE_PILLZ_PER_ROUND = 1;
 const VS_DURATION = 2500;
 const DAMAGE_DURATION = 2000;
 
@@ -38,8 +40,8 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
 
   const [playerHP, setPlayerHP] = useState(TOTAL_HP);
   const [opponentHP, setOpponentHP] = useState(TOTAL_HP);
-  const [playerPillz, setPlayerPillz] = useState(12);
-  const [opponentPillz, setOpponentPillz] = useState(12);
+  const [playerPillz, setPlayerPillz] = useState(STARTING_PILLZ);
+  const [opponentPillz, setOpponentPillz] = useState(STARTING_PILLZ);
   const [round, setRound] = useState(1);
 
   const [playerCardsUsed, setPlayerCardsUsed] = useState<string[]>([]);
@@ -205,6 +207,8 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
           setBattlePhase('ended');
         } else {
           setRound(nextRound);
+          setPlayerPillz((p) => Math.min(STARTING_PILLZ, p + FREE_PILLZ_PER_ROUND));
+          setOpponentPillz((p) => Math.min(STARTING_PILLZ, p + FREE_PILLZ_PER_ROUND));
           setCurrentPlayerCard(null);
           setCurrentOpponentCard(null);
           setCurrentResult(null);
