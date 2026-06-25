@@ -81,95 +81,118 @@ function AppInner() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto bg-game-menu text-white flex flex-col relative">
-      {/* Ambient particles for menu */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute w-1 h-1 bg-neon-purple/20 rounded-full animate-drift" style={{ top: '15%', left: '10%' }} />
-        <div className="absolute w-1.5 h-1.5 bg-neon-blue/15 rounded-full animate-drift" style={{ top: '40%', right: '20%', animationDelay: '3s' }} />
-        <div className="absolute w-1 h-1 bg-neon-pink/10 rounded-full animate-drift" style={{ top: '70%', left: '85%', animationDelay: '5s' }} />
-        <div className="absolute w-1 h-1 bg-neon-green/10 rounded-full animate-drift" style={{ top: '25%', right: '80%', animationDelay: '1s' }} />
-      </div>
       {screen === 'menu' && (
-        <div className="flex flex-col items-center flex-1 gap-3 p-4 pt-10 overflow-y-auto">
-          {/* Title */}
-          <div className="text-center mb-2">
-            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink">
-              ACKI RIVALS
+        <div className="relative flex flex-col items-center min-h-screen w-full overflow-hidden">
+          {/* Aurora background effects */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute animate-aurora-1 rounded-full" style={{ width: 300, height: 300, top: '-80px', left: '-80px', background: 'radial-gradient(circle, rgba(183,66,255,0.25) 0%, transparent 70%)' }} />
+            <div className="absolute animate-aurora-2 rounded-full" style={{ width: 350, height: 350, bottom: '10%', right: '-100px', background: 'radial-gradient(circle, rgba(0,212,255,0.2) 0%, transparent 70%)', animationDelay: '3s' }} />
+            <div className="absolute animate-aurora-3 rounded-full" style={{ width: 250, height: 250, top: '40%', left: '60%', background: 'radial-gradient(circle, rgba(255,45,149,0.15) 0%, transparent 70%)', animationDelay: '6s' }} />
+            {/* Grid pattern */}
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+            {/* Sparkles */}
+            {[{ top: '18%', left: '12%', delay: '0s' }, { top: '30%', right: '8%', delay: '0.7s' }, { top: '55%', left: '6%', delay: '1.4s' }, { top: '72%', right: '14%', delay: '2.1s' }, { top: '85%', left: '30%', delay: '0.3s' }].map((pos, i) => (
+              <div key={i} className="absolute text-white/30 animate-sparkle text-xs" style={{ ...pos, animationDelay: pos.delay }}>&#10022;</div>
+            ))}
+          </div>
+
+          {/* Floating cards */}
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 64, height: 86, top: '6%', left: '2%', opacity: 0.28, zIndex: 0, transform: 'rotate(-10deg)' }}>
+            <img src="/cards/card-acki-nacki.jpeg" alt="" className="block w-full h-full object-cover object-top" />
+          </div>
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-2" style={{ width: 60, height: 80, top: '8%', right: '2%', opacity: 0.25, zIndex: 0, transform: 'rotate(8deg)' }}>
+            <img src="/cards/card-cyber-wolf.png" alt="" className="block w-full h-full object-cover object-top" />
+          </div>
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-3" style={{ width: 56, height: 75, bottom: '15%', left: '5%', opacity: 0.2, zIndex: 0, transform: 'rotate(-5deg)' }}>
+            <img src="/cards/card-block-keeper.jpeg" alt="" className="block w-full h-full object-cover object-top" />
+          </div>
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 52, height: 70, bottom: '20%', right: '4%', opacity: 0.18, zIndex: 0, transform: 'rotate(12deg)', animationDelay: '1.5s' }}>
+            <img src="/cards/card-neon-sniper.png" alt="" className="block w-full h-full object-cover object-top" />
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center w-full px-5 pt-12 pb-8 gap-5">
+            {/* Title */}
+            <div className="flex flex-col items-center animate-slide-down" style={{ animationDelay: '0.05s' }}>
+              <div className="text-4xl font-black tracking-tight animate-title-glow" style={{ background: 'linear-gradient(90deg, #00d4ff 0%, #b742ff 50%, #ff2d95 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                ACKI RIVALS
+              </div>
+              <div className="text-[10px] text-white/30 tracking-[0.3em] uppercase mt-1">{t('menu.subtitle')}</div>
+              {/* Stats bar with glow */}
+              <div className="flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full animate-counter-glow" style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                <span className="text-[10px] text-neon-blue font-bold">💰 {credits}</span>
+                <span className="text-[10px] text-white/40">|</span>
+                <span className="text-[10px] text-white/60">🏆 {battlesWon}W / {battlesLost}L</span>
+                {walletConnection && <><span className="text-[10px] text-white/40">|</span><span className="text-[10px] text-neon-green">🔗</span></>}
+              </div>
             </div>
-            <div className="text-[10px] text-white/30 mt-1">{t('menu.subtitle')}</div>
-          </div>
 
-          {/* Stats bar */}
-          <div className="flex items-center justify-center gap-3 text-[10px] text-white/40 mb-2">
-            <span>💰 {credits} {t('menu.credits')}</span>
-            <span>🏆 {battlesWon}W / {battlesLost}L</span>
-            {walletConnection && <span className="text-neon-green">🔗</span>}
-          </div>
+            {/* Main actions - 2 columns */}
+            <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
+              <button onClick={() => setScreen('pvp')} disabled={deck.length !== 4}
+                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-red-600 to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
+                <span className="text-lg">🌐</span>
+                <span>{t('menu.pvp')}</span>
+              </button>
+              <button onClick={() => setScreen('battle')} disabled={deck.length !== 4}
+                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-neon-red to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
+                <span className="text-lg">⚔️</span>
+                <span>{t('menu.ai')}</span>
+              </button>
+              <button onClick={() => setScreen('deck')}
+                className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-neon-purple to-neon-blue text-white shadow-lg active:scale-95 transition-all">
+                <span className="text-lg">📚</span>
+                <span>{t('menu.deck')}</span>
+              </button>
+              <button onClick={() => setScreen('shop')}
+                className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-neon-pink to-purple-500 text-white shadow-lg active:scale-95 transition-all">
+                <span className="text-lg">🛒</span>
+                <span>{t('menu.shop')}</span>
+              </button>
+            </div>
 
-          {/* Main actions - 2 columns */}
-          <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
-            <button onClick={() => setScreen('pvp')} disabled={deck.length !== 4}
-              className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-red-600 to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
-              <span className="text-lg">🌐</span>
-              <span>{t('menu.pvp')}</span>
-            </button>
-            <button onClick={() => setScreen('battle')} disabled={deck.length !== 4}
-              className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-neon-red to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
-              <span className="text-lg">⚔️</span>
-              <span>{t('menu.ai')}</span>
-            </button>
-            <button onClick={() => setScreen('deck')}
-              className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-neon-purple to-neon-blue text-white shadow-lg active:scale-95 transition-all">
-              <span className="text-lg">📚</span>
-              <span>{t('menu.deck')}</span>
-            </button>
-            <button onClick={() => setScreen('shop')}
-              className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-neon-pink to-purple-500 text-white shadow-lg active:scale-95 transition-all">
-              <span className="text-lg">🛒</span>
-              <span>{t('menu.shop')}</span>
-            </button>
-          </div>
+            {deck.length !== 4 && (
+              <div className="text-[10px] text-white/30">{t('menu.buildDeck')}</div>
+            )}
 
-          {deck.length !== 4 && (
-            <div className="text-[10px] text-white/30">{t('menu.buildDeck')}</div>
-          )}
+            {/* Secondary actions - 3 columns */}
+            <div className="grid grid-cols-3 gap-2 w-full max-w-xs mt-1">
+              <button onClick={() => setScreen('upgrade')}
+                className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+                <span>⚒️</span>
+                <span>{t('menu.upgrade')}</span>
+              </button>
+              <button onClick={() => setScreen('wallet')}
+                className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+                <span>👛</span>
+                <span>{t('menu.wallet')}</span>
+              </button>
+              <button onClick={() => setScreen('mining')}
+                className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+                <span>⛏️</span>
+                <span>{t('menu.mining')}</span>
+              </button>
+            </div>
 
-          {/* Secondary actions - 3 columns */}
-          <div className="grid grid-cols-3 gap-2 w-full max-w-xs mt-1">
-            <button onClick={() => setScreen('upgrade')}
-              className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
-              <span>⚒️</span>
-              <span>{t('menu.upgrade')}</span>
-            </button>
-            <button onClick={() => setScreen('wallet')}
-              className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
-              <span>👛</span>
-              <span>{t('menu.wallet')}</span>
-            </button>
-            <button onClick={() => setScreen('mining')}
-              className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
-              <span>⛏️</span>
-              <span>{t('menu.mining')}</span>
-            </button>
-          </div>
-
-          {/* Info + Lang + Reset + Leaderboard row */}
-          <div className="grid grid-cols-4 gap-1.5 w-full max-w-xs mt-1">
-            <button onClick={() => setScreen('info')}
-              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
-              📖<span>{t('menu.rules')}</span>
-            </button>
-            <button onClick={() => setScreen('lang')}
-              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
-              🌐<span>Язык</span>
-            </button>
-            <button onClick={() => setScreen('leaderboard')}
-              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
-              🏆<span>Топ</span>
-            </button>
-            <button onClick={() => { localStorage.clear(); location.reload(); }}
-              className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
-              🔄<span>{t('menu.reset')}</span>
-            </button>
+            {/* Info + Lang + Reset + Leaderboard row */}
+            <div className="grid grid-cols-4 gap-1.5 w-full max-w-xs mt-1">
+              <button onClick={() => setScreen('info')}
+                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+                📖<span>{t('menu.rules')}</span>
+              </button>
+              <button onClick={() => setScreen('lang')}
+                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+                🌐<span>Язык</span>
+              </button>
+              <button onClick={() => setScreen('leaderboard')}
+                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+                🏆<span>Топ</span>
+              </button>
+              <button onClick={() => { localStorage.clear(); location.reload(); }}
+                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-white/5 border border-white/10 text-white/50 active:scale-95 transition-all">
+                🔄<span>{t('menu.reset')}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
