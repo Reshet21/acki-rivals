@@ -1,6 +1,6 @@
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
-import { getCardName, getAbilityName, getClanName, getStatLabel, getRarityLabel } from '../i18n/cardTranslations';
+import { getCardName, getAbilityName, getStatLabel, getRarityLabel } from '../i18n/cardTranslations';
 
 interface Props {
   card: Card;
@@ -35,7 +35,7 @@ const abilityInfo: Record<string, { icon: string; desc: string; color: string }>
   'double damage':    { icon: '⚡', desc: 'Double damage', color: 'text-yellow-300' },
 };
 
-// AN-style character illustrations
+// Card illustrations
 const cardArt: Record<number, string> = {
   1: '/cards/card-rusty-drone.png',
   2: '/cards/card-patrol.png',
@@ -89,9 +89,9 @@ const rarityConfig: Record<string, { badge: string; border: string; glow: string
 function StarDisplay({ stars }: { stars: number }) {
   if (stars <= 0) return null;
   return (
-    <div className="flex justify-center gap-0.5 mt-0.5">
+    <div className="flex justify-center gap-0.5">
       {Array.from({ length: stars }).map((_, i) => (
-        <span key={i} className="text-[9px] text-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.6)]">★</span>
+        <span key={i} className="text-[8px] text-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.6)]">★</span>
       ))}
     </div>
   );
@@ -111,18 +111,18 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
 
   const cardName = getCardName(lang, card.id);
   const abilityName = getAbilityName(lang, card.ability);
-  const clanName = getClanName(lang, clan);
   const powerLabel = getStatLabel(lang, 'power');
   const damageLabel = getStatLabel(lang, 'damage');
   const rarityLabel = getRarityLabel(lang, rarity);
 
+  // ═══ COMPACT MODE ═══
   if (compact) {
     return (
       <button
         onClick={onClick}
         className={`
           relative w-full rounded-xl overflow-hidden
-          bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900
+          bg-gradient-to-b from-gray-900 to-gray-950
           ${bgClass}
           border ${config.border} ${config.glow}
           transition-all duration-200 active:scale-95 flex flex-col
@@ -131,50 +131,50 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       >
         {rarity === 'legendary' && <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-xl" />}
 
-        {/* Character art */}
-        <div className="relative w-full h-16 overflow-hidden bg-black/30">
+        {/* Image — takes most of the card */}
+        <div className="relative w-full aspect-[3/4] overflow-hidden bg-black">
           {artSrc ? (
             <img src={artSrc} alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'center top' }} loading="lazy" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl opacity-20">🃏</div>
+            <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">🃏</div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
-          <div className="absolute top-1 right-1 z-10">
-            <span className={`text-[6px] px-1.5 py-0.5 rounded-full font-bold ${config.badge}`}>
+          {/* Gradient overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+
+          {/* Rarity badge — top right */}
+          <div className="absolute top-1.5 right-1.5 z-10">
+            <span className={`text-[7px] px-1.5 py-0.5 rounded-full font-bold ${config.badge}`}>
               {rarityLabel}
             </span>
           </div>
-        </div>
 
-        <div className="p-1.5 flex flex-col gap-0.5 flex-1 relative z-10">
-          <div className="text-center">
-            <div className="font-bold text-[11px] leading-tight text-white drop-shadow-md truncate px-0.5">
+          {/* Card name — bottom of image */}
+          <div className="absolute bottom-0 left-0 right-0 px-2 pb-1 z-10">
+            <div className="font-bold text-[11px] leading-tight text-white drop-shadow-lg text-center truncate">
               {cardName}
             </div>
             <StarDisplay stars={stars} />
           </div>
+        </div>
 
-          {/* Ability with icon + description */}
-          <div className="bg-black/40 rounded-md px-1.5 py-0.5 flex items-center gap-1 backdrop-blur-sm border border-white/5">
-            <span className="text-[9px]">{ability.icon}</span>
-            <div className="flex-1 min-w-0">
-              <div className={`text-[8px] font-bold leading-tight truncate ${ability.color}`}>
-                {abilityName}
-              </div>
-              <div className="text-[7px] text-white/40 leading-tight truncate">{ability.desc}</div>
-            </div>
+        {/* Stats bar — compact at bottom */}
+        <div className="flex items-center justify-between px-2 py-1.5 bg-black/60 backdrop-blur-sm">
+          {/* Power */}
+          <div className="flex items-center gap-1">
+            <span className="text-[8px] text-white/50">{powerLabel}</span>
+            <span className="text-sm font-black text-white">{displayPower}</span>
           </div>
 
-          <div className="flex justify-between items-center px-0.5">
-            <div className="text-center flex-1">
-              <div className="text-[6px] text-white/40 uppercase">{powerLabel}</div>
-              <div className="text-sm font-black text-white drop-shadow-md">{displayPower}</div>
-            </div>
-            <div className="w-px h-4 bg-white/10" />
-            <div className="text-center flex-1">
-              <div className="text-[6px] text-white/40 uppercase">{damageLabel}</div>
-              <div className="text-sm font-black text-red-300 drop-shadow-md">{displayDamage}</div>
-            </div>
+          {/* Ability icon */}
+          <div className="flex items-center gap-0.5">
+            <span className="text-[10px]">{ability.icon}</span>
+            <span className={`text-[8px] font-bold ${ability.color} max-w-[60px] truncate`}>{abilityName}</span>
+          </div>
+
+          {/* Damage */}
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-black text-red-300">{displayDamage}</span>
+            <span className="text-[8px] text-white/50">{damageLabel}</span>
           </div>
         </div>
 
@@ -185,13 +185,13 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
     );
   }
 
-  // Full-size card
+  // ═══ FULL-SIZE MODE ═══
   return (
     <button
       onClick={onClick}
       className={`
-        relative w-40 rounded-2xl overflow-hidden
-        bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900
+        relative w-44 rounded-2xl overflow-hidden
+        bg-gradient-to-b from-gray-900 to-gray-950
         ${bgClass}
         border-2 ${config.border} ${config.glow}
         transition-all duration-200 hover:scale-105 active:scale-95 flex flex-col
@@ -200,50 +200,52 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
     >
       {rarity === 'legendary' && <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-2xl" />}
 
-      {/* Character art */}
-      <div className="relative w-full h-24 overflow-hidden bg-black/30">
+      {/* Image — takes most of the card */}
+      <div className="relative w-full aspect-[3/4] overflow-hidden bg-black">
         {artSrc ? (
           <img src={artSrc} alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'center top' }} loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🃏</div>
+          <div className="w-full h-full flex items-center justify-center text-6xl opacity-20">🃏</div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
+        {/* Gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+
+        {/* Rarity badge — top right */}
         <div className="absolute top-2 right-2 z-10">
           <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold ${config.badge}`}>
             {rarityLabel}
           </span>
         </div>
-      </div>
 
-      <div className="p-3 flex flex-col gap-1.5 flex-1 relative z-10">
-        <div className="text-center">
-          <div className="font-bold text-sm leading-tight text-white drop-shadow-lg">
+        {/* Card name — bottom of image */}
+        <div className="absolute bottom-0 left-0 right-0 px-3 pb-2 z-10">
+          <div className="font-bold text-sm leading-tight text-white drop-shadow-lg text-center">
             {cardName}
           </div>
-          <StarDisplay stars={stars} />
-          <div className="text-[9px] text-white/50 mt-0.5">{clanName}</div>
+          <div className="flex justify-center mt-0.5">
+            <StarDisplay stars={stars} />
+          </div>
+        </div>
+      </div>
+
+      {/* Info bar — at bottom */}
+      <div className="px-2.5 py-2 bg-black/70 backdrop-blur-sm">
+        {/* Ability */}
+        <div className="flex items-center justify-center gap-1 mb-1.5">
+          <span className="text-xs">{ability.icon}</span>
+          <span className={`text-[10px] font-bold ${ability.color}`}>{abilityName}</span>
         </div>
 
-        {/* Ability with icon + description */}
-        <div className="bg-black/30 rounded-lg p-2 text-center backdrop-blur-sm border border-white/5">
-          <div className="flex items-center justify-center gap-1 mb-0.5">
-            <span className="text-sm">{ability.icon}</span>
-            <span className={`text-[10px] font-bold ${ability.color}`}>
-              {abilityName}
-            </span>
+        {/* Stats row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] text-white/50">{powerLabel}</span>
+            <span className="text-lg font-black text-white">{displayPower}</span>
           </div>
-          <div className="text-[9px] text-white/50">{ability.desc}</div>
-        </div>
-
-        <div className="flex justify-between items-center mt-auto">
-          <div className="text-center flex-1">
-            <div className="text-[8px] text-white/40 uppercase">{powerLabel}</div>
-            <div className="text-2xl font-black text-white drop-shadow-lg">{displayPower}</div>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-center flex-1">
-            <div className="text-[8px] text-white/40 uppercase">{damageLabel}</div>
-            <div className="text-2xl font-black text-red-300 drop-shadow-lg">{displayDamage}</div>
+          <div className="w-px h-5 bg-white/10" />
+          <div className="flex items-center gap-1">
+            <span className="text-lg font-black text-red-300">{displayDamage}</span>
+            <span className="text-[9px] text-white/50">{damageLabel}</span>
           </div>
         </div>
       </div>
