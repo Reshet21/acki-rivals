@@ -135,7 +135,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         {/* Character art */}
         <div className="relative w-full h-16 overflow-hidden bg-black/30">
           {artSrc ? (
-            <img src={artSrc} alt="" className="w-full h-full object-cover opacity-80" />
+            <img src={artSrc} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-3xl opacity-20">🃏</div>
           )}
@@ -204,7 +204,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       {/* Character art */}
       <div className="relative w-full h-24 overflow-hidden bg-black/30">
         {artSrc ? (
-          <img src={artSrc} alt="" className="w-full h-full object-cover opacity-80" />
+          <img src={artSrc} alt="" className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🃏</div>
         )}
