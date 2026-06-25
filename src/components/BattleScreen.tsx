@@ -6,6 +6,30 @@ import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
 
+const abilityInfo: Record<string, { icon: string; color: string }> = {
+  '+1 power': { icon: '⚔️', color: '#60a5fa' }, '+2 power': { icon: '⚔️', color: '#93c5fd' },
+  '+3 power': { icon: '⚔️', color: '#bfdbfe' }, '+4 power': { icon: '⚔️', color: '#67e8f9' },
+  '+1 damage': { icon: '💥', color: '#f87171' }, '+2 damage': { icon: '💥', color: '#fca5a5' },
+  '+1 pillz': { icon: '💊', color: '#4ade80' }, '+3 pillz': { icon: '💊', color: '#86efac' },
+  '-1 opponent power': { icon: '🛡️', color: '#fb923c' }, '-2 opponent power': { icon: '🛡️', color: '#fdba74' },
+  '-2 opponent damage': { icon: '🛡️', color: '#fb923c' },
+  'heal 1': { icon: '💚', color: '#4ade80' }, 'heal 2': { icon: '💚', color: '#86efac' }, 'heal 3': { icon: '💚', color: '#bbf7d0' },
+  'poison 1': { icon: '☠️', color: '#facc15' }, 'poison 2': { icon: '☠️', color: '#fde047' }, 'poison 3': { icon: '☠️', color: '#fef08a' },
+  'life steal 1': { icon: '🩸', color: '#c084fc' }, 'life steal 2': { icon: '🩸', color: '#d8b4fe' }, 'life steal 3': { icon: '🩸', color: '#e9d5ff' },
+  'stop opponent ability': { icon: '🚫', color: '#f87171' }, 'double damage': { icon: '⚡', color: '#fde047' },
+};
+
+const abilityNames: Record<string, string> = {
+  '+1 power': 'Укрепление', '+2 power': 'Боевой дух', '+3 power': 'Трансценденция', '+4 power': 'Абсолютная сила',
+  '+1 damage': 'Усиление удара', '+2 damage': 'Критический удар',
+  '+1 pillz': 'Запас', '+3 pillz': 'Арсенал',
+  '-1 opponent power': 'Ослабление', '-2 opponent power': 'Подавление', '-2 opponent damage': 'Броня',
+  'heal 1': 'Первая помощь', 'heal 2': 'Регенерация', 'heal 3': 'Божественное исцеление',
+  'poison 1': 'Токсин', 'poison 2': 'Яд', 'poison 3': 'Чума',
+  'life steal 1': 'Вытягивание жизни', 'life steal 2': 'Кража жизни', 'life steal 3': 'Вампиризм',
+  'stop opponent ability': 'Глушитель', 'double damage': 'Двойной удар',
+};
+
 interface Props {
   playerDeck: Card[];
   onBattleEnd: (result: 'win' | 'loss' | 'draw') => void;
@@ -371,6 +395,30 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                   {currentResult.winner === 'ai' && `⚔️ ${t('battle.defeat')}`}
                   {currentResult.winner === 'draw' && `⚔️ ${t('battle.draw')}`}
                 </div>
+                {/* Ability display */}
+                <div className="flex flex-col gap-1 mt-1 w-full max-w-[200px]">
+                  {currentPlayerCard && (() => {
+                    const ab = abilityInfo[currentPlayerCard.ability];
+                    return ab ? (
+                      <div className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded bg-white/5">
+                        <span>{ab.icon}</span>
+                        <span className="text-white/40">Ваша:</span>
+                        <span style={{ color: ab.color }}>{abilityNames[currentPlayerCard.ability] || currentPlayerCard.ability}</span>
+                      </div>
+                    ) : null;
+                  })()}
+                  {currentAiCard && (() => {
+                    const ab = abilityInfo[currentAiCard.ability];
+                    return ab ? (
+                      <div className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded bg-white/5">
+                        <span>{ab.icon}</span>
+                        <span className="text-white/40">Врага:</span>
+                        <span style={{ color: ab.color }}>{abilityNames[currentAiCard.ability] || currentAiCard.ability}</span>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+
                 {/* Secondary effects */}
                 <div className="flex flex-wrap gap-1 justify-center">
                   {currentResult.damageDealt > 0 && (
