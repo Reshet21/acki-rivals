@@ -63,8 +63,8 @@ export default function Leaderboard({ walletAddress, onBack }: Props) {
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden">
       <div className="shrink-0 px-3 pt-3 pb-2">
-        <div className="text-sm font-bold text-white mb-1">🏆 Топ игроков</div>
-        <div className="text-[10px] text-white/40">Рейтинг на основе побед</div>
+        <div className="text-sm font-bold text-white mb-1">{t('leaderboard.title')}</div>
+        <div className="text-[10px] text-white/40">{t('leaderboard.subtitle')}</div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
@@ -94,7 +94,7 @@ export default function Leaderboard({ walletAddress, onBack }: Props) {
                   <span className={`text-xs font-bold truncate ${entry.isPlayer ? 'text-neon-blue' : 'text-white'}`}>
                     {entry.name}
                   </span>
-                  {entry.isPlayer && <span className="text-[8px] text-neon-blue">(Вы)</span>}
+                  {entry.isPlayer && <span className="text-[8px] text-neon-blue">{t('leaderboard.you')}</span>}
                 </div>
                 <div className="flex gap-2 text-[9px] text-white/40">
                   <span className="text-neon-green">✓{entry.wins}</span>
@@ -106,7 +106,7 @@ export default function Leaderboard({ walletAddress, onBack }: Props) {
               {/* Rating */}
               <div className="text-right shrink-0">
                 <div className="text-xs font-bold text-white/70">{entry.rating.toLocaleString()}</div>
-                <div className="text-[8px] text-white/30">rating</div>
+                <div className="text-[8px] text-white/30">{t('leaderboard.rating')}</div>
               </div>
             </div>
           ))}
