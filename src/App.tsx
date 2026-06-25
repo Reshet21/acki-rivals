@@ -97,17 +97,17 @@ function AppInner() {
           </div>
 
           {/* Floating cards */}
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 64, height: 86, top: '6%', left: '2%', opacity: 0.28, zIndex: 0, transform: 'rotate(-10deg)' }}>
-            <img src="/cards/card-acki-nacki.jpeg" alt="" className="block w-full h-full object-cover object-top" />
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 70, height: 94, top: '5%', left: '2%', opacity: 0.45, zIndex: 0, transform: 'rotate(-10deg)', filter: 'hue-rotate(0deg) brightness(1.0) contrast(1.1) saturate(1.2)' }}>
+            <img src="/cards/card-acki-nacki.jpeg" alt="" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-2" style={{ width: 60, height: 80, top: '8%', right: '2%', opacity: 0.25, zIndex: 0, transform: 'rotate(8deg)' }}>
-            <img src="/cards/card-cyber-wolf.png" alt="" className="block w-full h-full object-cover object-top" />
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-2" style={{ width: 65, height: 87, top: '7%', right: '2%', opacity: 0.4, zIndex: 0, transform: 'rotate(8deg)', filter: 'hue-rotate(-20deg) brightness(0.95) contrast(1.2) saturate(1.3)' }}>
+            <img src="/cards/card-cyber-wolf.png" alt="" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-3" style={{ width: 56, height: 75, bottom: '15%', left: '5%', opacity: 0.2, zIndex: 0, transform: 'rotate(-5deg)' }}>
-            <img src="/cards/card-block-keeper.jpeg" alt="" className="block w-full h-full object-cover object-top" />
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-3" style={{ width: 60, height: 80, bottom: '14%', left: '3%', opacity: 0.38, zIndex: 0, transform: 'rotate(-5deg)', filter: 'hue-rotate(30deg) brightness(1.0) contrast(1.1) saturate(1.1)' }}>
+            <img src="/cards/card-block-keeper.jpeg" alt="" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 52, height: 70, bottom: '20%', right: '4%', opacity: 0.18, zIndex: 0, transform: 'rotate(12deg)', animationDelay: '1.5s' }}>
-            <img src="/cards/card-neon-sniper.png" alt="" className="block w-full h-full object-cover object-top" />
+          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 58, height: 77, bottom: '18%', right: '3%', opacity: 0.35, zIndex: 0, transform: 'rotate(12deg)', animationDelay: '1.5s', filter: 'hue-rotate(-45deg) brightness(0.9) contrast(1.25) saturate(1.4)' }}>
+            <img src="/cards/card-neon-sniper.png" alt="" className="w-full h-full object-cover rounded-xl" />
           </div>
 
           {/* Content */}
