@@ -6,6 +6,7 @@ import {
   getWaitingGames,
   getMyGames,
   getGame,
+  abandonGame,
   type Game,
 } from '../services/pvpService';
 
@@ -112,6 +113,15 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   const handleContinueGame = async (game: Game) => {
     const full = await getGame(game.id);
     if (full) onStartBattle(full, full.host_id === playerId);
+  };
+
+  const handleAbandon = async (game: Game) => {
+    try {
+      await abandonGame(game.id);
+      loadGames();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   };
 
   return (
@@ -235,23 +245,25 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
               const isHost = game.host_id === playerId;
               const opponent = isHost ? game.guest_id : game.host_id;
               return (
-                <button
-                  key={game.id}
-                  onClick={() => handleContinueGame(game)}
-                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 active:bg-white/10 transition-all text-left"
-                >
-                  <div>
+                <div key={game.id} className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5">
+                  <button
+                    onClick={() => handleContinueGame(game)}
+                    className="flex-1 text-left"
+                  >
                     <div className="text-sm font-bold text-white">
                       {isHost ? '🏠 Хост' : '👤 Гость'} vs {opponent || 'Ожидание...'}
                     </div>
                     <div className="text-[10px] text-white/30">
                       {game.status === 'waiting' ? 'Ожидание соперника' : `Раунд ${game.state?.round || 0}/4`}
                     </div>
-                  </div>
-                  <div className="text-neon-blue text-xs font-bold">
-                    {game.status === 'waiting' ? '⏳' : '▶️'}
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleAbandon(game); }}
+                    className="text-[10px] px-2 py-1 rounded border border-neon-red/30 text-neon-red/70 active:bg-neon-red/20 transition-all"
+                  >
+                    Выйти
+                  </button>
+                </div>
               );
             })}
           </div>

@@ -200,6 +200,18 @@ export async function finishGame(gameId: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function abandonGame(gameId: string): Promise<void> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  const { error } = await client
+    .from('games')
+    .delete()
+    .eq('id', gameId);
+
+  if (error) throw error;
+}
+
 // ─── Real-time subscriptions ─────────────────────────────
 
 export function subscribeToGame(
