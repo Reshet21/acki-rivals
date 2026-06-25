@@ -1,4 +1,6 @@
 import type { Card } from '../types';
+import { useI18n } from '../i18n';
+import { getCardName, getAbilityName, getClanName, getStatLabel, getRarityLabel } from '../i18n/cardTranslations';
 
 interface Props {
   card: Card;
@@ -9,39 +11,28 @@ interface Props {
 
 // Ability visual info: icon + short description
 const abilityInfo: Record<string, { icon: string; desc: string; color: string }> = {
-  '+1 power':          { icon: '⚔️', desc: '+1 к силе', color: 'text-blue-400' },
-  '+2 power':          { icon: '⚔️', desc: '+2 к силе', color: 'text-blue-300' },
-  '+3 power':          { icon: '⚔️', desc: '+3 к силе', color: 'text-blue-200' },
-  '+4 power':          { icon: '⚔️', desc: '+4 к силе', color: 'text-cyan-300' },
-  '+1 damage':         { icon: '💥', desc: '+1 к урону', color: 'text-red-400' },
-  '+2 damage':         { icon: '💥', desc: '+2 к урону', color: 'text-red-300' },
-  '+1 pillz':          { icon: '💊', desc: '+1 пиллз', color: 'text-green-400' },
-  '+3 pillz':          { icon: '💊', desc: '+3 пиллз', color: 'text-green-300' },
-  '-1 opponent power': { icon: '🛡️', desc: '-1 врагу к силе', color: 'text-orange-400' },
-  '-2 opponent power': { icon: '🛡️', desc: '-2 врагу к силе', color: 'text-orange-300' },
-  '-2 opponent damage':{ icon: '🛡️', desc: '-2 к урону врага', color: 'text-orange-400' },
-  'heal 1':           { icon: '💚', desc: '+1 HP при проигрыше', color: 'text-green-400' },
-  'heal 2':           { icon: '💚', desc: '+2 HP при проигрыше', color: 'text-green-300' },
-  'heal 3':           { icon: '💚', desc: '+3 HP при проигрыше', color: 'text-green-200' },
-  'poison 1':         { icon: '☠️', desc: '+1 урон врагу', color: 'text-yellow-400' },
-  'poison 2':         { icon: '☠️', desc: '+2 урон врагу', color: 'text-yellow-300' },
-  'poison 3':         { icon: '☠️', desc: '+3 урон врагу', color: 'text-yellow-200' },
-  'life steal 1':     { icon: '🩸', desc: '+1 HP при победе', color: 'text-purple-400' },
-  'life steal 2':     { icon: '🩸', desc: '+2 HP при победе', color: 'text-purple-300' },
-  'life steal 3':     { icon: '🩸', desc: '+3 HP при победе', color: 'text-purple-200' },
-  'stop opponent ability': { icon: '🚫', desc: 'Отменяет способность', color: 'text-red-400' },
-  'double damage':    { icon: '⚡', desc: 'Двойной урон', color: 'text-yellow-300' },
-};
-
-const abilityNames: Record<string, string> = {
-  '+1 power': 'Укрепление', '+2 power': 'Боевой дух', '+3 power': 'Трансценденция', '+4 power': 'Абсолютная сила',
-  '+1 damage': 'Усиление удара', '+2 damage': 'Критический удар',
-  '+1 pillz': 'Запас', '+3 pillz': 'Арсенал',
-  '-1 opponent power': 'Ослабление', '-2 opponent power': 'Подавление', '-2 opponent damage': 'Броня',
-  'heal 1': 'Первая помощь', 'heal 2': 'Регенерация', 'heal 3': 'Божественное исцеление',
-  'poison 1': 'Токсин', 'poison 2': 'Яд', 'poison 3': 'Чума',
-  'life steal 1': 'Вытягивание жизни', 'life steal 2': 'Кража жизни', 'life steal 3': 'Вампиризм',
-  'stop opponent ability': 'Глушитель', 'double damage': 'Двойной удар',
+  '+1 power':          { icon: '⚔️', desc: '+1 power', color: 'text-blue-400' },
+  '+2 power':          { icon: '⚔️', desc: '+2 power', color: 'text-blue-300' },
+  '+3 power':          { icon: '⚔️', desc: '+3 power', color: 'text-blue-200' },
+  '+4 power':          { icon: '⚔️', desc: '+4 power', color: 'text-cyan-300' },
+  '+1 damage':         { icon: '💥', desc: '+1 damage', color: 'text-red-400' },
+  '+2 damage':         { icon: '💥', desc: '+2 damage', color: 'text-red-300' },
+  '+1 pillz':          { icon: '💊', desc: '+1 pillz', color: 'text-green-400' },
+  '+3 pillz':          { icon: '💊', desc: '+3 pillz', color: 'text-green-300' },
+  '-1 opponent power': { icon: '🛡️', desc: '-1 enemy power', color: 'text-orange-400' },
+  '-2 opponent power': { icon: '🛡️', desc: '-2 enemy power', color: 'text-orange-300' },
+  '-2 opponent damage':{ icon: '🛡️', desc: '-2 enemy damage', color: 'text-orange-400' },
+  'heal 1':           { icon: '💚', desc: '+1 HP on loss', color: 'text-green-400' },
+  'heal 2':           { icon: '💚', desc: '+2 HP on loss', color: 'text-green-300' },
+  'heal 3':           { icon: '💚', desc: '+3 HP on loss', color: 'text-green-200' },
+  'poison 1':         { icon: '☠️', desc: '+1 poison', color: 'text-yellow-400' },
+  'poison 2':         { icon: '☠️', desc: '+2 poison', color: 'text-yellow-300' },
+  'poison 3':         { icon: '☠️', desc: '+3 poison', color: 'text-yellow-200' },
+  'life steal 1':     { icon: '🩸', desc: '+1 HP on win', color: 'text-purple-400' },
+  'life steal 2':     { icon: '🩸', desc: '+2 HP on win', color: 'text-purple-300' },
+  'life steal 3':     { icon: '🩸', desc: '+3 HP on win', color: 'text-purple-200' },
+  'stop opponent ability': { icon: '🚫', desc: 'Cancels ability', color: 'text-red-400' },
+  'double damage':    { icon: '⚡', desc: 'Double damage', color: 'text-yellow-300' },
 };
 
 // AN-style character illustrations
@@ -107,6 +98,7 @@ function StarDisplay({ stars }: { stars: number }) {
 }
 
 export default function CardComponent({ card, isSelected, onClick, compact }: Props) {
+  const { lang } = useI18n();
   const stars = card.stars ?? 0;
   const displayPower = (card.power ?? 0) + stars;
   const displayDamage = (card.damage ?? 0) + stars;
@@ -116,6 +108,13 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
   const bgClass = clanBg[clan] || '';
   const artSrc = cardArt[card.id];
   const ability = abilityInfo[card.ability] || { icon: '❓', desc: card.ability || '—', color: 'text-white/50' };
+
+  const cardName = getCardName(lang, card.id);
+  const abilityName = getAbilityName(lang, card.ability);
+  const clanName = getClanName(lang, clan);
+  const powerLabel = getStatLabel(lang, 'power');
+  const damageLabel = getStatLabel(lang, 'damage');
+  const rarityLabel = getRarityLabel(lang, rarity);
 
   if (compact) {
     return (
@@ -142,7 +141,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
           <div className="absolute top-1 right-1 z-10">
             <span className={`text-[6px] px-1.5 py-0.5 rounded-full font-bold ${config.badge}`}>
-              {rarity === 'common' ? 'ОБЫЧ' : rarity === 'uncommon' ? 'НЕОБЫЧ' : rarity === 'rare' ? 'РЕДК' : rarity === 'epic' ? 'ЭПИЧ' : 'ЛЕГЕНДА'}
+              {rarityLabel}
             </span>
           </div>
         </div>
@@ -150,7 +149,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         <div className="p-1.5 flex flex-col gap-0.5 flex-1 relative z-10">
           <div className="text-center">
             <div className="font-bold text-[11px] leading-tight text-white drop-shadow-md truncate px-0.5">
-              {card.name || '???'}
+              {cardName}
             </div>
             <StarDisplay stars={stars} />
           </div>
@@ -160,7 +159,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
             <span className="text-[9px]">{ability.icon}</span>
             <div className="flex-1 min-w-0">
               <div className={`text-[8px] font-bold leading-tight truncate ${ability.color}`}>
-                {abilityNames[card.ability] || card.ability}
+                {abilityName}
               </div>
               <div className="text-[7px] text-white/40 leading-tight truncate">{ability.desc}</div>
             </div>
@@ -168,12 +167,12 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
 
           <div className="flex justify-between items-center px-0.5">
             <div className="text-center flex-1">
-              <div className="text-[6px] text-white/40 uppercase">СИЛА</div>
+              <div className="text-[6px] text-white/40 uppercase">{powerLabel}</div>
               <div className="text-sm font-black text-white drop-shadow-md">{displayPower}</div>
             </div>
             <div className="w-px h-4 bg-white/10" />
             <div className="text-center flex-1">
-              <div className="text-[6px] text-white/40 uppercase">УРОН</div>
+              <div className="text-[6px] text-white/40 uppercase">{damageLabel}</div>
               <div className="text-sm font-black text-red-300 drop-shadow-md">{displayDamage}</div>
             </div>
           </div>
@@ -211,7 +210,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
         <div className="absolute top-2 right-2 z-10">
           <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold ${config.badge}`}>
-            {rarity === 'common' ? 'ОБЫЧ' : rarity === 'uncommon' ? 'НЕОБЫЧ' : rarity === 'rare' ? 'РЕДК' : rarity === 'epic' ? 'ЭПИЧ' : 'ЛЕГЕНДА'}
+            {rarityLabel}
           </span>
         </div>
       </div>
@@ -219,10 +218,10 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
       <div className="p-3 flex flex-col gap-1.5 flex-1 relative z-10">
         <div className="text-center">
           <div className="font-bold text-sm leading-tight text-white drop-shadow-lg">
-            {card.name || '???'}
+            {cardName}
           </div>
           <StarDisplay stars={stars} />
-          <div className="text-[9px] text-white/50 mt-0.5">{clan}</div>
+          <div className="text-[9px] text-white/50 mt-0.5">{clanName}</div>
         </div>
 
         {/* Ability with icon + description */}
@@ -230,7 +229,7 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
           <div className="flex items-center justify-center gap-1 mb-0.5">
             <span className="text-sm">{ability.icon}</span>
             <span className={`text-[10px] font-bold ${ability.color}`}>
-              {abilityNames[card.ability] || card.ability}
+              {abilityName}
             </span>
           </div>
           <div className="text-[9px] text-white/50">{ability.desc}</div>
@@ -238,12 +237,12 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
 
         <div className="flex justify-between items-center mt-auto">
           <div className="text-center flex-1">
-            <div className="text-[8px] text-white/40 uppercase">Сила</div>
+            <div className="text-[8px] text-white/40 uppercase">{powerLabel}</div>
             <div className="text-2xl font-black text-white drop-shadow-lg">{displayPower}</div>
           </div>
           <div className="w-px h-8 bg-white/10" />
           <div className="text-center flex-1">
-            <div className="text-[8px] text-white/40 uppercase">Урон</div>
+            <div className="text-[8px] text-white/40 uppercase">{damageLabel}</div>
             <div className="text-2xl font-black text-red-300 drop-shadow-lg">{displayDamage}</div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { PACKS, getPackById } from '../data/packs';
 import { openPack } from '../utils/packGenerator';
 import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
+import { getRarityLabel, getPackName } from '../i18n/cardTranslations';
 
 interface Props {
   credits: number;
@@ -11,24 +12,24 @@ interface Props {
   onBack: () => void;
 }
 
-const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; text: string; label: string; gradient: string }> = {
-  common: { border: 'border-gray-400', bg: 'bg-gray-500/10', glow: '', text: 'text-gray-300', label: 'Обычная', gradient: 'from-gray-600 to-gray-800' },
-  uncommon: { border: 'border-green-400', bg: 'bg-green-500/10', glow: 'shadow-[0_0_12px_rgba(74,222,128,0.3)]', text: 'text-green-300', label: 'Необычная', gradient: 'from-green-600 to-emerald-800' },
-  rare: { border: 'border-blue-400', bg: 'bg-blue-500/10', glow: 'shadow-[0_0_15px_rgba(96,165,250,0.4)]', text: 'text-blue-300', label: 'Редкая', gradient: 'from-blue-600 to-indigo-800' },
-  epic: { border: 'border-purple-400', bg: 'bg-purple-500/10', glow: 'shadow-[0_0_18px_rgba(168,85,247,0.4)]', text: 'text-purple-300', label: 'Эпическая', gradient: 'from-purple-600 to-violet-800' },
-  legendary: { border: 'border-yellow-400', bg: 'bg-yellow-500/10', glow: 'shadow-[0_0_20px_rgba(250,204,21,0.5)]', text: 'text-yellow-300', label: 'Легендарная', gradient: 'from-yellow-500 to-amber-700' },
+const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; text: string; gradient: string }> = {
+  common: { border: 'border-gray-400', bg: 'bg-gray-500/10', glow: '', text: 'text-gray-300', gradient: 'from-gray-600 to-gray-800' },
+  uncommon: { border: 'border-green-400', bg: 'bg-green-500/10', glow: 'shadow-[0_0_12px_rgba(74,222,128,0.3)]', text: 'text-green-300', gradient: 'from-green-600 to-emerald-800' },
+  rare: { border: 'border-blue-400', bg: 'bg-blue-500/10', glow: 'shadow-[0_0_15px_rgba(96,165,250,0.4)]', text: 'text-blue-300', gradient: 'from-blue-600 to-indigo-800' },
+  epic: { border: 'border-purple-400', bg: 'bg-purple-500/10', glow: 'shadow-[0_0_18px_rgba(168,85,247,0.4)]', text: 'text-purple-300', gradient: 'from-purple-600 to-violet-800' },
+  legendary: { border: 'border-yellow-400', bg: 'bg-yellow-500/10', glow: 'shadow-[0_0_20px_rgba(250,204,21,0.5)]', text: 'text-yellow-300', gradient: 'from-yellow-500 to-amber-700' },
 };
 
 type Phase = 'shop' | 'opening' | 'result';
 
-const packVisuals: Record<string, { gradient: string; icon: string; desc: string }> = {
-  basic: { gradient: 'from-gray-600 via-gray-500 to-gray-700', icon: '📦', desc: 'Стандартный набор' },
-  standard: { gradient: 'from-blue-600 via-blue-500 to-purple-600', icon: '🎁', desc: 'Улучшенный набор' },
-  advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: '💎', desc: 'Премиум набор' },
+const packVisuals: Record<string, { gradient: string; icon: string }> = {
+  basic: { gradient: 'from-gray-600 via-gray-500 to-gray-700', icon: '📦' },
+  standard: { gradient: 'from-blue-600 via-blue-500 to-purple-600', icon: '🎁' },
+  advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: '💎' },
 };
 
 export default function Shop({ credits, onBuyPack, onBack }: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [phase, setPhase] = useState<Phase>('shop');
   const [openedCards, setOpenedCards] = useState<Card[]>([]);
   const [revealIndex, setRevealIndex] = useState(-1);
@@ -172,19 +173,19 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
                   <div className="relative z-10 flex items-center gap-3">
                     <div className="text-3xl">{visual.icon}</div>
                     <div className="flex-1">
-                      <div className="text-lg font-black text-white">{pack.name}</div>
+                      <div className="text-lg font-black text-white">{getPackName(lang, pack.id)}</div>
                       <div className="text-[10px] text-white/70">{pack.description}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xl font-black text-white">💰 {pack.price}</div>
-                      <div className="text-[9px] text-white/60">{pack.cardCount} карт</div>
+                      <div className="text-[9px] text-white/60">{pack.cardCount} {t('deck.cards')}</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Rarity chances */}
                 <div className="px-4 py-3">
-                  <div className="text-[9px] text-white/30 uppercase tracking-wider mb-2">Шансы выпадения</div>
+                  <div className="text-[9px] text-white/30 uppercase tracking-wider mb-2">{t('shop.dropRates') || 'Drop rates'}</div>
                   <div className="flex gap-1.5 flex-wrap mb-3">
                     {rarities.map(([rarity, weight]) => {
                       const style = rarityStyles[rarity as Rarity];
@@ -195,7 +196,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
                           key={rarity}
                           className={`text-[9px] px-2 py-0.5 rounded-full border ${style.border} ${style.text}`}
                         >
-                          {style.label} {pct}%
+                          {getRarityLabel(lang, rarity)} {pct}%
                         </span>
                       );
                     })}
