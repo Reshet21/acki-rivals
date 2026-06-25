@@ -46,40 +46,40 @@ const abilityNames: Record<string, string> = {
 
 // AN-style character illustrations
 const cardArt: Record<number, string> = {
-  1: '/cards/card-01-AN.svg',   // Ржавый Дрон — робот AN
-  2: '/cards/card-04.svg',      // Патрульный — снайпер
-  3: '/cards/card-04.svg',      // Взломщик — снайпер
-  4: '/cards/card-04.svg',      // Неоновый Снайпер
-  5: '/cards/card-05-AN.svg',   // Кибер-Волк — волк AN
-  6: '/cards/card-04.svg',      // Рыцарь — снайпер
-  7: '/cards/card-07.svg',      // Тень — тень
-  8: '/cards/card-08-AN.svg',   // Берсерк — берсерк AN
-  9: '/cards/card-14.svg',      // Светлячок — монах
-  10: '/cards/card-14.svg',     // Медитативный — монах
-  11: '/cards/card-01.svg',     // Послушник — робот
-  12: '/cards/card-07.svg',     // Тотем — тень
-  13: '/cards/card-14.svg',     // Дзен-Воин — монах
-  14: '/cards/card-14.svg',     // Мастер — монах
-  15: '/cards/card-07.svg',     // Страж — тень
-  16: '/cards/card-16-AN.svg',  // Император — император AN
-  17: '/cards/card-08.svg',     // Неоновый Император — берсерк
-  18: '/cards/card-16.svg',     // Космический Страж — император
-  19: '/cards/card-07.svg',     // Фантом — тень
-  20: '/cards/card-05.svg',     // Убийца — волк
-  21: '/cards/card-14.svg',     // Дзен-Воин 2 — монах
-  22: '/cards/card-01.svg',     // Страж Храма — робот
-  23: '/cards/card-01.svg',     // Курьер — робот
-  24: '/cards/card-05.svg',     // Рейдер — волк
-  25: '/cards/card-04.svg',     // Диверсант — снайпер
-  26: '/cards/card-04.svg',     // Убийца 2 — снайпер
-  27: '/cards/card-08.svg',     // Паладин — берсерк
-  28: '/cards/card-16.svg',     // Неоновый Бог — император
-  29: '/cards/card-14.svg',     // Монах-Страж — монах
-  30: '/cards/card-14.svg',     // Целитель — монах
-  31: '/cards/card-07.svg',     // Отравитель — тень
-  32: '/cards/card-07.svg',     // Дух Предков — тень
-  33: '/cards/card-08.svg',     // Архонт — берсерк
-  34: '/cards/card-16.svg',     // Будда Машин — император
+  1: '/cards/card-rusty-drone.png',
+  2: '/cards/card-patrol.png',
+  3: '/cards/card-hacker.png',
+  4: '/cards/card-neon-sniper.png',
+  5: '/cards/card-cyber-wolf.png',
+  6: '/cards/card-circuit-guardian.jpeg',
+  7: '/cards/card-phantom.png',
+  8: '/cards/card-acki-nacki.jpeg',
+  9: '/cards/card-mamabord.jpeg',
+  10: '/cards/card-mamabord.jpeg',
+  11: '/cards/card-block-keeper.jpeg',
+  12: '/cards/card-block-keeper.jpeg',
+  13: '/cards/card-block-keeper.jpeg',
+  14: '/cards/card-block-manager.jpeg',
+  15: '/cards/card-block-manager.jpeg',
+  16: '/cards/card-block-manager.jpeg',
+  17: '/cards/card-malicious-block.jpeg',
+  18: '/cards/card-circuit-guardian.jpeg',
+  19: '/cards/card-phantom.png',
+  20: '/cards/card-cyber-killer.png',
+  21: '/cards/card-mamabord.jpeg',
+  22: '/cards/card-block-keeper.jpeg',
+  23: '/cards/card-courier.png',
+  24: '/cards/card-raider.png',
+  25: '/cards/card-saboteur.png',
+  26: '/cards/card-cyber-killer.png',
+  27: '/cards/card-circuit-guardian.jpeg',
+  28: '/cards/card-malicious-block.jpeg',
+  29: '/cards/card-block-keeper.jpeg',
+  30: '/cards/card-mamabord.jpeg',
+  31: '/cards/card-saboteur.png',
+  32: '/cards/card-block-keeper.jpeg',
+  33: '/cards/card-circuit-guardian.jpeg',
+  34: '/cards/card-malicious-block.jpeg',
 };
 
 const clanBg: Record<string, string> = {
