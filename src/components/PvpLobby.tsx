@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Card } from '../types';
-import { createGame, joinGame, getWaitingGames, abandonGame, subscribeToGame, type Game } from '../services/pvpService';
+import { createGame, joinGame, getWaitingGames, abandonGame, getGame, type Game } from '../services/pvpService';
 
 interface Props {
   playerId: string;
@@ -22,17 +22,29 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   const [joinCode, setJoinCode] = useState('');
   const [randomQueue, setRandomQueue] = useState(false);
   const [searchTimer, setSearchTimer] = useState(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Poll room for updates (fallback for realtime)
   useEffect(() => {
-    if (!room) return;
-    return subscribeToGame(room.id, () => {}, (updated) => {
-      setRoom(updated);
-      if (updated.guest_id && updated.status === 'active') {
-        onStartBattle(updated, updated.host_id === playerId);
-      }
-    });
+    if (!room) { if (pollRef.current) clearInterval(pollRef.current); return; }
+
+    const poll = async () => {
+      try {
+        const fresh = await getGame(room.id);
+        if (fresh && fresh.guest_id && fresh.status === 'active') {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setRoom(fresh);
+          onStartBattle(fresh, fresh.host_id === playerId);
+        }
+      } catch {}
+    };
+
+    poll();
+    pollRef.current = setInterval(poll, 2000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [room?.id, playerId, onStartBattle]);
 
+  // Poll open rooms
   const loadRooms = async () => {
     setLoadingRooms(true);
     try { setOpenRooms((await getWaitingGames()).filter((g) => g.host_id !== playerId)); } catch {}
@@ -40,8 +52,15 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   };
 
   useEffect(() => { if (tab === 'open') loadRooms(); }, [tab]);
-  useEffect(() => { if (!randomQueue) return; const i = setInterval(() => setSearchTimer((p) => p + 1), 1000); return () => clearInterval(i); }, [randomQueue]);
 
+  // Random search timer
+  useEffect(() => {
+    if (!randomQueue) return;
+    const i = setInterval(() => setSearchTimer((p) => p + 1), 1000);
+    return () => clearInterval(i);
+  }, [randomQueue]);
+
+  // Random matchmaking
   useEffect(() => {
     if (!randomQueue) return;
     const check = async () => {
@@ -57,18 +76,26 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     check();
     const i = setInterval(check, 2000);
     return () => clearInterval(i);
-  }, [randomQueue, playerId, deck, onStartBattle]);
+  }, [randomQueue, playerId, deck]);
 
   const handleCreate = async () => {
     if (deck.length !== 4) return;
-    try { setWaiting(true); setError(null); const g = await createGame(playerId, deck); if (g) { setRoom(g); setTab('menu'); } } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
+    try {
+      setWaiting(true); setError(null);
+      const g = await createGame(playerId, deck);
+      if (g) { setRoom(g); setTab('menu'); }
+    } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
 
   const handleRandom = () => { if (deck.length !== 4) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
-  const cancelRandom = async () => { if (room) { try { await abandonGame(room.id); } catch {} setRoom(null); } setRandomQueue(false); setSearchTimer(0); };
+  const cancelRandom = () => { setRandomQueue(false); setSearchTimer(0); };
 
   const handleJoinOpen = async (game: Game) => {
-    try { setWaiting(true); setError(null); const updated = await joinGame(game.id, playerId, deck); if (updated) { setRoom(updated); setTab('menu'); } } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
+    try {
+      setWaiting(true); setError(null);
+      const updated = await joinGame(game.id, playerId, deck);
+      if (updated) { setRoom(updated); setTab('menu'); }
+    } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
 
   const handleJoinCode = async () => {
@@ -77,8 +104,8 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
       setWaiting(true); setError(null);
       const games = await getWaitingGames();
       const game = games.find((g) => g.id === joinCode.trim());
-      if (!game) { setError('Комната не найдена'); return; }
-      if (game.host_id === playerId) { setError('Нельзя войти в свою комнату'); return; }
+      if (!game) { setError('Комната не найдена'); setWaiting(false); return; }
+      if (game.host_id === playerId) { setError('Нельзя войти в свою комнату'); setWaiting(false); return; }
       const updated = await joinGame(joinCode.trim(), playerId, deck);
       if (updated) { setRoom(updated); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
@@ -86,8 +113,12 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
 
   const handleCopy = () => { navigator.clipboard.writeText(room?.id || '').then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
   const handleEnter = () => { if (room) onStartBattle(room, room.host_id === playerId); };
-  const handleAbandon = async () => { if (room) { try { await abandonGame(room.id); } catch {} setRoom(null); setTab('menu'); } };
+  const handleAbandon = async () => {
+    if (room) { try { await abandonGame(room.id); } catch {} setRoom(null); }
+    setTab('menu');
+  };
 
+  // ═══ DECK CHECK ═══
   if (deck.length !== 4) return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4">
       <div className="text-white/50 text-center"><div className="text-lg mb-2">⚠️</div><div className="text-sm">Соберите колоду из 4 карт</div></div>
@@ -95,11 +126,13 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     </div>
   );
 
+  // ═══ WAITING FOR OPPONENT ═══
   if (room && !room.guest_id) return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4 gap-4">
       <div className="text-4xl animate-pulse">⏳</div>
       <div className="text-lg font-bold text-white">Ожидание соперника...</div>
-      <div className="w-full max-w-xs"><div className="text-[10px] text-white/40 text-center mb-1">Код комнаты</div>
+      <div className="w-full max-w-xs">
+        <div className="text-[10px] text-white/40 text-center mb-1">Код комнаты</div>
         <div className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-center font-mono text-sm text-neon-green break-all select-all">{room.id}</div>
       </div>
       <button onClick={handleCopy} className={`w-full max-w-xs py-2.5 rounded-lg text-sm font-bold transition-all ${copied ? 'bg-neon-green/20 text-neon-green border border-neon-green/30' : 'bg-white/5 border border-white/10 text-white/60 active:bg-white/10'}`}>
@@ -110,16 +143,22 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     </div>
   );
 
+  // ═══ RANDOM MATCHMAKING ═══
   if (randomQueue) return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4 gap-6">
-      <div className="text-center"><div className="text-4xl mb-4 animate-spin" style={{ animationDuration: '3s' }}>⚔️</div>
+      <div className="text-center">
+        <div className="text-4xl mb-4 animate-spin" style={{ animationDuration: '3s' }}>⚔️</div>
         <div className="text-lg font-bold text-white mb-2">Подбор соперника...</div>
         <div className="text-sm text-white/40">{searchTimer}с</div>
+      </div>
+      <div className="flex flex-col gap-1.5 text-xs text-white/30 text-center">
+        <div>Ищем открытую комнату</div>
       </div>
       <button onClick={cancelRandom} className="px-6 py-2.5 rounded-lg text-sm font-bold bg-neon-red/10 border border-neon-red/30 text-neon-red active:bg-neon-red/20">❌ Выйти из поиска</button>
     </div>
   );
 
+  // ═══ MAIN MENU ═══
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden">
       <div className="flex border-b border-dark-border shrink-0">
