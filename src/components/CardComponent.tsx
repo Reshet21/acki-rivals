@@ -130,7 +130,22 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
 
   return (
     <>
-      <button onClick={(e) => { if (noPopup) { onClick?.(); } else { e.preventDefault(); setShowDetail(true); } }} style={S.btn}>{inner}</button>
+      <button onClick={onClick} style={{ ...S.btn, position: 'relative' } as React.CSSProperties}>
+        {inner}
+        {/* Info button — top right */}
+        {!noPopup && (
+          <div
+            onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
+            style={{
+              position: 'absolute', top: compact ? 2 : 4, right: compact ? 2 : 4,
+              width: compact ? 14 : 16, height: compact ? 14 : 16, borderRadius: '50%',
+              background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: compact ? 7 : 8, color: '#fff', cursor: 'pointer', zIndex: 10,
+            }}
+          >i</div>
+        )}
+      </button>
       {showDetail && <CardDetailPopup card={card} hand={hand} onClose={() => setShowDetail(false)} />}
     </>
   );
