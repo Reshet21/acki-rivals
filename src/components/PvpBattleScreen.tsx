@@ -9,6 +9,7 @@ import {
   getRoundMoves,
   updateGameState,
   subscribeToGame,
+  abandonGame,
   type Game,
   type GameState,
   type Move,
@@ -205,6 +206,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
           else if (newOppHP > newMyHP) r = 'loss';
           setBattleResult(r);
           setBattlePhase('ended');
+          abandonGame(game.id).catch(console.error);
         } else {
           setRound(nextRound);
           setPlayerPillz((p) => Math.min(STARTING_PILLZ, p + FREE_PILLZ_PER_ROUND));
@@ -248,6 +250,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
             else if (oppHP > myHP) r = 'loss';
             setBattleResult(r);
             setBattlePhase('ended');
+            abandonGame(game.id).catch(console.error);
           }
         }
         if (!updatedGame.guest_id && !isHost) {
@@ -375,6 +378,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
       guestPillz: isHost ? playerPillz : 0,
     };
     updateGameState(game.id, newState).catch(console.error);
+    abandonGame(game.id).catch(console.error);
 
     setBattleResult('loss');
     setBattlePhase('ended');
