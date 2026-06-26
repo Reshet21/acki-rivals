@@ -200,6 +200,22 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
         setPlayerHP(newMyHP);
         setOpponentHP(newOppHP);
 
+        // KO check
+        if (newMyHP <= 0 || newOppHP <= 0) {
+          let r: 'win' | 'loss' | 'draw' = 'draw';
+          if (newMyHP > newOppHP) r = 'win';
+          else if (newOppHP > newMyHP) r = 'loss';
+          else if (newMyHP <= 0 && newOppHP <= 0) r = 'draw';
+          else if (newOppHP <= 0) r = 'win';
+          else r = 'loss';
+          setBattleResult(r);
+          setBattlePhase('ended');
+          const koState: GameState = { phase: 'ended', round: roundRef.current, hostHP: isHost ? newMyHP : newOppHP, guestHP: isHost ? newOppHP : newMyHP, hostPillz: isHost ? playerPillzRef.current : opponentPillzRef.current, guestPillz: isHost ? opponentPillzRef.current : playerPillzRef.current };
+          updateGameState(game.id, koState).catch(console.error);
+          abandonGame(game.id).catch(console.error);
+          return;
+        }
+
         const nextRound = roundRef.current + 1;
 
         const newState: GameState = {

@@ -241,6 +241,19 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         setPlayerHP(newPlayerHP);
         setAiHP(newAiHP);
 
+        // KO check — immediate victory if HP reaches 0
+        if (newPlayerHP <= 0 || newAiHP <= 0) {
+          let r: 'win' | 'loss' | 'draw' = 'draw';
+          if (newPlayerHP > newAiHP) r = 'win';
+          else if (newAiHP > newPlayerHP) r = 'loss';
+          else if (newPlayerHP <= 0 && newAiHP <= 0) r = 'draw';
+          else if (newAiHP <= 0) r = 'win';
+          else r = 'loss';
+          setBattleResult(r);
+          setBattlePhase('ended');
+          return;
+        }
+
         const nextRound = round + 1;
 
         if (nextRound > TOTAL_ROUNDS) {

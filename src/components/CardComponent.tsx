@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
 import { getCardName, getAbilityName, getStatLabel } from '../i18n/cardTranslations';
+import CardDetailPopup from './CardDetailPopup';
 
 interface Props {
   card: Card;
   isSelected?: boolean;
   onClick?: () => void;
   compact?: boolean;
+  hand?: Card[];
+  noPopup?: boolean;
 }
 
 const abInfo: Record<string, { icon: string; color: string }> = {
@@ -45,8 +49,9 @@ const R: Record<string, { gc:string; gg:string; bg:string; fg:string; bt:string;
   legendary: { gc:'radial-gradient(circle at 35% 30%,#fef08a,#f59e0b 50%,#78350f)', gg:'0 0 22px #f59e0b,0 0 40px rgba(245,158,11,0.4)', bg:'linear-gradient(135deg,#78350f,#f59e0b,#b45309,#fbbf24)', fg:'0 0 30px rgba(245,158,11,0.5),0 0 60px rgba(245,158,11,0.2)', bt:'ЛЕГЕНДАРНАЯ', bc:'#f59e0b', sl:'linear-gradient(90deg,transparent,rgba(245,158,11,0.3),transparent)' },
 };
 
-export default function CardComponent({ card, isSelected, onClick, compact }: Props) {
+export default function CardComponent({ card, isSelected, onClick, compact, hand, noPopup }: Props) {
   const { lang } = useI18n();
+  const [showDetail, setShowDetail] = useState(false);
   const s = card.stars ?? 0;
   const r = R[card.rarity || 'common'] || R.common;
   const img = art[card.id];
@@ -123,5 +128,10 @@ export default function CardComponent({ card, isSelected, onClick, compact }: Pr
     </>
   );
 
-  return <button onClick={onClick} style={S.btn}>{inner}</button>;
+  return (
+    <>
+      <button onClick={(e) => { if (noPopup) { onClick?.(); } else { e.preventDefault(); setShowDetail(true); } }} style={S.btn}>{inner}</button>
+      {showDetail && <CardDetailPopup card={card} hand={hand} onClose={() => setShowDetail(false)} />}
+    </>
+  );
 }
