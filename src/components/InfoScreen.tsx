@@ -5,7 +5,7 @@ interface Props {
   onBack: () => void;
 }
 
-type Tab = 'about' | 'cards' | 'battle' | 'packs' | 'pvp';
+type Tab = 'about' | 'cards' | 'battle' | 'combos' | 'packs' | 'pvp';
 
 export default function InfoScreen({ onBack }: Props) {
   const { t } = useI18n();
@@ -15,6 +15,7 @@ export default function InfoScreen({ onBack }: Props) {
     { id: 'about', label: t('info.aboutTab') },
     { id: 'cards', label: t('info.cardsTab') },
     { id: 'battle', label: t('info.battleTab') },
+    { id: 'combos', label: '🔗 Комбо' },
     { id: 'packs', label: t('info.packsTab') },
     { id: 'pvp', label: t('info.pvpTab') },
   ];
@@ -41,6 +42,7 @@ export default function InfoScreen({ onBack }: Props) {
         {tab === 'about' && <AboutSection />}
         {tab === 'cards' && <CardsSection />}
         {tab === 'battle' && <BattleSection />}
+        {tab === 'combos' && <CombosSection />}
         {tab === 'packs' && <PacksSection />}
         {tab === 'pvp' && <PvpSection />}
       </div>
@@ -185,6 +187,38 @@ function PacksSection() {
       </Section>
       <Section title={t('info.earnCreditsTitle')}>
         <p>{t('info.earnCreditsDesc')}</p>
+      </Section>
+    </>
+  );
+}
+
+function CombosSection() {
+  return (
+    <>
+      <Section title="🔗 Комбо карты">
+        <p>Когда определённые карты оказываются в одной руке, они получают бонусы!</p>
+      </Section>
+      <Section title="⚔️ Клан Неоновых Наемников">
+        <p>Бонус клана: +1 к силе всех карт когда 2+ карты клана в руке</p>
+        <p>Комбо: Дрон+Курьер → +2 силы обоим</p>
+        <p>Комбо: Волк+Убийца → +2 урона убийце</p>
+        <p>Комбо: Берсерк+Император → +3 урона берсерку</p>
+        <p>Комбо: Тень+Фантом → двойная кража жизни</p>
+      </Section>
+      <Section title="🧘 Цифровые Монахи">
+        <p>Бонус клана: +1 к урону всех карт когда 2+ карты клана в руке</p>
+        <p>Комбо: Медитативный+Страж → +2 исцеления обоим</p>
+        <p>Комбо: Мастер+Архонт → двойной яд</p>
+        <p>Комбо: Император+Страж → +3 силы императору</p>
+        <p>Комбо: Будда+Дух → тройное исцеление</p>
+      </Section>
+      <Section title="🌐 Кросс-клан комбо">
+        <p>Берсерк + Император Кода → +2 урона обоим</p>
+        <p>Неоновый Бог + Будда Машин → +3 силы обоим</p>
+      </Section>
+      <Section title="💡 Как работают комбо">
+        <p>Комбо активируется автоматически когда обе карты в руке.</p>
+        <p>Посмотри подробности нажав кнопку «i» на карточке.</p>
       </Section>
     </>
   );
