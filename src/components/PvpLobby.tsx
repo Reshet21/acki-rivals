@@ -86,7 +86,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   }, [randomQueue, playerId, deck, searchTimer]);
 
   const handleCreate = async () => {
-    if (deck.length !== 4) return;
+    if (deck.length !== 8) return;
     try {
       setWaiting(true); setError(null);
       const g = await createGame(playerId, deck);
@@ -94,7 +94,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
 
-  const handleRandom = () => { if (deck.length !== 4) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
+  const handleRandom = () => { if (deck.length !== 8) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
   const cancelRandom = () => { setRandomQueue(false); setSearchTimer(0); };
 
   const handleJoinOpen = async (game: Game) => {
@@ -126,7 +126,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   };
 
   // ═══ DECK CHECK ═══
-  if (deck.length !== 4) return (
+  if (deck.length !== 8) return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4">
       <div className="text-white/50 text-center"><div className="text-lg mb-2">⚠️</div><div className="text-sm">Соберите колоду из 4 карт</div></div>
       <button onClick={onBack} className="mt-4 px-6 py-2 rounded-lg text-sm font-bold bg-white/5 border border-white/10 text-white/60 active:bg-white/10">Назад</button>

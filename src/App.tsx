@@ -70,7 +70,7 @@ function AppInner() {
       if (inDeck) {
         return prev.filter((c) => c.uid !== card.uid);
       }
-      if (prev.length >= 4) return prev;
+      if (prev.length >= 8) return prev;
       return [...prev, card];
     });
   }, [setDeck]);
@@ -129,13 +129,13 @@ function AppInner() {
 
             {/* Main actions - 2 columns */}
             <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
-              <button onClick={() => setScreen('pvp')} disabled={deck.length !== 4}
-                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-red-600 to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
+              <button onClick={() => setScreen('pvp')} disabled={deck.length !== 8}
+                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 8 ? 'bg-gradient-to-br from-red-600 to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
                 <span className="text-lg">🌐</span>
                 <span>{t('menu.pvp')}</span>
               </button>
-              <button onClick={() => setScreen('battle')} disabled={deck.length !== 4}
-                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 4 ? 'bg-gradient-to-br from-neon-red to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
+              <button onClick={() => setScreen('battle')} disabled={deck.length !== 8}
+                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 8 ? 'bg-gradient-to-br from-neon-red to-orange-500 text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
                 <span className="text-lg">⚔️</span>
                 <span>{t('menu.ai')}</span>
               </button>
@@ -151,7 +151,7 @@ function AppInner() {
               </button>
             </div>
 
-            {deck.length !== 4 && (
+            {deck.length !== 8 && (
               <div className="text-[10px] text-white/30">{t('menu.buildDeck')}</div>
             )}
 

@@ -33,11 +33,24 @@ const DAMAGE_DURATION = 2000;
 
 type BattlePhase = 'waiting' | 'select' | 'submitting' | 'waiting_opponent' | 'vs' | 'damage' | 'ended';
 
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, onSurrender }: Props) {
   const { t } = useI18n();
 
   const myDeck: Card[] = isHost ? (game.host_deck || []) : (game.guest_deck || []);
   const oppDeck: Card[] = isHost ? (game.guest_deck || []) : (game.host_deck || []);
+
+  // Deal 4 random cards from 8-card deck
+  const [myHand] = useState<Card[]>(() => shuffleArray(myDeck.filter((c) => c.uid)).slice(0, TOTAL_ROUNDS));
+  const [oppHand] = useState<Card[]>(() => shuffleArray(oppDeck.filter((c) => c.uid)).slice(0, TOTAL_ROUNDS));
 
   const [playerHP, setPlayerHP] = useState(TOTAL_HP);
   const [opponentHP, setOpponentHP] = useState(TOTAL_HP);
@@ -90,8 +103,8 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
   playerCardsUsedRef.current = playerCardsUsed;
   opponentCardsUsedRef.current = opponentCardsUsed;
 
-  const playerCardsRemaining = myDeck.filter((c) => c.uid && !playerCardsUsed.includes(c.uid));
-  const opponentCardsRemaining = oppDeck.filter((c) => c.uid && !opponentCardsUsed.includes(c.uid));
+  const playerCardsRemaining = myHand.filter((c) => c.uid && !playerCardsUsed.includes(c.uid));
+  const opponentCardsRemaining = oppHand.filter((c) => c.uid && !opponentCardsUsed.includes(c.uid));
 
   const findCardByUid = useCallback((deck: Card[], uid: string): Card | undefined => {
     return deck.find((c) => c.uid === uid);

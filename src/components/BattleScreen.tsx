@@ -84,6 +84,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
   const [aiPillz, setAiPillz] = useState(STARTING_PILLZ);
   const [round, setRound] = useState(1);
 
+  // Deal 4 random cards from player's 8-card deck
+  const [playerHand] = useState<Card[]>(() => shuffleArray(playerDeck.filter((c) => c.uid)).slice(0, TOTAL_ROUNDS));
+  // AI picks 4 random from all cards
   const [aiDeck] = useState<Card[]>(() =>
     shuffleArray(allCards).slice(0, TOTAL_ROUNDS).map((c, i) => ({
       ...c,
@@ -123,7 +126,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
   playerHPRef.current = playerHP;
   aiHPRef.current = aiHP;
 
-  const playerCardsRemaining = playerDeck.filter((c) => c.uid && !playerCardsUsed.includes(c.uid));
+  const playerCardsRemaining = playerHand.filter((c) => c.uid && !playerCardsUsed.includes(c.uid));
   const aiCardsRemaining = aiDeck.filter((c) => c.uid && !aiCardsUsed.includes(c.uid));
 
   useEffect(() => {
@@ -166,7 +169,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
     setCurrentAiCard(ai.card);
     setCurrentAiPillz(ai.pillz);
 
-    const result = resolveRound(card, pillz, ai.card, ai.pillz);
+    const result = resolveRound(card, pillz, ai.card, ai.pillz, playerHand, aiDeck);
     setCurrentResult(result);
 
     setPlayerPillz((p) => Math.max(0, p - pillz));

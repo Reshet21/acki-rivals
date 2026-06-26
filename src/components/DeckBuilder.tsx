@@ -63,8 +63,8 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
           <div className="text-neon-purple font-bold">
             📚 {t('deck.title')} ({collection.length})
           </div>
-          <div className={`font-bold ${deck.length >= 4 ? 'text-neon-green' : 'text-white/60'}`}>
-            ⚔️ {deck.length}/4
+          <div className={`font-bold ${deck.length >= 8 ? 'text-neon-green' : 'text-white/60'}`}>
+            ⚔️ {deck.length}/8
           </div>
         </div>
 
@@ -99,7 +99,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
           ))}
         </div>
 
-        {deck.length < 4 && (
+        {deck.length < 8 && (
           <div className="text-[10px] text-white/30 text-center mt-1">
             {t('deck.select')} {4 - deck.length} {t('deck.cards')}
           </div>
