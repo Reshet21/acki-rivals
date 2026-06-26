@@ -7,7 +7,7 @@ function randomFactor(): number {
 }
 
 export function calculateRoundAttack(power: number, pillz: number): number {
-  return Math.round(power * pillz * randomFactor());
+  return Math.round(power * (1 + pillz) * randomFactor());
 }
 
 // Apply clan bonus: if 2+ cards from same clan in hand, all get bonus
