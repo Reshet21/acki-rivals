@@ -5,7 +5,7 @@ import { getPackById } from './data/packs';
 import type { Card } from './types';
 import type { WalletConnection } from './services/beeEngine';
 import { getStoredSession } from './services/beeEngine';
-import { I18nProvider, useI18n } from './i18n';
+import { I18nProvider } from './i18n';
 import { useTelegram } from './telegram';
 import BattleScreen from './components/BattleScreen';
 import Shop from './components/Shop';
@@ -23,7 +23,6 @@ import type { Game } from './services/pvpService';
 type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'lang' | 'leaderboard';
 
 function AppInner() {
-  const { t } = useI18n();
   const { haptic, user } = useTelegram();
   const {
     collection,
@@ -86,124 +85,177 @@ function AppInner() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto bg-an-dark text-white flex flex-col relative">
+    <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto text-white flex flex-col relative" style={{ background: '#050508' }}>
       {screen === 'menu' && (
         <div className="relative flex flex-col items-center min-h-screen w-full overflow-hidden">
-          {/* Acki Nacki hero background */}
+          {/* Premium background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <img src="/cards/acki-nacki-hero.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-an-dark/80 to-an-dark" />
-            {/* Animated glow orbs */}
-            <div className="absolute animate-aurora-1 rounded-full" style={{ width: 300, height: 300, top: '-80px', left: '-80px', background: 'radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%)' }} />
-            <div className="absolute animate-aurora-2 rounded-full" style={{ width: 350, height: 350, bottom: '10%', right: '-100px', background: 'radial-gradient(circle, rgba(255,61,0,0.15) 0%, transparent 70%)', animationDelay: '3s' }} />
+            <img src="/cards/acki-nacki-hero.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" style={{ filter: 'blur(2px)' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,8,0.3) 0%, rgba(5,5,8,0.7) 40%, rgba(5,5,8,0.95) 70%, #050508 100%)' }} />
+            {/* Premium glow effects */}
+            <div className="absolute animate-aurora-1 rounded-full" style={{ width: 400, height: 400, top: '-150px', left: '-100px', background: 'radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%)' }} />
+            <div className="absolute animate-aurora-2 rounded-full" style={{ width: 350, height: 350, bottom: '5%', right: '-80px', background: 'radial-gradient(circle, rgba(255,100,0,0.08) 0%, transparent 70%)', animationDelay: '4s' }} />
+            {/* Grid pattern */}
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.02, backgroundImage: 'linear-gradient(rgba(255,215,0,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,215,0,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
             {/* Sparkles */}
-            {[{ top: '18%', left: '12%', delay: '0s' }, { top: '30%', right: '8%', delay: '0.7s' }, { top: '55%', left: '6%', delay: '1.4s' }, { top: '72%', right: '14%', delay: '2.1s' }, { top: '85%', left: '30%', delay: '0.3s' }].map((pos, i) => (
-              <div key={i} className="absolute text-an-gold/30 animate-sparkle text-xs" style={{ ...pos, animationDelay: pos.delay }}>&#10022;</div>
+            {[{ top: '12%', left: '8%', delay: '0s', size: 'sm' }, { top: '25%', right: '5%', delay: '1s', size: 'md' }, { top: '45%', left: '3%', delay: '2s', size: 'sm' }, { top: '65%', right: '8%', delay: '0.5s', size: 'lg' }, { top: '80%', left: '15%', delay: '1.5s', size: 'sm' }].map((pos, i) => (
+              <div key={i} className="absolute animate-sparkle" style={{ ...pos, animationDelay: pos.delay, color: 'rgba(255,215,0,0.4)' }}>
+                {pos.size === 'lg' ? '✦' : pos.size === 'md' ? '✧' : '·'}
+              </div>
             ))}
           </div>
 
-          {/* Floating cards with Acki Nacki characters */}
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 64, height: 86, top: '6%', left: '2%', opacity: 0.4, zIndex: 0, transform: 'rotate(-10deg)' }}>
-            <img src="/cards/an-girl-main.jpg" alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'top' }} />
-          </div>
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-2" style={{ width: 60, height: 80, top: '8%', right: '2%', opacity: 0.35, zIndex: 0, transform: 'rotate(8deg)' }}>
-            <img src="/cards/an-popit-main.jpg" alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'top' }} />
-          </div>
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-3" style={{ width: 56, height: 75, bottom: '15%', left: '5%', opacity: 0.3, zIndex: 0, transform: 'rotate(-5deg)' }}>
-            <img src="/cards/an-red-block.jpg" alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'top' }} />
-          </div>
-          <div className="absolute menu-card-preview pointer-events-none animate-card-float-1" style={{ width: 52, height: 70, bottom: '20%', right: '4%', opacity: 0.28, zIndex: 0, transform: 'rotate(12deg)', animationDelay: '1.5s' }}>
-            <img src="/cards/an-smiley-yellow.jpg" alt="" className="block w-full h-full" style={{ objectFit: 'cover', objectPosition: 'top' }} />
-          </div>
-
           {/* Content */}
-          <div className="relative z-10 flex flex-col items-center w-full px-5 pt-12 pb-8 gap-5">
-            {/* Title */}
+          <div className="relative z-10 flex flex-col items-center w-full px-5 pt-10 pb-6 gap-4">
+            {/* Premium Logo Section */}
             <div className="flex flex-col items-center animate-slide-down" style={{ animationDelay: '0.05s' }}>
-              <div className="text-4xl font-black tracking-tight animate-title-glow" style={{ background: 'linear-gradient(90deg, #FFD700 0%, #FF9800 50%, #FF3D00 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              {/* Logo glow effect */}
+              <div className="relative">
+                <div className="absolute -inset-4 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+                <img src="/cards/an-smiley-yellow.jpg" alt="" className="w-16 h-16 rounded-full border-2 border-an-gold/40 relative z-10" style={{ boxShadow: '0 0 30px rgba(255,215,0,0.3)' }} />
+              </div>
+              <h1 className="text-3xl font-black tracking-tight mt-3 animate-title-glow" style={{ background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 60%, #FFD700 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.05em' }}>
                 ACKI RIVALS
-              </div>
-              <div className="text-[10px] text-an-gold/40 tracking-[0.3em] uppercase mt-1">{t('menu.subtitle')}</div>
-              {/* Telegram user info */}
-              {user && (
-                <div className="flex items-center gap-2 mt-2 px-3 py-1 rounded-full" style={{ background: 'rgba(255,215,0,0.05)', border: '1px solid rgba(255,215,0,0.15)' }}>
-                  <span className="text-[10px] text-an-gold/70">👤 {user.firstName}{user.username ? ` (@${user.username})` : ''}</span>
+              </h1>
+              <p className="text-[10px] tracking-[0.4em] uppercase mt-1" style={{ color: 'rgba(255,215,0,0.35)' }}>BLOCKCHAIN CARD BATTLE</p>
+            </div>
+
+            {/* Premium Stats Card */}
+            <div className="w-full max-w-xs animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.04) 100%)', border: '1px solid rgba(255,215,0,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,215,0,0.1)' }}>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.05) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
+                {/* User info */}
+                {user && (
+                  <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.3)' }}>
+                      {user.firstName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-white">{user.firstName}</div>
+                      {user.username && <div className="text-[10px]" style={{ color: 'rgba(255,215,0,0.5)' }}>@{user.username}</div>}
+                    </div>
+                  </div>
+                )}
+                {/* Stats grid */}
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <div className="text-xl font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{credits.toLocaleString()}</div>
+                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>Кредиты</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-black" style={{ color: '#4ADE80' }}>{battlesWon}</div>
+                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Победы</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-black" style={{ color: '#FF6B6B' }}>{battlesLost}</div>
+                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Поражения</div>
+                  </div>
                 </div>
-              )}
-              {/* Stats bar with glow */}
-              <div className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full animate-counter-glow" style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)' }}>
-                <span className="text-[10px] text-an-gold font-bold">💰 {credits}</span>
-                <span className="text-[10px] text-white/40">|</span>
-                <span className="text-[10px] text-white/60">🏆 {battlesWon}W / {battlesLost}L</span>
-                {walletConnection && <><span className="text-[10px] text-white/40">|</span><span className="text-[10px] text-an-green">🔗</span></>}
+                {walletConnection && (
+                  <div className="mt-3 pt-2 flex items-center justify-center gap-1" style={{ borderTop: '1px solid rgba(255,215,0,0.1)' }}>
+                    <span className="text-[9px]" style={{ color: 'rgba(255,215,0,0.4)' }}>🔗 Кошелёк подключён</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Main actions - 2 columns */}
-            <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
-              <button onClick={() => setScreen('pvp')} disabled={deck.length !== 8}
-                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 8 ? 'bg-gradient-to-br from-an-red to-an-orange text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
-                <span className="text-lg">🌐</span>
-                <span>{t('menu.pvp')}</span>
-              </button>
-              <button onClick={() => setScreen('battle')} disabled={deck.length !== 8}
-                className={`py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all ${deck.length === 8 ? 'bg-gradient-to-br from-an-red to-an-orange text-white shadow-lg active:scale-95' : 'bg-white/5 text-white/20'}`}>
-                <span className="text-lg">⚔️</span>
-                <span>{t('menu.ai')}</span>
-              </button>
-              <button onClick={() => setScreen('deck')}
-                className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-an-gold to-an-orange text-an-dark shadow-lg active:scale-95 transition-all">
-                <span className="text-lg">📚</span>
-                <span>{t('menu.deck')}</span>
-              </button>
-              <button onClick={() => setScreen('shop')}
-                className="py-3 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 bg-gradient-to-br from-an-red to-an-orange text-white shadow-lg active:scale-95 transition-all">
-                <span className="text-lg">🛒</span>
-                <span>{t('menu.shop')}</span>
-              </button>
-            </div>
-
+            {/* Deck warning */}
             {deck.length !== 8 && (
-              <div className="text-[10px] text-an-gold/40">{t('menu.buildDeck')}</div>
+              <div className="w-full max-w-xs px-4 py-2.5 rounded-xl text-center animate-fade-in" style={{ background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
+                <span className="text-xs font-medium" style={{ color: 'rgba(255,215,0,0.8)' }}>📚 Соберите колоду из 8 карт для боёв</span>
+              </div>
             )}
 
-            {/* Secondary actions - 3 columns */}
-            <div className="grid grid-cols-3 gap-2 w-full max-w-xs mt-1">
-              <button onClick={() => setScreen('upgrade')}
-                className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-an-card border border-an-border text-white/60 active:scale-95 transition-all">
-                <span>⚒️</span>
-                <span>{t('menu.upgrade')}</span>
+            {/* Premium Battle Buttons */}
+            <div className="w-full max-w-xs space-y-2.5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+              {/* PvP Button - Hero */}
+              <button onClick={() => setScreen('pvp')} disabled={deck.length !== 8}
+                className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.98]"
+                style={{
+                  background: deck.length === 8 ? 'linear-gradient(135deg, #FF3D00 0%, #FF6D00 50%, #FF9100 100%)' : 'rgba(255,255,255,0.03)',
+                  border: deck.length === 8 ? '1px solid rgba(255,100,0,0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  boxShadow: deck.length === 8 ? '0 4px 20px rgba(255,61,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : 'none',
+                  color: deck.length === 8 ? 'white' : 'rgba(255,255,255,0.15)',
+                }}>
+                <span className="text-xl">⚔️</span>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold">PvP Бой</span>
+                  <span className="text-[10px] font-normal opacity-70">Против других игроков</span>
+                </div>
               </button>
-              <button onClick={() => setScreen('wallet')}
-                className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-an-card border border-an-border text-white/60 active:scale-95 transition-all">
-                <span>👛</span>
-                <span>{t('menu.wallet')}</span>
-              </button>
-              <button onClick={() => setScreen('mining')}
-                className="py-2.5 rounded-lg font-bold text-[11px] flex flex-col items-center gap-0.5 bg-an-card border border-an-border text-white/60 active:scale-95 transition-all">
-                <span>⛏️</span>
-                <span>{t('menu.mining')}</span>
+
+              {/* AI Battle Button */}
+              <button onClick={() => setScreen('battle')} disabled={deck.length !== 8}
+                className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.98]"
+                style={{
+                  background: deck.length === 8 ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' : 'rgba(255,255,255,0.03)',
+                  border: deck.length === 8 ? '1px solid rgba(0,212,255,0.3)' : '1px solid rgba(255,255,255,0.05)',
+                  boxShadow: deck.length === 8 ? '0 4px 20px rgba(0,212,255,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' : 'none',
+                  color: deck.length === 8 ? 'white' : 'rgba(255,255,255,0.15)',
+                }}>
+                <span className="text-xl">🤖</span>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold">Бой ИИ</span>
+                  <span className="text-[10px] font-normal opacity-70">Практика и награды</span>
+                </div>
               </button>
             </div>
 
-            {/* Info + Lang + Reset + Leaderboard row */}
-            <div className="grid grid-cols-4 gap-1.5 w-full max-w-xs mt-1">
-              <button onClick={() => setScreen('info')}
-                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-an-card border border-an-border text-white/50 active:scale-95 transition-all">
-                📖<span>{t('menu.rules')}</span>
+            {/* Secondary Actions - Premium Cards */}
+            <div className="w-full max-w-xs grid grid-cols-2 gap-2.5 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <button onClick={() => setScreen('deck')}
+                className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,140,0,0.06) 100%)', border: '1px solid rgba(255,215,0,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                <span className="text-xl">📚</span>
+                <span style={{ color: '#FFD700' }}>Колода</span>
               </button>
-              <button onClick={() => setScreen('lang')}
-                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-an-card border border-an-border text-white/50 active:scale-95 transition-all">
-                🌐<span>Язык</span>
+              <button onClick={() => setScreen('shop')}
+                className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(139,92,246,0.06) 100%)', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                <span className="text-xl">🛒</span>
+                <span style={{ color: '#A855F7' }}>Магазин</span>
               </button>
-              <button onClick={() => setScreen('leaderboard')}
-                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-an-card border border-an-border text-white/50 active:scale-95 transition-all">
-                🏆<span>Топ</span>
+            </div>
+
+            {/* Tertiary Actions - Minimal */}
+            <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+              <button onClick={() => setScreen('upgrade')}
+                className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="text-base">⚒️</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Улучшить</span>
               </button>
-              <button onClick={() => { localStorage.clear(); location.reload(); }}
-                className="py-2 rounded-lg font-bold text-[9px] flex flex-col items-center gap-0.5 bg-an-card border border-an-border text-white/50 active:scale-95 transition-all">
-                🔄<span>{t('menu.reset')}</span>
+              <button onClick={() => setScreen('wallet')}
+                className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="text-base">👛</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Кошелёк</span>
               </button>
+              <button onClick={() => setScreen('mining')}
+                className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="text-base">⛏️</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Майнинг</span>
+              </button>
+            </div>
+
+            {/* Bottom Navigation - Premium Tab Bar */}
+            <div className="w-full max-w-xs mt-2 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+              <div className="flex items-center justify-around py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <button onClick={() => setScreen('leaderboard')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                  <span className="text-lg">🏆</span>
+                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Топ</span>
+                </button>
+                <button onClick={() => setScreen('info')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                  <span className="text-lg">📖</span>
+                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Правила</span>
+                </button>
+                <button onClick={() => setScreen('lang')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                  <span className="text-lg">🌐</span>
+                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Язык</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
