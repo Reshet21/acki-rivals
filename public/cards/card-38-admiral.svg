@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg38" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0520"/>
+      <stop offset="50%" stop-color="#150a30"/>
+      <stop offset="100%" stop-color="#0a0520"/>
+    </linearGradient>
+    <linearGradient id="gold38" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffdd44"/>
+      <stop offset="100%" stop-color="#ff8800"/>
+    </linearGradient>
+    <filter id="glow38">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg38)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#gold38)" stroke-width="2" opacity="0.6"/>
+  <!-- Command bridge -->
+  <rect x="60" y="70" width="80" height="50" rx="4" fill="none" stroke="#ffdd44" stroke-width="1" opacity="0.3"/>
+  <rect x="70" y="75" width="20" height="12" rx="2" fill="#ffdd44" opacity="0.15"/>
+  <rect x="95" y="75" width="20" height="12" rx="2" fill="#ff8800" opacity="0.15"/>
+  <rect x="120" y="75" width="15" height="12" rx="2" fill="#ffdd44" opacity="0.15"/>
+  <!-- Radar dish -->
+  <path d="M100,130 L100,100" stroke="#ffdd44" stroke-width="2" opacity="0.6"/>
+  <path d="M80,105 Q100,85 120,105" fill="none" stroke="#ffdd44" stroke-width="1.5" opacity="0.7"/>
+  <circle cx="100" cy="105" r="3" fill="#ffdd44" opacity="0.8"/>
+  <!-- Signal waves -->
+  <path d="M100,100 Q130,70 160,100" fill="none" stroke="#ff8800" stroke-width="0.8" opacity="0.4"/>
+  <path d="M100,100 Q70,70 40,100" fill="none" stroke="#ff8800" stroke-width="0.8" opacity="0.4"/>
+  <path d="M100,100 Q140,55 180,100" fill="none" stroke="#ffdd44" stroke-width="0.5" opacity="0.25"/>
+  <path d="M100,100 Q60,55 20,100" fill="none" stroke="#ffdd44" stroke-width="0.5" opacity="0.25"/>
+  <!-- Rank bars -->
+  <rect x="55" y="155" width="30" height="3" rx="1" fill="#ffdd44" opacity="0.6"/>
+  <rect x="55" y="162" width="25" height="3" rx="1" fill="#ffdd44" opacity="0.5"/>
+  <rect x="55" y="169" width="20" height="3" rx="1" fill="#ffdd44" opacity="0.4"/>
+  <!-- Star emblem -->
+  <polygon points="140,155 143,163 152,163 145,168 148,176 140,172 132,176 135,168 128,163 137,163" fill="#ffdd44" opacity="0.7" filter="url(#glow38)"/>
+  <!-- Grid -->
+  <line x1="0" y1="200" x2="200" y2="200" stroke="#ffdd44" stroke-width="0.3" opacity="0.15"/>
+  <line x1="0" y1="210" x2="200" y2="210" stroke="#ffdd44" stroke-width="0.3" opacity="0.1"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffdd44" opacity="0.5">АДМИРАЛ // ADMIRAL</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff8800" opacity="0.3">NEON MERCENARIES</text>
+</svg>

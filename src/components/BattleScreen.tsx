@@ -5,6 +5,7 @@ import { resolveRound } from '../utils/battleLogic';
 import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
+import { useTelegram } from '../telegram';
 
 const abilityInfo: Record<string, { icon: string; color: string }> = {
   '+1 power': { icon: '⚔️', color: '#60a5fa' }, '+2 power': { icon: '⚔️', color: '#93c5fd' },
@@ -78,6 +79,7 @@ const DAMAGE_DURATION = 2000;
 
 export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
   const { t } = useI18n();
+  const { haptic } = useTelegram();
   const [playerHP, setPlayerHP] = useState(TOTAL_HP);
   const [aiHP, setAiHP] = useState(TOTAL_HP);
   const [playerPillz, setPlayerPillz] = useState(STARTING_PILLZ);
@@ -251,6 +253,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           else r = 'loss';
           setBattleResult(r);
           setBattlePhase('ended');
+          if (r === 'win') haptic.notificationOccurred('success');
+          else if (r === 'loss') haptic.notificationOccurred('error');
+          else haptic.notificationOccurred('warning');
           return;
         }
 
@@ -262,6 +267,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           else if (newAiHP > newPlayerHP) r = 'loss';
           setBattleResult(r);
           setBattlePhase('ended');
+          if (r === 'win') haptic.notificationOccurred('success');
+          else if (r === 'loss') haptic.notificationOccurred('error');
+          else haptic.notificationOccurred('warning');
         } else {
           setRound(nextRound);
           // Urban Rivals: +1 free pillz per round

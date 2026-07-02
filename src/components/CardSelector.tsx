@@ -20,6 +20,10 @@ const cardArt: Record<number, string> = {
   28:'/cards/card-malicious-block.jpeg',29:'/cards/card-block-keeper.jpeg',30:'/cards/card-mamabord.jpeg',
   31:'/cards/card-saboteur.png',32:'/cards/card-block-keeper.jpeg',33:'/cards/card-circuit-guardian.jpeg',
   34:'/cards/card-malicious-block.jpeg',
+  35:'/cards/card-35-scout.svg',36:'/cards/card-36-saboteur.svg',37:'/cards/card-37-storm.svg',
+  38:'/cards/card-38-admiral.svg',39:'/cards/card-39-cyber-dragon.svg',
+  40:'/cards/card-40-pilgrim.svg',41:'/cards/card-41-alchemist.svg',42:'/cards/card-42-keeper.svg',
+  43:'/cards/card-43-high-priest.svg',44:'/cards/card-44-zen-dragon.svg',
 };
 
 const rarityColor: Record<string, string> = {

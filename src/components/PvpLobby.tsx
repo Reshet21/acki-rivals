@@ -128,7 +128,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   // ═══ DECK CHECK ═══
   if (deck.length !== 8) return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4">
-      <div className="text-white/50 text-center"><div className="text-lg mb-2">⚠️</div><div className="text-sm">Соберите колоду из 4 карт</div></div>
+      <div className="text-white/50 text-center"><div className="text-lg mb-2">⚠️</div><div className="text-sm">Соберите колоду из 8 карт</div></div>
       <button onClick={onBack} className="mt-4 px-6 py-2 rounded-lg text-sm font-bold bg-white/5 border border-white/10 text-white/60 active:bg-white/10">Назад</button>
     </div>
   );
@@ -198,7 +198,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
             {!loadingRooms && openRooms.length === 0 && <div className="text-xs text-white/30 text-center py-8"><div className="text-2xl mb-2">😴</div>Нет открытых комнат</div>}
             {openRooms.map((g) => (
               <div key={g.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                <div><div className="text-sm font-bold text-white">{g.host_id}</div><div className="text-[10px] text-white/30">{g.host_deck?.length || 4}/4 карт</div></div>
+                <div><div className="text-sm font-bold text-white">{g.host_id}</div><div className="text-[10px] text-white/30">{g.host_deck?.length || 0}/8 карт</div></div>
                 <button onClick={() => handleJoinOpen(g)} disabled={waiting} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-neon-green text-white active:scale-95 disabled:opacity-50">Войти</button>
               </div>
             ))}

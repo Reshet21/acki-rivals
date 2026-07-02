@@ -6,6 +6,7 @@ import type { Card } from './types';
 import type { WalletConnection } from './services/beeEngine';
 import { getStoredSession } from './services/beeEngine';
 import { I18nProvider, useI18n } from './i18n';
+import { useTelegram } from './telegram';
 import BattleScreen from './components/BattleScreen';
 import Shop from './components/Shop';
 import WalletPanel from './components/WalletPanel';
@@ -23,6 +24,7 @@ type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgra
 
 function AppInner() {
   const { t } = useI18n();
+  const { haptic } = useTelegram();
   const {
     collection,
     deck,
@@ -50,10 +52,11 @@ function AppInner() {
   }, [collection, deck, credits, battlesWon, battlesLost, saveToStorage]);
 
   const handleBattleEnd = useCallback((result: 'win' | 'loss' | 'draw') => {
-    if (result === 'win') recordWin();
-    else if (result === 'loss') recordLoss();
+    if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }
+    else if (result === 'loss') { recordLoss(); haptic.notificationOccurred('error'); }
+    else { haptic.notificationOccurred('warning'); }
     setScreen('menu');
-  }, [recordWin, recordLoss]);
+  }, [recordWin, recordLoss, haptic]);
 
   const handleBuyPack = useCallback((packId: string) => {
     const pack = getPackById(packId);
@@ -61,19 +64,22 @@ function AppInner() {
     addCredits(-pack.price);
     const newCards = openPackCards(packId);
     newCards.forEach((c) => addCard(c));
-  }, [credits, addCredits, addCard]);
+    haptic.notificationOccurred('success');
+  }, [credits, addCredits, addCard, haptic]);
 
   const handleToggleDeck = useCallback((card: Card) => {
     setDeck((prev) => {
       if (!card.uid) return prev;
       const inDeck = prev.some((c) => c.uid === card.uid);
       if (inDeck) {
+        haptic.selectionChanged();
         return prev.filter((c) => c.uid !== card.uid);
       }
       if (prev.length >= 8) return prev;
+      haptic.selectionChanged();
       return [...prev, card];
     });
-  }, [setDeck]);
+  }, [setDeck, haptic]);
 
   const handleWalletConnected = useCallback((conn: WalletConnection) => {
     setWalletConnection(conn);
@@ -287,8 +293,9 @@ function AppInner() {
             playerId={walletConnection?.walletName || 'player_' + Date.now()}
             isHost={pvpIsHost}
             onBattleEnd={(result) => {
-              if (result === 'win') recordWin();
-              else if (result === 'loss') recordLoss();
+              if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }
+              else if (result === 'loss') { recordLoss(); haptic.notificationOccurred('error'); }
+              else { haptic.notificationOccurred('warning'); }
               setPvpGame(null);
               setScreen('menu');
             }}

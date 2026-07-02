@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg44" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a2a"/>
+      <stop offset="50%" stop-color="#0a2030"/>
+      <stop offset="100%" stop-color="#0a1a2a"/>
+    </linearGradient>
+    <linearGradient id="zen44" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00ffcc"/>
+      <stop offset="50%" stop-color="#00ccff"/>
+      <stop offset="100%" stop-color="#00ffaa"/>
+    </linearGradient>
+    <filter id="glow44">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg44)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#zen44)" stroke-width="2" opacity="0.6"/>
+  <!-- Enso circle (zen) -->
+  <circle cx="100" cy="110" r="50" fill="none" stroke="url(#zen44)" stroke-width="3" opacity="0.5" filter="url(#glow44)" 
+          stroke-dasharray="280 40" stroke-linecap="round"/>
+  <!-- Dragon coiled in circle -->
+  <path d="M100,70 Q130,75 135,100 Q140,130 115,140 Q90,150 80,130 Q70,110 85,95 Q95,82 110,88 Q120,95 115,110 Q110,120 100,118" 
+        fill="none" stroke="#00ffcc" stroke-width="1.5" opacity="0.7"/>
+  <!-- Dragon eye -->
+  <circle cx="108" cy="92" r="3" fill="#00ffcc" opacity="0.8" filter="url(#glow44)"/>
+  <circle cx="108" cy="92" r="1.5" fill="#ffffff" opacity="0.9"/>
+  <!-- Whiskers / flow -->
+  <path d="M85,95 Q70,85 60,90" fill="none" stroke="#00ccff" stroke-width="0.8" opacity="0.4"/>
+  <path d="M88,100 Q72,95 62,100" fill="none" stroke="#00ffaa" stroke-width="0.8" opacity="0.4"/>
+  <!-- Yin-yang hint -->
+  <circle cx="100" cy="110" r="8" fill="none" stroke="#00ffcc" stroke-width="0.5" opacity="0.2"/>
+  <circle cx="100" cy="106" r="2" fill="#00ffcc" opacity="0.15"/>
+  <circle cx="100" cy="114" r="2" fill="#00ccff" opacity="0.15"/>
+  <!-- Zen dots -->
+  <circle cx="100" cy="55" r="2" fill="#00ffcc" opacity="0.4"/>
+  <circle cx="100" cy="170" r="2" fill="#00ccff" opacity="0.4"/>
+  <circle cx="50" cy="110" r="1.5" fill="#00ffaa" opacity="0.3"/>
+  <circle cx="150" cy="110" r="1.5" fill="#00ffcc" opacity="0.3"/>
+  <!-- Outer rings -->
+  <circle cx="100" cy="110" r="60" fill="none" stroke="#00ffcc" stroke-width="0.3" opacity="0.15"/>
+  <circle cx="100" cy="110" r="70" fill="none" stroke="#00ccff" stroke-width="0.2" opacity="0.1"/>
+  <!-- Mist -->
+  <ellipse cx="60" cy="160" rx="25" ry="5" fill="#00ffcc" opacity="0.04"/>
+  <ellipse cx="140" cy="150" rx="20" ry="4" fill="#00ccff" opacity="0.04"/>
+  <!-- Label -->
+  <text x="100" y="238" text-anchor="middle" font-family="monospace" font-size="9" fill="#00ffcc" opacity="0.5">ДРАКОН ДЗЕН // ZEN DRAGON</text>
+  <text x="100" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#00ccff" opacity="0.3">DIGITAL MONKS</text>
+</svg>

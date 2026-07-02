@@ -45,12 +45,17 @@ function shuffleArray<T>(arr: T[]): T[] {
 export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, onSurrender }: Props) {
   const { t } = useI18n();
 
-  const myDeck: Card[] = isHost ? (game.host_deck || []) : (game.guest_deck || []);
-  const oppDeck: Card[] = isHost ? (game.guest_deck || []) : (game.host_deck || []);
+  const rawMyDeck: Card[] = isHost ? (game.host_deck || []) : (game.guest_deck || []);
+  const rawOppDeck: Card[] = isHost ? (game.guest_deck || []) : (game.host_deck || []);
+
+  // Ensure all cards have UIDs (Supabase may not preserve them)
+  const ensureUids = (deck: Card[]) => deck.map((c, i) => c.uid ? c : { ...c, uid: `pvp-${c.id}-${i}-${Date.now()}` });
+  const myDeck = ensureUids(rawMyDeck);
+  const oppDeck = ensureUids(rawOppDeck);
 
   // Deal 4 random cards from 8-card deck
-  const [myHand] = useState<Card[]>(() => shuffleArray(myDeck.filter((c) => c.uid)).slice(0, TOTAL_ROUNDS));
-  const [oppHand] = useState<Card[]>(() => shuffleArray(oppDeck.filter((c) => c.uid)).slice(0, TOTAL_ROUNDS));
+  const [myHand] = useState<Card[]>(() => shuffleArray(myDeck).slice(0, TOTAL_ROUNDS));
+  const [oppHand] = useState<Card[]>(() => shuffleArray(oppDeck).slice(0, TOTAL_ROUNDS));
 
   const [playerHP, setPlayerHP] = useState(TOTAL_HP);
   const [opponentHP, setOpponentHP] = useState(TOTAL_HP);
@@ -247,7 +252,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
         }
       }, DAMAGE_DURATION);
     }, VS_DURATION);
-  }, [game.id, isHost, myDeck, oppDeck, findCardByUid]);
+  }, [game.id, isHost, myDeck, oppDeck, findCardByUid, findCardById]);
 
   useEffect(() => {
     const cleanup = subscribeToGame(

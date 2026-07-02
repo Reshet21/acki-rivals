@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg35" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#1a0a2a"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="neon35" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#00ccff"/>
+    </linearGradient>
+    <filter id="glow35">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg35)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#neon35)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Radar sweep -->
+  <circle cx="100" cy="120" r="60" fill="none" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="100" cy="120" r="40" fill="none" stroke="#00ff88" stroke-width="0.5" opacity="0.4"/>
+  <circle cx="100" cy="120" r="20" fill="none" stroke="#00ff88" stroke-width="0.5" opacity="0.5"/>
+  <line x1="100" y1="120" x2="100" y2="60" stroke="#00ff88" stroke-width="1.5" opacity="0.8" filter="url(#glow35)">
+    <animateTransform attributeName="transform" type="rotate" from="0 100 120" to="360 100 120" dur="4s" repeatCount="indefinite"/>
+  </line>
+  <!-- Crosshair -->
+  <circle cx="100" cy="120" r="3" fill="#00ff88" filter="url(#glow35)"/>
+  <line x1="85" y1="120" x2="115" y2="120" stroke="#00ff88" stroke-width="0.8" opacity="0.6"/>
+  <line x1="100" y1="105" x2="100" y2="135" stroke="#00ff88" stroke-width="0.8" opacity="0.6"/>
+  <!-- Target dots -->
+  <circle cx="130" cy="95" r="2" fill="#ff0066" opacity="0.8"/>
+  <circle cx="75" cy="140" r="2" fill="#ff0066" opacity="0.8"/>
+  <circle cx="120" cy="150" r="1.5" fill="#ffaa00" opacity="0.7"/>
+  <!-- Scan lines -->
+  <rect x="0" y="0" width="200" height="1" fill="#00ff88" opacity="0.05"/>
+  <rect x="0" y="40" width="200" height="1" fill="#00ff88" opacity="0.05"/>
+  <rect x="0" y="80" width="200" height="1" fill="#00ff88" opacity="0.05"/>
+  <rect x="0" y="160" width="200" height="1" fill="#00ff88" opacity="0.05"/>
+  <rect x="0" y="200" width="200" height="1" fill="#00ff88" opacity="0.05"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ff88" opacity="0.5">SCOUT // РАЗВЕДЧИК</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00ccff" opacity="0.3">NEON MERCENARIES</text>
+</svg>

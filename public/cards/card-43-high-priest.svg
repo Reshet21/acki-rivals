@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg43" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a0a2a"/>
+      <stop offset="50%" stop-color="#2a1040"/>
+      <stop offset="100%" stop-color="#1a0a2a"/>
+    </linearGradient>
+    <linearGradient id="purple43" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cc88ff"/>
+      <stop offset="100%" stop-color="#aa44dd"/>
+    </linearGradient>
+    <filter id="glow43">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow43b">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg43)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#purple43)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Halo -->
+  <ellipse cx="100" cy="80" rx="40" ry="12" fill="none" stroke="#cc88ff" stroke-width="1.5" opacity="0.5" filter="url(#glow43)"/>
+  <ellipse cx="100" cy="80" rx="35" ry="10" fill="#cc88ff" opacity="0.08"/>
+  <!-- Third eye -->
+  <ellipse cx="100" cy="110" rx="15" ry="10" fill="none" stroke="#cc88ff" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="100" cy="110" r="5" fill="#aa44dd" opacity="0.4"/>
+  <circle cx="100" cy="110" r="2.5" fill="#cc88ff" opacity="0.8" filter="url(#glow43)"/>
+  <circle cx="100" cy="110" r="1" fill="#ffffff" opacity="0.9"/>
+  <!-- Prayer beads / circles -->
+  <circle cx="100" cy="140" r="30" fill="none" stroke="#aa44dd" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="100" cy="140" r="25" fill="none" stroke="#cc88ff" stroke-width="0.5" opacity="0.25"/>
+  <circle cx="100" cy="140" r="20" fill="none" stroke="#aa44dd" stroke-width="0.5" opacity="0.3"/>
+  <!-- Mantra symbols -->
+  <text x="100" y="155" text-anchor="middle" font-family="serif" font-size="14" fill="#cc88ff" opacity="0.3">ॐ</text>
+  <!-- Energy rays -->
+  <line x1="100" y1="80" x2="100" y2="45" stroke="#cc88ff" stroke-width="0.8" opacity="0.3"/>
+  <line x1="80" y1="85" x2="60" y2="55" stroke="#aa44dd" stroke-width="0.6" opacity="0.2"/>
+  <line x1="120" y1="85" x2="140" y2="55" stroke="#aa44dd" stroke-width="0.6" opacity="0.2"/>
+  <line x1="70" y1="95" x2="45" y2="75" stroke="#cc88ff" stroke-width="0.5" opacity="0.15"/>
+  <line x1="130" y1="95" x2="155" y2="75" stroke="#cc88ff" stroke-width="0.5" opacity="0.15"/>
+  <!-- Aura -->
+  <circle cx="100" cy="110" r="55" fill="none" stroke="#cc88ff" stroke-width="0.3" opacity="0.15"/>
+  <circle cx="100" cy="110" r="65" fill="none" stroke="#aa44dd" stroke-width="0.2" opacity="0.1"/>
+  <!-- Label -->
+  <text x="100" y="238" text-anchor="middle" font-family="monospace" font-size="9" fill="#cc88ff" opacity="0.5">ВЕРХОВНЫЙ ЖРЕЦ // HIGH PRIEST</text>
+  <text x="100" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#aa44dd" opacity="0.3">DIGITAL MONKS</text>
+</svg>
