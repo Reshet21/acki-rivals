@@ -146,7 +146,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
         {copied ? '✓ Скопировано' : '📋 Скопировать код'}
       </button>
       <button onClick={handleEnter} className="w-full max-w-xs py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.3)]">⚔️ Войти в комнату</button>
-      <button onClick={handleAbandon} className="text-xs text-neon-red/50 active:text-neon-red">Выйти из комнаты</button>
+      <button onClick={handleAbandon} className="w-full max-w-xs py-2.5 rounded-lg text-sm font-bold bg-neon-red/20 border border-neon-red/40 text-neon-red active:bg-neon-red/30 transition-all">❌ Выйти из комнаты</button>
     </div>
   );
 
@@ -168,22 +168,22 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   // ═══ MAIN MENU ═══
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden">
-      <div className="flex border-b border-dark-border shrink-0">
+      <div className="flex border-b border-an-border shrink-0">
         {(['menu', 'open', 'join'] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2.5 text-xs font-bold transition-colors ${tab === t ? 'text-neon-blue border-b-2 border-neon-blue' : 'text-white/40'}`}>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2.5 text-xs font-bold transition-colors ${tab === t ? 'text-an-gold border-b-2 border-an-gold' : 'text-white/40'}`}>
             {t === 'menu' && '🎮 Меню'}{t === 'open' && '🔍 Открытые'}{t === 'join' && '🔗 По коду'}
           </button>
         ))}
       </div>
-      {error && <div className="mx-3 mt-2 px-3 py-2 rounded-lg text-xs bg-neon-red/10 text-neon-red border border-neon-red/30">{error}</div>}
+      {error && <div className="mx-3 mt-2 px-3 py-2 rounded-lg text-xs bg-an-red/10 text-an-red border border-an-red/30">{error}</div>}
       <div className="flex-1 min-h-0 overflow-y-auto p-3">
         {tab === 'menu' && (
           <div className="flex flex-col gap-3">
-            <button onClick={handleRandom} disabled={waiting} className="py-4 rounded-xl font-bold text-sm flex flex-col items-center gap-1 bg-gradient-to-br from-neon-red to-orange-500 text-white shadow-lg active:scale-95 disabled:opacity-50">
+            <button onClick={handleRandom} disabled={waiting} className="py-4 rounded-xl font-bold text-sm flex flex-col items-center gap-1 bg-gradient-to-br from-an-red to-an-orange text-white shadow-lg active:scale-95 disabled:opacity-50">
               <span className="text-2xl">🎲</span><span>Случайный бой</span><span className="text-[10px] text-white/60 font-normal">Найдём соперника</span>
             </button>
-            <button onClick={handleCreate} disabled={waiting} className="py-4 rounded-xl font-bold text-sm flex flex-col items-center gap-1 bg-gradient-to-br from-neon-purple to-neon-blue text-white shadow-lg active:scale-95 disabled:opacity-50">
-              <span className="text-2xl">🏠</span><span>Создать комнату</span><span className="text-[10px] text-white/60 font-normal">Поделись кодом</span>
+            <button onClick={handleCreate} disabled={waiting} className="py-4 rounded-xl font-bold text-sm flex flex-col items-center gap-1 bg-gradient-to-br from-an-gold to-an-orange text-an-dark shadow-lg active:scale-95 disabled:opacity-50">
+              <span className="text-2xl">🏠</span><span>Создать комнату</span><span className="text-[10px] text-an-dark/60 font-normal">Поделись кодом</span>
             </button>
             <div className="text-center text-[10px] text-white/20 mt-2">12HP · 12+1 пиллз · 4 раунда</div>
           </div>
@@ -192,14 +192,17 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center mb-1">
               <div className="text-xs text-white/40 font-bold">Доступные комнаты</div>
-              <button onClick={loadRooms} className="text-[10px] text-neon-blue">🔄 Обновить</button>
+              <button onClick={loadRooms} className="text-[10px] text-an-gold">🔄 Обновить</button>
             </div>
             {loadingRooms && <div className="text-xs text-white/30 text-center py-4">Загрузка...</div>}
             {!loadingRooms && openRooms.length === 0 && <div className="text-xs text-white/30 text-center py-8"><div className="text-2xl mb-2">😴</div>Нет открытых комнат</div>}
             {openRooms.map((g) => (
-              <div key={g.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                <div><div className="text-sm font-bold text-white">{g.host_id}</div><div className="text-[10px] text-white/30">{g.host_deck?.length || 0}/8 карт</div></div>
-                <button onClick={() => handleJoinOpen(g)} disabled={waiting} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-neon-green text-white active:scale-95 disabled:opacity-50">Войти</button>
+              <div key={g.id} className="flex items-center justify-between p-3 rounded-xl bg-an-card border border-an-border">
+                <div>
+                  <div className="text-sm font-bold text-white">{g.host_id}</div>
+                  <div className="text-[10px] text-white/30">{g.host_deck?.length || 0}/8 карт</div>
+                </div>
+                <button onClick={() => handleJoinOpen(g)} disabled={waiting} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-an-gold text-an-dark active:scale-95 disabled:opacity-50">Войти</button>
               </div>
             ))}
           </div>
@@ -208,14 +211,14 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
           <div className="flex flex-col gap-3">
             <div className="text-xs text-white/40">Введите код комнаты:</div>
             <div className="flex gap-2">
-              <input type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="Код комнаты..." className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-neon-blue" />
-              <button onClick={handleJoinCode} disabled={!joinCode.trim() || waiting} className="px-4 py-2 rounded-lg text-sm font-bold bg-neon-blue text-white disabled:opacity-50 active:scale-95">{waiting ? '...' : 'Войти'}</button>
+              <input type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="Код комнаты..." className="flex-1 px-3 py-2 rounded-lg bg-an-card border border-an-border text-sm text-white placeholder-white/30 focus:outline-none focus:border-an-gold" />
+              <button onClick={handleJoinCode} disabled={!joinCode.trim() || waiting} className="px-4 py-2 rounded-lg text-sm font-bold bg-an-gold text-an-dark disabled:opacity-50 active:scale-95">{waiting ? '...' : 'Войти'}</button>
             </div>
           </div>
         )}
       </div>
       <div className="shrink-0 px-3 pb-3">
-        <button onClick={onBack} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10">Назад</button>
+        <button onClick={onBack} className="w-full py-2.5 rounded-lg font-bold text-sm bg-an-card border border-an-border text-white/60 active:bg-an-surface">Назад</button>
       </div>
     </div>
   );
