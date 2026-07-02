@@ -4,14 +4,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        'neon-blue': '#00d4ff',
-        'neon-purple': '#b742ff',
-        'neon-pink': '#ff2d95',
-        'neon-green': '#00ff9f',
-        'neon-red': '#ff3333',
-        'dark-bg': '#0f0f23',
-        'dark-card': '#1a1a3e',
-        'dark-border': '#2a2a5e',
+        'an-gold': '#FFD700',
+        'an-yellow': '#FFC107',
+        'an-orange': '#FF9800',
+        'an-red': '#FF3D00',
+        'an-green': '#00E676',
+        'an-dark': '#0A0A0A',
+        'an-card': '#1A1A1A',
+        'an-surface': '#121212',
+        'an-border': '#2A2A2A',
       },
     },
   },

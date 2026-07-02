@@ -27,21 +27,58 @@ const abInfo: Record<string, { icon: string; color: string }> = {
 };
 
 const art: Record<number, string> = {
-  1:'/cards/card-01-block.svg',2:'/cards/card-02-node.svg',3:'/cards/card-03-hacker.svg',
-  4:'/cards/card-04-transaction.svg',5:'/cards/card-05-hash-wolf.svg',6:'/cards/card-06-chain-knight.svg',
-  7:'/cards/card-07-block-shadow.svg',8:'/cards/card-08-hyperblock.svg',9:'/cards/card-09-small-hash.svg',
-  10:'/cards/card-10-meditative-node.svg',11:'/cards/card-11-chain-acolyte.svg',12:'/cards/card-12-block-totem.svg',
-  13:'/cards/card-13-shard-whisperer.svg',14:'/cards/card-14-epoch-master.svg',15:'/cards/card-15-consensus-guardian.svg',
-  16:'/cards/card-16-code-emperor.svg',17:'/cards/card-17-block-emperor.svg',18:'/cards/card-18-cosmic-validator.svg',
-  19:'/cards/card-19-phantom-node.svg',20:'/cards/card-20-validator.svg',21:'/cards/card-21-zen-validator.svg',
-  22:'/cards/card-22-chain-temple-guard.svg',23:'/cards/card-23-hash-courier.svg',24:'/cards/card-24-mempool-raider.svg',
-  25:'/cards/card-25-chain-saboteur.svg',26:'/cards/card-26-node-killer.svg',27:'/cards/card-27-validation-paladin.svg',
-  28:'/cards/card-28-blockchain-god.svg',29:'/cards/card-29-epoch-guardian.svg',30:'/cards/card-30-node-healer.svg',
-  31:'/cards/card-31-mempool-poisoner.svg',32:'/cards/card-32-genesis-spirit.svg',33:'/cards/card-33-block-archon.svg',
-  34:'/cards/card-34-buddha.svg',35:'/cards/card-35-mempool-scout.svg',36:'/cards/card-36-fork-saboteur.svg',
-  37:'/cards/card-37-consensus-storm.svg',38:'/cards/card-38-chain-admiral.svg',39:'/cards/card-39-consensus-dragon.svg',
-  40:'/cards/card-40-block-pilgrim.svg',41:'/cards/card-41-hash-alchemist.svg',42:'/cards/card-42-chain-keeper.svg',
-  43:'/cards/card-43-consensus-priest.svg',44:'/cards/card-44-epoch-dragon.svg',
+  // Legendary - лучшие изображения
+  8:'/cards/an-girl-main.jpg',   // Готическая девушка - Гиперблок
+  16:'/cards/an-popit-main.jpg', // Popit - Император Кода
+  28:'/cards/an-red-block.jpg',  // Красный блок-кипер - Бог Блокчейна
+  34:'/cards/an-smiley-yellow.jpg', // Жёлтый смайлик - Будда Блокчейна
+  39:'/cards/an-girl-art.jpg',   // Арт девушки - Дракон Консенсуса
+  44:'/cards/an-block-keeper.jpg', // Блок-кипер - Дракон Эпох
+
+  // Epic - хорошие изображения
+  17:'/cards/an-block-keeper2.jpg', // Блок-кипер 2 - Император Блоков
+  27:'/cards/an-logo-yellow.jpg',  // Жёлтый лого - Паладин Валидации
+  33:'/cards/an-tokenomics.jpg',   // Токеномика - Архонт Блоков
+  38:'/cards/an-key-logo.jpg',     // Ключ - Адмирал Цепи
+  43:'/cards/an-block-keeper3.jpg', // Блок-кипер 3 - Верховный Жрец
+
+  // Rare - средние изображения
+  5:'/cards/card-acki-nacki.jpeg',  // Оригинальная карта
+  6:'/cards/card-circuit-guardian.jpeg',
+  7:'/cards/card-phantom.png',
+  13:'/cards/card-block-keeper.jpeg',
+  14:'/cards/card-block-manager.jpeg',
+  15:'/cards/card-malicious-block.jpeg',
+  26:'/cards/card-cyber-killer.png',
+  32:'/cards/card-mamabord.jpeg',
+  37:'/cards/card-courier.png',
+  42:'/cards/card-raider.png',
+
+  // Uncommon
+  19:'/cards/card-hacker.png',
+  20:'/cards/card-cyber-wolf.png',
+  21:'/cards/card-patrol.png',
+  22:'/cards/card-rusty-drone.png',
+  24:'/cards/card-saboteur.png',
+  25:'/cards/card-neon-sniper.png',
+  30:'/cards/card-phantom.png',
+  31:'/cards/card-phantom.png',
+  36:'/cards/card-hacker.png',
+  41:'/cards/card-courier.png',
+
+  // Common - базовые изображения
+  1:'/cards/card-rusty-drone.png',
+  2:'/cards/card-patrol.png',
+  3:'/cards/card-hacker.png',
+  4:'/cards/card-neon-sniper.png',
+  9:'/cards/card-mamabord.jpeg',
+  10:'/cards/card-block-keeper.jpeg',
+  11:'/cards/card-circuit-guardian.jpeg',
+  12:'/cards/card-block-keeper.jpeg',
+  23:'/cards/card-courier.png',
+  29:'/cards/card-mamabord.jpeg',
+  35:'/cards/card-patrol.png',
+  40:'/cards/card-rusty-drone.png',
 };
 
 const R: Record<string, { gc:string; gg:string; bg:string; fg:string; bt:string; bc:string; sl:string }> = {
