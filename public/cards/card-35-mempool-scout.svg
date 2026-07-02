@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg35" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a0a"/>
+      <stop offset="50%" stop-color="#0a2a10"/>
+      <stop offset="100%" stop-color="#0a1a0a"/>
+    </linearGradient>
+    <linearGradient id="scout35" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#00cc44"/>
+    </linearGradient>
+    <filter id="glow35">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg35)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#scout35)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Mempool scout -->
+  <rect x="60" y="60" width="80" height="60" rx="6" fill="none" stroke="#00ff88" stroke-width="1.5" opacity="0.5"/>
+  <text x="100" y="95" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ff88" opacity="0.4">MEMPOOL</text>
+  <!-- Scout radar -->
+  <circle cx="100" cy="140" r="20" fill="none" stroke="#00cc44" stroke-width="1" opacity="0.4"/>
+  <line x1="100" y1="140" x2="100" y2="120" stroke="#00ff88" stroke-width="1.5" opacity="0.6" filter="url(#glow35)">
+    <animateTransform attributeName="transform" type="rotate" from="0 100 140" to="360 100 140" dur="3s" repeatCount="indefinite"/>
+  </line>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ff88" opacity="0.5">МЕМПУЛ РАЗВЕДЧИК</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00cc44" opacity="0.3">ACKI NACKI</text>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg43" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a0a2a"/>
+      <stop offset="50%" stop-color="#2a1040"/>
+      <stop offset="100%" stop-color="#1a0a2a"/>
+    </linearGradient>
+    <linearGradient id="priest43" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cc88ff"/>
+      <stop offset="100%" stop-color="#aa44dd"/>
+    </linearGradient>
+    <filter id="glow43">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg43)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#priest43)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Consensus high priest -->
+  <ellipse cx="100" cy="80" rx="40" ry="12" fill="none" stroke="#cc88ff" stroke-width="1.5" opacity="0.5" filter="url(#glow43)"/>
+  <!-- Third eye (consensus eye) -->
+  <ellipse cx="100" cy="110" rx="15" ry="10" fill="none" stroke="#cc88ff" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="100" cy="110" r="5" fill="#aa44dd" opacity="0.4"/>
+  <circle cx="100" cy="110" r="2.5" fill="#cc88ff" opacity="0.8" filter="url(#glow43)"/>
+  <!-- Consensus symbols -->
+  <circle cx="100" cy="140" r="30" fill="none" stroke="#aa44dd" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="100" cy="140" r="25" fill="none" stroke="#cc88ff" stroke-width="0.5" opacity="0.25"/>
+  <circle cx="100" cy="140" r="20" fill="none" stroke="#aa44dd" stroke-width="0.5" opacity="0.3"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="9" fill="#cc88ff" opacity="0.5">ВЕРХОВНЫЙ ЖРЕЦ КОНСЕНСУСА</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#aa44dd" opacity="0.3">EPIC • ACKI NACKI</text>
+</svg>

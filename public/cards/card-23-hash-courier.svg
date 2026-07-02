@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg23" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a0a"/>
+      <stop offset="50%" stop-color="#0a2a10"/>
+      <stop offset="100%" stop-color="#0a1a0a"/>
+    </linearGradient>
+    <linearGradient id="courier23" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#00cc44"/>
+    </linearGradient>
+    <filter id="glow23">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg23)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#courier23)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Hash courier -->
+  <rect x="70" y="70" width="60" height="40" rx="6" fill="none" stroke="#00ff88" stroke-width="1.5" opacity="0.5"/>
+  <text x="100" y="95" text-anchor="middle" font-family="monospace" font-size="12" fill="#00ff88" opacity="0.6">#</text>
+  <!-- Delivery arrow -->
+  <path d="M100,110 L100,140 L90,130 M100,140 L110,130" fill="none" stroke="#00cc44" stroke-width="1.5" opacity="0.5"/>
+  <!-- Speed lines -->
+  <line x1="60" y1="85" x2="70" y2="85" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/>
+  <line x1="60" y1="95" x2="70" y2="95" stroke="#00cc44" stroke-width="0.5" opacity="0.3"/>
+  <line x1="130" y1="85" x2="140" y2="85" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/>
+  <line x1="130" y1="95" x2="140" y2="95" stroke="#00cc44" stroke-width="0.5" opacity="0.3"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ff88" opacity="0.5">КУРЬЕР ХЕШЕЙ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00cc44" opacity="0.3">ACKI NACKI</text>
+</svg>

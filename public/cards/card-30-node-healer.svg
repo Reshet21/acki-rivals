@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg30" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a0a"/>
+      <stop offset="50%" stop-color="#0a2a10"/>
+      <stop offset="100%" stop-color="#0a1a0a"/>
+    </linearGradient>
+    <linearGradient id="healer30" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#00cc44"/>
+    </linearGradient>
+    <filter id="glow30">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg30)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#healer30)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Node healer -->
+  <circle cx="100" cy="100" r="35" fill="none" stroke="#00ff88" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="100" cy="100" r="25" fill="#00ff88" opacity="0.08"/>
+  <!-- Heal symbol -->
+  <path d="M95,85 L105,85 L105,95 L115,95 L115,105 L105,105 L105,115 L95,115 L95,105 L85,105 L85,95 L95,95 Z" 
+        fill="none" stroke="#00ff88" stroke-width="2" opacity="0.7" filter="url(#glow30)"/>
+  <!-- Healing particles -->
+  <circle cx="80" cy="80" r="1.5" fill="#00ff88" opacity="0.4"/>
+  <circle cx="120" cy="85" r="1" fill="#00cc44" opacity="0.3"/>
+  <circle cx="75" cy="120" r="1" fill="#00ff88" opacity="0.3"/>
+  <circle cx="125" cy="115" r="1.5" fill="#00cc44" opacity="0.4"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ff88" opacity="0.5">ЦЕЛИТЕЛЬ НОД</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00cc44" opacity="0.3">ACKI NACKI</text>
+</svg>

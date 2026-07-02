@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg28" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2a0a00"/>
+      <stop offset="50%" stop-color="#3a1a00"/>
+      <stop offset="100%" stop-color="#2a0a00"/>
+    </linearGradient>
+    <linearGradient id="god28" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffdd44"/>
+      <stop offset="50%" stop-color="#ff8800"/>
+      <stop offset="100%" stop-color="#ff4400"/>
+    </linearGradient>
+    <filter id="glow28">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg28)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#god28)" stroke-width="2.5" opacity="0.8"/>
+  <!-- Blockchain crown -->
+  <path d="M70,70 L100,45 L130,70 L125,80 L100,65 L75,80 Z" fill="none" stroke="#ffdd44" stroke-width="2" opacity="0.8" filter="url(#glow28)"/>
+  <!-- Central block -->
+  <rect x="70" y="85" width="60" height="50" rx="6" fill="none" stroke="#ff8800" stroke-width="2" opacity="0.7"/>
+  <rect x="75" y="90" width="50" height="40" rx="4" fill="#ffdd44" opacity="0.1"/>
+  <!-- Eye of blockchain -->
+  <circle cx="100" cy="110" r="15" fill="none" stroke="#ffdd44" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="100" cy="110" r="8" fill="#ff8800" opacity="0.4"/>
+  <circle cx="100" cy="110" r="4" fill="#ffdd44" opacity="0.8" filter="url(#glow28)"/>
+  <!-- Chain links -->
+  <path d="M70,135 L70,150 L80,160 L70,170" fill="none" stroke="#ff8800" stroke-width="1.5" opacity="0.5"/>
+  <path d="M130,135 L130,150 L120,160 L130,170" fill="none" stroke="#ffdd44" stroke-width="1.5" opacity="0.5"/>
+  <!-- Aura -->
+  <circle cx="100" cy="110" r="55" fill="none" stroke="#ffdd44" stroke-width="0.5" opacity="0.2"/>
+  <circle cx="100" cy="110" r="65" fill="none" stroke="#ff8800" stroke-width="0.3" opacity="0.15"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="12" fill="#ffdd44" opacity="0.5">БОГ БЛОКЧЕЙНА</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff8800" opacity="0.3">LEGENDARY • ACKI NACKI</text>
+</svg>

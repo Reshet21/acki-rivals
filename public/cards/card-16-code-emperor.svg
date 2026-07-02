@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg16" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a1a2a"/>
+      <stop offset="50%" stop-color="#0a2030"/>
+      <stop offset="100%" stop-color="#0a1a2a"/>
+    </linearGradient>
+    <linearGradient id="code16" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00ffcc"/>
+      <stop offset="50%" stop-color="#00ccff"/>
+      <stop offset="100%" stop-color="#00ffaa"/>
+    </linearGradient>
+    <filter id="glow16">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg16)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#code16)" stroke-width="2" opacity="0.7"/>
+  <!-- Code emperor throne -->
+  <path d="M80,60 L100,45 L120,60 L125,100 L120,140 L100,150 L80,140 L75,100 Z" 
+        fill="none" stroke="#00ffcc" stroke-width="2" opacity="0.6"/>
+  <!-- Crown -->
+  <path d="M85,65 L100,50 L115,65" fill="none" stroke="#00ccff" stroke-width="1.5" opacity="0.8"/>
+  <!-- Code streams -->
+  <text x="85" y="80" font-family="monospace" font-size="6" fill="#00ffcc" opacity="0.3">01001</text>
+  <text x="90" y="90" font-family="monospace" font-size="6" fill="#00ccff" opacity="0.3">10110</text>
+  <text x="80" y="100" font-family="monospace" font-size="6" fill="#00ffaa" opacity="0.3">11001</text>
+  <text x="95" y="110" font-family="monospace" font-size="6" fill="#00ffcc" opacity="0.3">01101</text>
+  <!-- Central eye -->
+  <circle cx="100" cy="95" r="12" fill="none" stroke="#00ffcc" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="100" cy="95" r="6" fill="#00ccff" opacity="0.4"/>
+  <circle cx="100" cy="95" r="3" fill="#00ffcc" opacity="0.8" filter="url(#glow16)"/>
+  <!-- Power aura -->
+  <circle cx="100" cy="100" r="50" fill="none" stroke="#00ffcc" stroke-width="0.5" opacity="0.2"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ffcc" opacity="0.5">ИМПЕРАТОР КОДА</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00ccff" opacity="0.3">LEGENDARY • ACKI NACKI</text>
+</svg>

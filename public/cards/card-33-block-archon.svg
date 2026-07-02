@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg33" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0520"/>
+      <stop offset="50%" stop-color="#150a30"/>
+      <stop offset="100%" stop-color="#0a0520"/>
+    </linearGradient>
+    <linearGradient id="archon33" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#cc88ff"/>
+      <stop offset="100%" stop-color="#aa44dd"/>
+    </linearGradient>
+    <filter id="glow33">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg33)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#archon33)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Block archon -->
+  <rect x="65" y="55" width="70" height="60" rx="6" fill="none" stroke="#cc88ff" stroke-width="2" opacity="0.6"/>
+  <rect x="70" y="60" width="60" height="50" rx="4" fill="#cc88ff" opacity="0.08"/>
+  <!-- Archon crown -->
+  <path d="M75,55 L85,40 L95,55" fill="none" stroke="#cc88ff" stroke-width="1.5" opacity="0.5"/>
+  <path d="M95,55 L105,40 L115,55" fill="none" stroke="#aa44dd" stroke-width="1.5" opacity="0.5"/>
+  <!-- Poison aura -->
+  <circle cx="100" cy="85" r="35" fill="none" stroke="#cc88ff" stroke-width="0.5" opacity="0.3"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#cc88ff" opacity="0.5">АРХОНТ БЛОКОВ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#aa44dd" opacity="0.3">EPIC • ACKI NACKI</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg22" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a2a"/>
+      <stop offset="50%" stop-color="#0a2030"/>
+      <stop offset="100%" stop-color="#0a1a2a"/>
+    </linearGradient>
+    <linearGradient id="temple22" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4488ff"/>
+      <stop offset="100%" stop-color="#2266cc"/>
+    </linearGradient>
+    <filter id="glow22">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg22)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#temple22)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Temple guard -->
+  <path d="M80,90 L100,65 L120,90 Z" fill="none" stroke="#4488ff" stroke-width="1.5" opacity="0.5"/>
+  <rect x="88" y="90" width="24" height="30" fill="none" stroke="#2266cc" stroke-width="1" opacity="0.4"/>
+  <!-- Chain guard -->
+  <path d="M70,100 L80,100 M120,100 L130,100" stroke="#4488ff" stroke-width="1.5" opacity="0.4"/>
+  <!-- Shield -->
+  <path d="M100,110 L115,120 L115,140 Q115,150 100,155 Q85,150 85,140 L85,120 Z" 
+        fill="none" stroke="#4488ff" stroke-width="1.5" opacity="0.5"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#4488ff" opacity="0.5">СТРАЖ ХРАМА ЦЕПИ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#2266cc" opacity="0.3">ACKI NACKI</text>
+</svg>

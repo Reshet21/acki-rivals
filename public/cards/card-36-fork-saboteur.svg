@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg36" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a0505"/>
+      <stop offset="50%" stop-color="#2a0a0a"/>
+      <stop offset="100%" stop-color="#1a0505"/>
+    </linearGradient>
+    <linearGradient id="fork36" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff0044"/>
+      <stop offset="100%" stop-color="#ff6600"/>
+    </linearGradient>
+    <filter id="glow36">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg36)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#fork36)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Fork saboteur -->
+  <path d="M80,80 L100,100 L120,80" fill="none" stroke="#ff0044" stroke-width="2" opacity="0.6"/>
+  <path d="M100,100 L100,140" fill="none" stroke="#ff6600" stroke-width="2" opacity="0.5"/>
+  <!-- Fork branches -->
+  <path d="M100,120 L80,140" fill="none" stroke="#ff0044" stroke-width="1.5" opacity="0.5"/>
+  <path d="M100,120 L120,140" fill="none" stroke="#ff6600" stroke-width="1.5" opacity="0.5"/>
+  <!-- Break symbol -->
+  <path d="M95,125 L105,135" fill="none" stroke="#ff0044" stroke-width="2" opacity="0.8" filter="url(#glow36)"/>
+  <path d="M95,135 L105,125" fill="none" stroke="#ff6600" stroke-width="2" opacity="0.8"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#ff0044" opacity="0.5">САБОТАЖНИК ФОРКОВ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff6600" opacity="0.3">ACKI NACKI</text>
+</svg>

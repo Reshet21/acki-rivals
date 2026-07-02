@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg38" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0520"/>
+      <stop offset="50%" stop-color="#150a30"/>
+      <stop offset="100%" stop-color="#0a0520"/>
+    </linearGradient>
+    <linearGradient id="admiral38" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffdd44"/>
+      <stop offset="100%" stop-color="#ff8800"/>
+    </linearGradient>
+    <filter id="glow38">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg38)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#admiral38)" stroke-width="2" opacity="0.7"/>
+  <!-- Chain admiral -->
+  <path d="M60,80 L100,60 L140,80 L140,140 L100,160 L60,140 Z" 
+        fill="none" stroke="#ffdd44" stroke-width="2" opacity="0.6"/>
+  <!-- Admiral insignia -->
+  <polygon points="100,80 108,95 100,110 92,95" fill="none" stroke="#ffdd44" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="100" cy="95" r="5" fill="#ffdd44" opacity="0.5" filter="url(#glow38)"/>
+  <!-- Chain links -->
+  <path d="M60,140 L60,160 L70,170 L60,180" fill="none" stroke="#ff8800" stroke-width="1.5" opacity="0.4"/>
+  <path d="M140,140 L140,160 L130,170 L140,180" fill="none" stroke="#ffdd44" stroke-width="1.5" opacity="0.4"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffdd44" opacity="0.5">АДМИРАЛ ЦЕПИ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff8800" opacity="0.3">EPIC • ACKI NACKI</text>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg40" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a1a1a"/>
+      <stop offset="50%" stop-color="#0a2020"/>
+      <stop offset="100%" stop-color="#0a1a1a"/>
+    </linearGradient>
+    <linearGradient id="pilgrim40" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ffcc"/>
+      <stop offset="100%" stop-color="#00ccaa"/>
+    </linearGradient>
+    <filter id="glow40">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg40)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#pilgrim40)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Block pilgrim -->
+  <path d="M100,180 Q80,150 90,120 Q100,90 100,60" fill="none" stroke="#00ffcc" stroke-width="1.5" opacity="0.4" stroke-dasharray="4,4"/>
+  <!-- Footsteps -->
+  <ellipse cx="95" cy="170" rx="4" ry="6" fill="#00ffcc" opacity="0.2"/>
+  <ellipse cx="105" cy="155" rx="4" ry="6" fill="#00ccaa" opacity="0.25"/>
+  <ellipse cx="95" cy="140" rx="4" ry="6" fill="#00ffcc" opacity="0.3"/>
+  <!-- Block destination -->
+  <rect x="85" y="50" width="30" height="25" rx="4" fill="none" stroke="#00ffcc" stroke-width="1.5" opacity="0.5"/>
+  <rect x="88" y="53" width="24" height="19" rx="3" fill="#00ffcc" opacity="0.1"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ffcc" opacity="0.5">ПАЛОМНИК К БЛОКУ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00ccaa" opacity="0.3">ACKI NACKI</text>
+</svg>

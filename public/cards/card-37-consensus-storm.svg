@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg37" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0a2a"/>
+      <stop offset="50%" stop-color="#050520"/>
+      <stop offset="100%" stop-color="#0a0a2a"/>
+    </linearGradient>
+    <linearGradient id="storm37" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffff00"/>
+      <stop offset="100%" stop-color="#00aaff"/>
+    </linearGradient>
+    <filter id="glow37">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg37)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#storm37)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Consensus storm -->
+  <circle cx="100" cy="100" r="40" fill="none" stroke="#4488ff" stroke-width="1" opacity="0.3"/>
+  <circle cx="100" cy="100" r="50" fill="none" stroke="#00aaff" stroke-width="0.5" opacity="0.2"/>
+  <!-- Lightning bolts -->
+  <path d="M90,70 L95,90 L85,95 L100,120" fill="none" stroke="url(#storm37)" stroke-width="2" filter="url(#glow37)" opacity="0.8"/>
+  <path d="M120,75 L115,95 L125,100 L110,125" fill="none" stroke="#ffff00" stroke-width="1.5" filter="url(#glow37)" opacity="0.6"/>
+  <!-- Consensus nodes -->
+  <circle cx="70" cy="80" r="5" fill="#4488ff" opacity="0.3"/>
+  <circle cx="130" cy="80" r="5" fill="#00aaff" opacity="0.3"/>
+  <circle cx="70" cy="120" r="5" fill="#00aaff" opacity="0.3"/>
+  <circle cx="130" cy="120" r="5" fill="#4488ff" opacity="0.3"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#4488ff" opacity="0.5">ШТОРМ КОНСЕНСУСА</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00aaff" opacity="0.3">ACKI NACKI</text>
+</svg>

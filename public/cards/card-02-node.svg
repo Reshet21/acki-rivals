@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a0a"/>
+      <stop offset="50%" stop-color="#0a2a10"/>
+      <stop offset="100%" stop-color="#0a1a0a"/>
+    </linearGradient>
+    <linearGradient id="neon2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#00ccff"/>
+    </linearGradient>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg2)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#neon2)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Network node -->
+  <circle cx="100" cy="100" r="30" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.7"/>
+  <circle cx="100" cy="100" r="20" fill="#00ff88" opacity="0.15"/>
+  <circle cx="100" cy="100" r="8" fill="#00ff88" opacity="0.6" filter="url(#glow2)"/>
+  <!-- Connections to other nodes -->
+  <line x1="100" y1="70" x2="100" y2="40" stroke="#00ccff" stroke-width="1" opacity="0.5"/>
+  <circle cx="100" cy="35" r="5" fill="#00ccff" opacity="0.4"/>
+  <line x1="130" y1="100" x2="160" y2="100" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+  <circle cx="165" cy="100" r="5" fill="#00ff88" opacity="0.4"/>
+  <line x1="70" y1="100" x2="40" y2="100" stroke="#00ccff" stroke-width="1" opacity="0.5"/>
+  <circle cx="35" cy="100" r="5" fill="#00ccff" opacity="0.4"/>
+  <line x1="100" y1="130" x2="100" y2="160" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+  <circle cx="100" cy="165" r="5" fill="#00ff88" opacity="0.4"/>
+  <!-- Radar sweep -->
+  <line x1="100" y1="100" x2="100" y2="70" stroke="#00ff88" stroke-width="1.5" opacity="0.8" filter="url(#glow2)">
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="4s" repeatCount="indefinite"/>
+  </line>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ff88" opacity="0.5">НОДА-РАЗВЕДЧИК</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00ccff" opacity="0.3">ACKI NACKI</text>
+</svg>

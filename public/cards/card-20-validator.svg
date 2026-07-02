@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg20" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a0a"/>
+      <stop offset="50%" stop-color="#0a2a10"/>
+      <stop offset="100%" stop-color="#0a1a0a"/>
+    </linearGradient>
+    <linearGradient id="validator20" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#00cc44"/>
+    </linearGradient>
+    <filter id="glow20">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg20)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#validator20)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Validator symbol -->
+  <rect x="65" y="60" width="70" height="70" rx="8" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.6"/>
+  <rect x="70" y="65" width="60" height="60" rx="6" fill="#00ff88" opacity="0.08"/>
+  <!-- Checkmark -->
+  <path d="M80,95 L95,110 L120,80" fill="none" stroke="#00ff88" stroke-width="3" opacity="0.8" filter="url(#glow20)"/>
+  <!-- Network lines -->
+  <line x1="65" y1="95" x2="40" y2="95" stroke="#00cc44" stroke-width="0.5" opacity="0.3"/>
+  <line x1="135" y1="95" x2="160" y2="95" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ff88" opacity="0.5">ВАЛИДАТОР</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00cc44" opacity="0.3">ACKI NACKI</text>
+</svg>

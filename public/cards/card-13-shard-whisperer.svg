@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg13" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a2a"/>
+      <stop offset="50%" stop-color="#0a2030"/>
+      <stop offset="100%" stop-color="#0a1a2a"/>
+    </linearGradient>
+    <linearGradient id="shard13" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#aa44ff"/>
+      <stop offset="100%" stop-color="#ff44aa"/>
+    </linearGradient>
+    <filter id="glow13">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg13)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#shard13)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Shard whisperer -->
+  <path d="M80,70 L100,50 L120,70 L130,100 L120,130 L100,140 L80,130 L70,100 Z" 
+        fill="none" stroke="#aa44ff" stroke-width="1.5" opacity="0.5"/>
+  <!-- Whisper lines -->
+  <path d="M90,90 Q100,85 110,90" fill="none" stroke="#ff44aa" stroke-width="0.8" opacity="0.4"/>
+  <path d="M85,100 Q100,95 115,100" fill="none" stroke="#aa44ff" stroke-width="0.8" opacity="0.3"/>
+  <path d="M90,110 Q100,105 110,110" fill="none" stroke="#ff44aa" stroke-width="0.8" opacity="0.4"/>
+  <!-- Eye -->
+  <circle cx="100" cy="95" r="5" fill="#aa44ff" opacity="0.5" filter="url(#glow13)"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#aa44ff" opacity="0.5">ШЕПТУН ШАРДОВ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff44aa" opacity="0.3">ACKI NACKI</text>
+</svg>

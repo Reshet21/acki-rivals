@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg9" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a1a1a"/>
+      <stop offset="50%" stop-color="#0a2020"/>
+      <stop offset="100%" stop-color="#0a1a1a"/>
+    </linearGradient>
+    <linearGradient id="hash9" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00ffcc"/>
+      <stop offset="100%" stop-color="#00ccaa"/>
+    </linearGradient>
+    <filter id="glow9">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg9)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#hash9)" stroke-width="1.5" opacity="0.5"/>
+  <!-- Small hash symbol -->
+  <text x="100" y="120" text-anchor="middle" font-family="monospace" font-size="60" fill="#00ffcc" opacity="0.6" filter="url(#glow9)">#</text>
+  <!-- Hash chains -->
+  <line x1="60" y1="140" x2="140" y2="140" stroke="#00ccaa" stroke-width="0.5" opacity="0.3"/>
+  <line x1="60" y1="150" x2="140" y2="150" stroke="#00ffcc" stroke-width="0.5" opacity="0.3"/>
+  <line x1="60" y1="160" x2="140" y2="160" stroke="#00ccaa" stroke-width="0.5" opacity="0.3"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ffcc" opacity="0.5">МАЛЫЙ ХЕШ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00ccaa" opacity="0.3">ACKI NACKI</text>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#1a0a2a"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="neon5" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff8800"/>
+      <stop offset="100%" stop-color="#ff0044"/>
+    </linearGradient>
+    <filter id="glow5">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg5)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#neon5)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Wolf head silhouette (geometric) -->
+  <path d="M80,80 L100,60 L120,80 L130,100 L125,120 L110,130 L100,135 L90,130 L75,120 L70,100 Z" 
+        fill="none" stroke="#ff8800" stroke-width="2" opacity="0.7"/>
+  <!-- Eyes -->
+  <circle cx="90" cy="95" r="5" fill="#ff0044" opacity="0.8" filter="url(#glow5)"/>
+  <circle cx="110" cy="95" r="5" fill="#ff0044" opacity="0.8" filter="url(#glow5)"/>
+  <!-- Hash pattern in wolf -->
+  <text x="100" y="110" text-anchor="middle" font-family="monospace" font-size="6" fill="#ff8800" opacity="0.4">HASH</text>
+  <!-- Ears -->
+  <path d="M80,80 L70,60 L90,75" fill="none" stroke="#ff8800" stroke-width="1.5" opacity="0.5"/>
+  <path d="M120,80 L130,60 L110,75" fill="none" stroke="#ff0044" stroke-width="1.5" opacity="0.5"/>
+  <!-- Aura -->
+  <circle cx="100" cy="100" r="50" fill="none" stroke="#ff8800" stroke-width="0.5" opacity="0.2"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#ff8800" opacity="0.5">ХЕШ-ВОЛК</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff0044" opacity="0.3">ACKI NACKI</text>
+</svg>

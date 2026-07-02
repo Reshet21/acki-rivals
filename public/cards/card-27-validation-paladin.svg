@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg27" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0520"/>
+      <stop offset="50%" stop-color="#150a30"/>
+      <stop offset="100%" stop-color="#0a0520"/>
+    </linearGradient>
+    <linearGradient id="paladin27" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#cc88ff"/>
+      <stop offset="100%" stop-color="#aa44dd"/>
+    </linearGradient>
+    <filter id="glow27">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg27)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#paladin27)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Validation paladin -->
+  <path d="M100,55 L145,80 L145,140 Q145,170 100,195 Q55,170 55,140 L55,80 Z" 
+        fill="none" stroke="#cc88ff" stroke-width="2" opacity="0.6"/>
+  <!-- Validation check in shield -->
+  <path d="M85,110 L95,120 L115,100" fill="none" stroke="#cc88ff" stroke-width="2.5" opacity="0.7" filter="url(#glow27)"/>
+  <!-- Holy light -->
+  <circle cx="100" cy="100" r="30" fill="#cc88ff" opacity="0.08"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#cc88ff" opacity="0.5">ПАЛАДИН ВАЛИДАЦИИ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#aa44dd" opacity="0.3">EPIC • ACKI NACKI</text>
+</svg>

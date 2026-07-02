@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg44" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a2a"/>
+      <stop offset="50%" stop-color="#0a2030"/>
+      <stop offset="100%" stop-color="#0a1a2a"/>
+    </linearGradient>
+    <linearGradient id="epoch44" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00ffcc"/>
+      <stop offset="50%" stop-color="#00ccff"/>
+      <stop offset="100%" stop-color="#00ffaa"/>
+    </linearGradient>
+    <filter id="glow44">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg44)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#epoch44)" stroke-width="2" opacity="0.7"/>
+  <!-- Epoch dragon (zen style) -->
+  <path d="M100,70 Q130,75 135,100 Q140,130 115,140 Q90,150 80,130 Q70,110 85,95 Q95,82 110,88 Q120,95 115,110 Q110,120 100,118" 
+        fill="none" stroke="#00ffcc" stroke-width="1.5" opacity="0.7"/>
+  <!-- Epoch eye -->
+  <circle cx="108" cy="92" r="3" fill="#00ffcc" opacity="0.8" filter="url(#glow44)"/>
+  <circle cx="108" cy="92" r="1.5" fill="#ffffff" opacity="0.9"/>
+  <!-- Epoch rings -->
+  <circle cx="100" cy="110" r="35" fill="none" stroke="#00ffcc" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="100" cy="110" r="40" fill="none" stroke="#00ccff" stroke-width="0.5" opacity="0.25"/>
+  <circle cx="100" cy="110" r="45" fill="none" stroke="#00ffaa" stroke-width="0.5" opacity="0.2"/>
+  <!-- Epoch markers -->
+  <circle cx="100" cy="55" r="2" fill="#00ffcc" opacity="0.4"/>
+  <circle cx="100" cy="170" r="2" fill="#00ccff" opacity="0.4"/>
+  <circle cx="50" cy="110" r="1.5" fill="#00ffaa" opacity="0.3"/>
+  <circle cx="150" cy="110" r="1.5" fill="#00ffcc" opacity="0.3"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00ffcc" opacity="0.5">ДРАКОН ЭПОХ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#00ccff" opacity="0.3">LEGENDARY • ACKI NACKI</text>
+</svg>

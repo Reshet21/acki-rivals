@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg7" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#1a0a2a"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="shadow7" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#666666"/>
+      <stop offset="100%" stop-color="#333333"/>
+    </linearGradient>
+    <filter id="glow7">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg7)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#shadow7)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Shadow block -->
+  <rect x="70" y="60" width="60" height="50" rx="6" fill="none" stroke="#666666" stroke-width="2" opacity="0.5"/>
+  <rect x="75" y="65" width="50" height="40" rx="4" fill="#333333" opacity="0.3"/>
+  <!-- Shadow effect -->
+  <rect x="75" y="65" width="50" height="40" rx="4" fill="none" stroke="#999999" stroke-width="0.5" opacity="0.3" filter="url(#glow7)"/>
+  <!-- Stealth lines -->
+  <line x1="60" y1="80" x2="80" y2="80" stroke="#666666" stroke-width="0.5" opacity="0.3"/>
+  <line x1="120" y1="90" x2="140" y2="90" stroke="#666666" stroke-width="0.5" opacity="0.3"/>
+  <!-- Eye in shadow -->
+  <circle cx="100" cy="85" r="5" fill="#999999" opacity="0.4"/>
+  <circle cx="100" cy="85" r="2" fill="#ffffff" opacity="0.6"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#666666" opacity="0.5">ТЕНЬ БЛОКА</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#333333" opacity="0.3">ACKI NACKI</text>
+</svg>

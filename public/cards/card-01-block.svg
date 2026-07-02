@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#1a0a2a"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="neon1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#b742ff"/>
+    </linearGradient>
+    <filter id="glow1">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg1)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#neon1)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Block shape -->
+  <rect x="60" y="60" width="80" height="60" rx="6" fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.8"/>
+  <rect x="65" y="65" width="70" height="50" rx="4" fill="#00d4ff" opacity="0.1"/>
+  <!-- Hash lines inside block -->
+  <line x1="75" y1="75" x2="125" y2="75" stroke="#b742ff" stroke-width="1" opacity="0.4"/>
+  <line x1="75" y1="85" x2="115" y2="85" stroke="#00d4ff" stroke-width="1" opacity="0.3"/>
+  <line x1="75" y1="95" x2="120" y2="95" stroke="#b742ff" stroke-width="1" opacity="0.4"/>
+  <line x1="75" y1="105" x2="110" y2="105" stroke="#00d4ff" stroke-width="1" opacity="0.3"/>
+  <!-- Chain link below -->
+  <path d="M100,120 L100,140 L90,150 L100,160 L110,150 L100,140" fill="none" stroke="#b742ff" stroke-width="1.5" opacity="0.5"/>
+  <!-- Block header -->
+  <rect x="60" y="55" width="80" height="8" rx="2" fill="#00d4ff" opacity="0.3"/>
+  <text x="100" y="62" text-anchor="middle" font-family="monospace" font-size="6" fill="#00d4ff" opacity="0.8">BLOCK #001</text>
+  <!-- Neon lines -->
+  <line x1="30" y1="200" x2="170" y2="200" stroke="#00d4ff" stroke-width="0.5" opacity="0.2"/>
+  <line x1="30" y1="210" x2="170" y2="210" stroke="#b742ff" stroke-width="0.5" opacity="0.15"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#00d4ff" opacity="0.5">МАЛЫЙ БЛОК</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#b742ff" opacity="0.3">ACKI NACKI</text>
+</svg>

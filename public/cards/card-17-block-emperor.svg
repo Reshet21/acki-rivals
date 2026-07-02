@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="bg17" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0520"/>
+      <stop offset="50%" stop-color="#150a30"/>
+      <stop offset="100%" stop-color="#0a0520"/>
+    </linearGradient>
+    <linearGradient id="emp17" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffdd44"/>
+      <stop offset="100%" stop-color="#ff8800"/>
+    </linearGradient>
+    <filter id="glow17">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="280" rx="12" fill="url(#bg17)"/>
+  <rect x="2" y="2" width="196" height="276" rx="10" fill="none" stroke="url(#emp17)" stroke-width="2" opacity="0.7"/>
+  <!-- Block emperor throne -->
+  <rect x="65" y="60" width="70" height="80" rx="6" fill="none" stroke="#ffdd44" stroke-width="2" opacity="0.6"/>
+  <rect x="70" y="65" width="60" height="70" rx="4" fill="#ffdd44" opacity="0.08"/>
+  <!-- Crown of blocks -->
+  <rect x="75" y="55" width="15" height="10" rx="2" fill="#ffdd44" opacity="0.4"/>
+  <rect x="95" y="50" width="15" height="15" rx="2" fill="#ff8800" opacity="0.5"/>
+  <rect x="115" y="55" width="15" height="10" rx="2" fill="#ffdd44" opacity="0.4"/>
+  <!-- Chain throne -->
+  <path d="M65,140 L65,160 L75,170 L65,180" fill="none" stroke="#ff8800" stroke-width="1.5" opacity="0.4"/>
+  <path d="M135,140 L135,160 L125,170 L135,180" fill="none" stroke="#ffdd44" stroke-width="1.5" opacity="0.4"/>
+  <!-- Central emblem -->
+  <polygon points="100,80 108,95 100,110 92,95" fill="none" stroke="#ffdd44" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="100" cy="95" r="5" fill="#ffdd44" opacity="0.5" filter="url(#glow17)"/>
+  <!-- Label -->
+  <text x="100" y="240" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffdd44" opacity="0.5">ИМПЕРАТОР БЛОКОВ</text>
+  <text x="100" y="255" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff8800" opacity="0.3">EPIC • ACKI NACKI</text>
+</svg>
