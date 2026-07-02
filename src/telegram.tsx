@@ -1,44 +1,85 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { init, backButton, themeParams, hapticFeedback, miniApp } from '@telegram-apps/sdk';
+
+// Telegram WebApp API (native)
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        ready: () => void;
+        expand: () => void;
+        close: () => void;
+        backButton: {
+          show: () => void;
+          hide: () => void;
+          onClick: (callback: () => void) => void;
+          offClick: (callback: () => void) => void;
+        };
+        mainButton: {
+          show: () => void;
+          hide: () => void;
+          setText: (text: string) => void;
+          onClick: (callback: () => void) => void;
+          offClick: (callback: () => void) => void;
+          setParams: (params: { color?: string; text_color?: string; text?: string; is_active?: boolean; is_visible?: boolean }) => void;
+        };
+        HapticFeedback: {
+          impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
+          notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
+          selectionChanged: () => void;
+        };
+        themeParams: Record<string, string>;
+        colorScheme: 'light' | 'dark';
+        initData: string;
+        initDataUnsafe: {
+          user?: { id: number; first_name: string; last_name?: string; username?: string; language_code?: string };
+          chat_instance?: string;
+          chat_type?: string;
+          start_param?: string;
+          can_send_messages?: boolean;
+          auth_date: number;
+          hash: string;
+        };
+        viewportHeight: number;
+        viewportStableHeight: number;
+        isExpanded: boolean;
+        platform: string;
+      };
+    };
+  }
+}
 
 interface TelegramContextType {
   isReady: boolean;
+  isInTelegram: boolean;
+  user: { id: number; firstName: string; lastName?: string; username?: string; languageCode?: string } | null;
   goBack: () => void;
+  close: () => void;
   haptic: {
     impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
     notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
     selectionChanged: () => void;
   };
-  theme: {
-    bg_color: string;
-    text_color: string;
-    hint_color: string;
-    link_color: string;
-    button_color: string;
-    button_text_color: string;
-    secondary_bg_color: string;
+  mainButton: {
+    show: (text: string, onClick: () => void) => void;
+    hide: () => void;
   };
 }
 
-const defaultTheme = {
-  bg_color: '#0f0f23',
-  text_color: '#ffffff',
-  hint_color: '#999999',
-  link_color: '#00d4ff',
-  button_color: '#b742ff',
-  button_text_color: '#ffffff',
-  secondary_bg_color: '#1a1a2e',
-};
-
 const TelegramContext = createContext<TelegramContextType>({
   isReady: false,
+  isInTelegram: false,
+  user: null,
   goBack: () => {},
+  close: () => {},
   haptic: {
     impactOccurred: () => {},
     notificationOccurred: () => {},
     selectionChanged: () => {},
   },
-  theme: defaultTheme,
+  mainButton: {
+    show: () => {},
+    hide: () => {},
+  },
 });
 
 export function useTelegram() {
@@ -47,62 +88,94 @@ export function useTelegram() {
 
 export function TelegramProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
-  const [theme, setTheme] = useState(defaultTheme);
+  const [isInTelegram, setIsInTelegram] = useState(false);
+  const [user, setUser] = useState<TelegramContextType['user']>(null);
 
   useEffect(() => {
-    try {
-      init();
+    const tg = window.Telegram?.WebApp;
 
-      // Mount back button
-      backButton.mount();
+    if (tg) {
+      setIsInTelegram(true);
 
-      // Mount theme params
-      themeParams.mount();
+      // Initialize Mini App
+      tg.ready();
+      tg.expand();
 
-      // Mount mini app for closing behavior
-      miniApp.mount();
-
-      // Read theme after mount
-      const tp = themeParams.state();
-      if (tp && Object.keys(tp).length > 0) {
-        setTheme({
-          bg_color: tp.bg_color || defaultTheme.bg_color,
-          text_color: tp.text_color || defaultTheme.text_color,
-          hint_color: tp.hint_color || defaultTheme.hint_color,
-          link_color: tp.link_color || defaultTheme.link_color,
-          button_color: tp.button_color || defaultTheme.button_color,
-          button_text_color: tp.button_text_color || defaultTheme.button_text_color,
-          secondary_bg_color: tp.secondary_bg_color || defaultTheme.secondary_bg_color,
+      // Parse user data
+      if (tg.initDataUnsafe?.user) {
+        const u = tg.initDataUnsafe.user;
+        setUser({
+          id: u.id,
+          firstName: u.first_name,
+          lastName: u.last_name,
+          username: u.username,
+          languageCode: u.language_code,
         });
       }
 
-      setIsReady(true);
-    } catch {
-      // Not in Telegram — use defaults
-      setIsReady(true);
+      // Show back button
+      tg.backButton.show();
+      tg.backButton.onClick(() => {
+        window.history.back();
+      });
+
+      // Set theme colors for Acki Nacki style
+      tg.mainButton.setParams({
+        color: '#FFD700',
+        text_color: '#0A0A0A',
+      });
     }
+
+    setIsReady(true);
   }, []);
 
   const goBack = () => {
-    try {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.backButton.show();
+    } else {
       window.history.back();
-    } catch {}
+    }
+  };
+
+  const close = () => {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.close();
+    }
   };
 
   const haptic = {
     impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => {
-      try { hapticFeedback.impactOccurred(style); } catch {}
+      try { window.Telegram?.WebApp?.HapticFeedback.impactOccurred(style); } catch {}
     },
     notificationOccurred: (type: 'error' | 'success' | 'warning') => {
-      try { hapticFeedback.notificationOccurred(type); } catch {}
+      try { window.Telegram?.WebApp?.HapticFeedback.notificationOccurred(type); } catch {}
     },
     selectionChanged: () => {
-      try { hapticFeedback.selectionChanged(); } catch {}
+      try { window.Telegram?.WebApp?.HapticFeedback.selectionChanged(); } catch {}
+    },
+  };
+
+  const mainButton = {
+    show: (text: string, onClick: () => void) => {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.mainButton.setText(text);
+        tg.mainButton.onClick(onClick);
+        tg.mainButton.show();
+      }
+    },
+    hide: () => {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.mainButton.hide();
+      }
     },
   };
 
   return (
-    <TelegramContext.Provider value={{ isReady, goBack, haptic, theme }}>
+    <TelegramContext.Provider value={{ isReady, isInTelegram, user, goBack, close, haptic, mainButton }}>
       {children}
     </TelegramContext.Provider>
   );

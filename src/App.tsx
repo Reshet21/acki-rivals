@@ -24,7 +24,7 @@ type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgra
 
 function AppInner() {
   const { t } = useI18n();
-  const { haptic } = useTelegram();
+  const { haptic, user } = useTelegram();
   const {
     collection,
     deck,
@@ -124,8 +124,14 @@ function AppInner() {
                 ACKI RIVALS
               </div>
               <div className="text-[10px] text-an-gold/40 tracking-[0.3em] uppercase mt-1">{t('menu.subtitle')}</div>
+              {/* Telegram user info */}
+              {user && (
+                <div className="flex items-center gap-2 mt-2 px-3 py-1 rounded-full" style={{ background: 'rgba(255,215,0,0.05)', border: '1px solid rgba(255,215,0,0.15)' }}>
+                  <span className="text-[10px] text-an-gold/70">👤 {user.firstName}{user.username ? ` (@${user.username})` : ''}</span>
+                </div>
+              )}
               {/* Stats bar with glow */}
-              <div className="flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full animate-counter-glow" style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)' }}>
+              <div className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full animate-counter-glow" style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)' }}>
                 <span className="text-[10px] text-an-gold font-bold">💰 {credits}</span>
                 <span className="text-[10px] text-white/40">|</span>
                 <span className="text-[10px] text-white/60">🏆 {battlesWon}W / {battlesLost}L</span>
