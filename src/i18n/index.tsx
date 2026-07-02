@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import translations from './translations';
 
-type Lang = 'ru' | 'en' | 'es' | 'pt' | 'ar' | 'zh' | 'tr' | 'uk' | 'de' | 'fr' | 'hi' | 'id' | 'ja' | 'ko' | 'pl';
+export type Lang = 'ru' | 'en' | 'es' | 'pt' | 'ar' | 'zh' | 'tr' | 'uk' | 'de' | 'fr' | 'hi' | 'id' | 'ja' | 'ko' | 'pl';
 
 interface I18nContextType {
   lang: Lang;

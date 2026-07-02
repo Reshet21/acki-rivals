@@ -16,11 +16,11 @@ import UpgradeScreen from './components/UpgradeScreen';
 import PvpLobby from './components/PvpLobby';
 import PvpBattleScreen from './components/PvpBattleScreen';
 import InfoScreen from './components/InfoScreen';
-import LanguageSelector from './components/LanguageSelector';
 import Leaderboard from './components/Leaderboard';
+import SettingsScreen from './components/SettingsScreen';
 import type { Game } from './services/pvpService';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'lang' | 'leaderboard';
+type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
 function AppInner() {
   const { haptic, user } = useTelegram();
@@ -251,9 +251,9 @@ function AppInner() {
                   <span className="text-lg">📖</span>
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Правила</span>
                 </button>
-                <button onClick={() => setScreen('lang')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
-                  <span className="text-lg">🌐</span>
-                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Язык</span>
+                <button onClick={() => setScreen('settings')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                  <span className="text-lg">⚙️</span>
+                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Настройки</span>
                 </button>
               </div>
             </div>
@@ -372,9 +372,9 @@ function AppInner() {
         </div>
       )}
 
-      {screen === 'lang' && (
+      {screen === 'settings' && (
         <div className="flex-1">
-          <LanguageSelector onBack={() => setScreen('menu')} />
+          <SettingsScreen onBack={() => setScreen('menu')} />
         </div>
       )}
 
