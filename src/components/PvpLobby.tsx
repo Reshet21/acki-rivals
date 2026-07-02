@@ -140,13 +140,13 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
       <div className="text-lg font-bold text-white">Ожидание соперника...</div>
       <div className="w-full max-w-xs">
         <div className="text-[10px] text-white/40 text-center mb-1">Код комнаты</div>
-        <div className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-center font-mono text-sm text-neon-green break-all select-all">{room.id}</div>
+        <div className="w-full px-3 py-2.5 rounded-lg bg-an-card border border-an-border text-center font-mono text-sm text-an-gold break-all select-all">{room.id}</div>
       </div>
-      <button onClick={handleCopy} className={`w-full max-w-xs py-2.5 rounded-lg text-sm font-bold transition-all ${copied ? 'bg-neon-green/20 text-neon-green border border-neon-green/30' : 'bg-white/5 border border-white/10 text-white/60 active:bg-white/10'}`}>
+      <button onClick={handleCopy} className={`w-full max-w-xs py-2.5 rounded-lg text-sm font-bold transition-all ${copied ? 'bg-an-green/20 text-an-green border border-an-green/30' : 'bg-an-card border border-an-border text-white/60 active:bg-an-surface'}`}>
         {copied ? '✓ Скопировано' : '📋 Скопировать код'}
       </button>
-      <button onClick={handleEnter} className="w-full max-w-xs py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.3)]">⚔️ Войти в комнату</button>
-      <button onClick={handleAbandon} className="w-full max-w-xs py-2.5 rounded-lg text-sm font-bold bg-neon-red/20 border border-neon-red/40 text-neon-red active:bg-neon-red/30 transition-all">❌ Выйти из комнаты</button>
+      <button onClick={handleEnter} className="w-full max-w-xs py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-an-gold to-an-orange text-an-dark active:scale-95">⚔️ Войти в комнату</button>
+      <button onClick={handleAbandon} className="w-full max-w-xs py-3 rounded-xl text-sm font-bold bg-an-red text-white active:scale-95">❌ Покинуть комнату</button>
     </div>
   );
 
@@ -161,7 +161,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
       <div className="flex flex-col gap-1.5 text-xs text-white/30 text-center">
         <div>Ищем открытую комнату</div>
       </div>
-      <button onClick={cancelRandom} className="px-6 py-2.5 rounded-lg text-sm font-bold bg-neon-red/10 border border-neon-red/30 text-neon-red active:bg-neon-red/20">❌ Выйти из поиска</button>
+      <button onClick={cancelRandom} className="px-6 py-2.5 rounded-lg text-sm font-bold bg-an-red/20 border border-an-red/40 text-an-red active:bg-an-red/30">❌ Выйти из поиска</button>
     </div>
   );
 
