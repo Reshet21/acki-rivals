@@ -5,9 +5,12 @@ import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
 import { getRarityLabel, getPackName } from '../i18n/cardTranslations';
 import { useHaptic } from '../hooks/useHaptic';
+import type { WalletConnection } from '../services/beeEngine';
+import { buyPack as buyPackWithNackl } from '../services/paymentService';
 
 interface Props {
-  credits: number;
+  walletConnection: WalletConnection | null;
+  nacklBalance: string | null;
   onBuyPack: (packId: string) => Card[] | void;
   onBack: () => void;
 }
@@ -28,12 +31,14 @@ const packVisuals: Record<string, { gradient: string; icon: string }> = {
   advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: '💎' },
 };
 
-export default function Shop({ credits, onBuyPack, onBack }: Props) {
+export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack }: Props) {
   const { t, lang } = useI18n();
   const { impactOccurred } = useHaptic();
   const [phase, setPhase] = useState<Phase>('shop');
   const [openedCards, setOpenedCards] = useState<Card[]>([]);
   const [revealIndex, setRevealIndex] = useState(-1);
+  const [buyingPackId, setBuyingPackId] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     if (phase !== 'opening' || openedCards.length === 0) return;
@@ -51,16 +56,42 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
     return () => clearInterval(interval);
   }, [phase, openedCards.length]);
 
-  const handleBuy = (packId: string) => {
+  const handleBuy = async (packId: string) => {
     const pack = getPackById(packId);
-    if (!pack || credits < pack.price) return;
-    impactOccurred('medium');
+    if (!pack) return;
 
-    const cards = onBuyPack(packId);
-    if (!cards || cards.length === 0) return;
-    setOpenedCards(cards);
-    setRevealIndex(-1);
-    setPhase('opening');
+    if (!walletConnection) {
+      setPaymentError('Подключите кошелёк для покупки');
+      return;
+    }
+
+    const balance = parseFloat(nacklBalance || '0');
+    if (balance < pack.nacklPrice) {
+      setPaymentError('Недостаточно NACKL');
+      return;
+    }
+
+    impactOccurred('medium');
+    setBuyingPackId(packId);
+    setPaymentError(null);
+
+    try {
+      const result = await buyPackWithNackl(walletConnection, pack.nacklPrice);
+
+      if (result.success) {
+        const cards = onBuyPack(packId);
+        if (!cards || cards.length === 0) return;
+        setOpenedCards(cards);
+        setRevealIndex(-1);
+        setPhase('opening');
+      } else {
+        setPaymentError(result.error || 'Ошибка оплаты');
+      }
+    } catch (e) {
+      setPaymentError('Ошибка сети');
+    } finally {
+      setBuyingPackId(null);
+    }
   };
 
   const handleCollect = () => {
@@ -68,6 +99,14 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
     setPhase('shop');
     setOpenedCards([]);
     setRevealIndex(-1);
+  };
+
+  const canBuyPack = (packId: string): boolean => {
+    if (!walletConnection) return false;
+    const pack = getPackById(packId);
+    if (!pack) return false;
+    const balance = parseFloat(nacklBalance || '0');
+    return balance >= pack.nacklPrice;
   };
 
   // ═══ Pack opening animation ═══
@@ -91,7 +130,9 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
           <div className="text-lg font-bold text-white">
             {phase === 'opening' ? `✨ ${t('shop.opening')}` : `🎉 ${t('shop.opened')}`}
           </div>
-          <div className="text-sm text-neon-blue font-bold">💰 {credits}</div>
+          <div className="text-sm text-neon-blue font-bold">
+            {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
+          </div>
         </div>
 
         {/* Cards grid */}
@@ -146,15 +187,36 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
         <div className="text-lg font-bold text-white">{t('shop.title')}</div>
         <div className="flex items-center gap-1 px-3 py-1.5 rounded-full animate-counter-glow"
           style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
-          <span className="text-sm text-neon-blue font-bold">💰 {credits}</span>
+          <span className="text-sm text-neon-blue font-bold">
+            {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
+          </span>
         </div>
       </div>
+
+      {/* Wallet warning */}
+      {!walletConnection && (
+        <div className="px-4 mb-3">
+          <div className="px-3 py-2 rounded-lg text-xs text-center" style={{ background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
+            <span style={{ color: 'rgba(255,215,0,0.8)' }}>Подключите кошелёк для покупки пакетов</span>
+          </div>
+        </div>
+      )}
+
+      {/* Payment error */}
+      {paymentError && (
+        <div className="px-4 mb-3">
+          <div className="px-3 py-2 rounded-lg text-xs text-center" style={{ background: 'rgba(255,60,60,0.1)', border: '1px solid rgba(255,60,60,0.2)' }}>
+            <span className="text-red-400">{paymentError}</span>
+          </div>
+        </div>
+      )}
 
       {/* Packs */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4 relative z-10">
         <div className="flex flex-col gap-4">
           {PACKS.map((pack) => {
-            const canBuy = credits >= pack.price;
+            const canBuy = canBuyPack(pack.id);
+            const isBuying = buyingPackId === pack.id;
             const rarities = Object.entries(pack.rarityWeights);
             const visual = packVisuals[pack.id] || packVisuals.basic;
 
@@ -180,7 +242,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
                       <div className="text-[10px] text-white/70">{pack.description}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xl font-black text-white">💰 {pack.price}</div>
+                      <div className="text-xl font-black text-white">{pack.nacklPrice} NACKL</div>
                       <div className="text-[9px] text-white/60">{pack.cardCount} {t('deck.cards')}</div>
                     </div>
                   </div>
@@ -207,14 +269,21 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
 
                   <button
                     onClick={() => handleBuy(pack.id)}
-                    disabled={!canBuy}
+                    disabled={!canBuy || isBuying}
                     className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-                      canBuy
+                      canBuy && !isBuying
                         ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.2)]'
                         : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
                     }`}
                   >
-                    {canBuy ? `${t('shop.buy')} — ${pack.price} 💰` : t('shop.notEnough')}
+                    {isBuying
+                      ? 'Отправка транзакции...'
+                      : canBuy
+                        ? `${t('shop.buy')} — ${pack.nacklPrice} NACKL`
+                        : walletConnection
+                          ? t('shop.notEnough')
+                          : 'Нет кошелька'
+                    }
                   </button>
                 </div>
               </div>

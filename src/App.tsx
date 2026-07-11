@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGameState } from './hooks/useGameState';
 import { openPack as openPackCards } from './utils/packGenerator';
-import { getPackById } from './data/packs';
 import type { Card } from './types';
 import type { WalletConnection } from './services/beeEngine';
-import { getStoredSession } from './services/beeEngine';
+import { getStoredSession, getNacklBalance } from './services/beeEngine';
 import { I18nProvider } from './i18n';
 import { useTelegram } from './telegram';
 import { useHaptic } from './hooks/useHaptic';
@@ -34,7 +33,7 @@ function AppInner() {
     battlesWon,
     battlesLost,
     addCard,
-    addCredits,
+    addCredits: _addCredits,
     upgradeCard,
     saveToStorage,
     recordWin,
@@ -53,12 +52,29 @@ function AppInner() {
   const [walletConnection, setWalletConnection] = useState<WalletConnection | null>(() =>
     getStoredSession()
   );
+  const [nacklBalance, setNacklBalance] = useState<string | null>(null);
   const [pvpGame, setPvpGame] = useState<Game | null>(null);
   const [pvpIsHost, setPvpIsHost] = useState(false);
 
   useEffect(() => {
     saveToStorage();
   }, [collection, deck, credits, battlesWon, battlesLost, saveToStorage]);
+
+  // Poll NACKL balance when wallet connected
+  useEffect(() => {
+    if (!walletConnection) { setNacklBalance(null); return; }
+
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const b = await getNacklBalance(walletConnection.walletAddress);
+        if (!cancelled) setNacklBalance(b);
+      } catch { /* ignore */ }
+    };
+    poll();
+    const id = setInterval(poll, 10000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [walletConnection]);
 
   const handleBattleEnd = useCallback((result: 'win' | 'loss' | 'draw') => {
     if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }
@@ -68,14 +84,11 @@ function AppInner() {
   }, [recordWin, recordLoss, haptic]);
 
   const handleBuyPack = useCallback((packId: string): Card[] | void => {
-    const pack = getPackById(packId);
-    if (!pack || credits < pack.price) return;
-    addCredits(-pack.price);
     const newCards = openPackCards(packId);
     newCards.forEach((c) => addCard(c));
     haptic.notificationOccurred('success');
     return newCards;
-  }, [credits, addCredits, addCard, haptic]);
+  }, [addCard, haptic]);
 
   const handleToggleDeck = useCallback((card: Card) => {
     setDeck((prev) => {
@@ -278,7 +291,12 @@ function AppInner() {
 
       {screen === 'shop' && (
         <div className="flex-1 flex items-center justify-center">
-          <Shop credits={credits} onBuyPack={handleBuyPack} onBack={() => setScreen('menu')} />
+          <Shop
+            walletConnection={walletConnection}
+            nacklBalance={nacklBalance}
+            onBuyPack={handleBuyPack}
+            onBack={() => setScreen('menu')}
+          />
         </div>
       )}
 
