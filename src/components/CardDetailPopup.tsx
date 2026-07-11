@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
-import { getCardName, getAbilityName, getClanName, getRarityLabel } from '../i18n/cardTranslations';
+import { getCardName, getAbilityName, getClanName, getRarityLabel, getAbilityDescription } from '../i18n/cardTranslations';
 import { clanBonuses, comboAbilities } from '../data/cards';
 import { abilityInfo } from '../data/abilityVisuals';
 import { cardArt } from '../data/cardArt';
@@ -11,21 +11,7 @@ const rarityColor: Record<string, string> = {
   common: '#6b7280', uncommon: '#10b981', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b',
 };
 
-const abDesc: Record<string, string> = {
-  '+1 power': 'Увеличивает силу на 1', '+2 power': 'Увеличивает силу на 2',
-  '+3 power': 'Увеличивает силу на 3', '+4 power': 'Увеличивает силу на 4',
-  '+1 damage': 'Увеличивает урон на 1', '+2 damage': 'Увеличивает урон на 2',
-  '+1 pillz': 'Даёт 1 доп. пиллз', '+3 pillz': 'Даёт 3 доп. пиллза',
-  '-1 opponent power': 'Ослабляет силу врага на 1', '-2 opponent power': 'Ослабляет силу врага на 2',
-  '-2 opponent damage': 'Уменьшает урон врага на 2',
-  'heal 1': 'Исцеляет 1 HP при поражении', 'heal 2': 'Исцеляет 2 HP при поражении',
-  'heal 3': 'Исцеляет 3 HP при поражении',
-  'poison 1': 'Наносит 1 доп. урон при поражении', 'poison 2': 'Наносит 2 доп. урона',
-  'poison 3': 'Наносит 3 доп. урона',
-  'life steal 1': 'Крадёт 1 HP при победе', 'life steal 2': 'Крадёт 2 HP при победе',
-  'life steal 3': 'Крадёт 3 HP при победе',
-  'stop opponent ability': 'Отменяет способность противника', 'double damage': 'Удваивает урон',
-};
+
 
 interface Props {
   card: Card;
@@ -42,7 +28,7 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
   const clanName = getClanName(lang, card.clan);
   const rarityLabel = getRarityLabel(lang, card.rarity);
   const rc = rarityColor[card.rarity || 'common'];
-  const ab = abDesc[card.ability] || '';
+  const ab = getAbilityDescription(lang, card.ability);
 
   // Find combos for this card
   const combos = comboAbilities.filter((c) => c.card1 === card.id || c.card2 === card.id);
