@@ -1,4 +1,5 @@
 import { useI18n } from '../i18n';
+import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
   walletAddress: string | null;
@@ -52,6 +53,7 @@ function getLeaderboard(playerWins: number, playerLosses: number, walletName: st
 
 export default function Leaderboard({ walletAddress, wins, losses, onBack }: Props) {
   const { t } = useI18n();
+  const { impactOccurred } = useHaptic();
 
   const entries = getLeaderboard(wins, losses, walletAddress);
 
@@ -109,7 +111,7 @@ export default function Leaderboard({ walletAddress, wins, losses, onBack }: Pro
       </div>
 
       <div className="shrink-0 px-3 pb-3">
-        <button onClick={onBack} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all">
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all">
           {t('deck.back')}
         </button>
       </div>

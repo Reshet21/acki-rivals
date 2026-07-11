@@ -4,6 +4,7 @@ import { PACKS, getPackById } from '../data/packs';
 import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
 import { getRarityLabel, getPackName } from '../i18n/cardTranslations';
+import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
   credits: number;
@@ -29,6 +30,7 @@ const packVisuals: Record<string, { gradient: string; icon: string }> = {
 
 export default function Shop({ credits, onBuyPack, onBack }: Props) {
   const { t, lang } = useI18n();
+  const { impactOccurred } = useHaptic();
   const [phase, setPhase] = useState<Phase>('shop');
   const [openedCards, setOpenedCards] = useState<Card[]>([]);
   const [revealIndex, setRevealIndex] = useState(-1);
@@ -52,6 +54,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
   const handleBuy = (packId: string) => {
     const pack = getPackById(packId);
     if (!pack || credits < pack.price) return;
+    impactOccurred('medium');
 
     const cards = onBuyPack(packId);
     if (!cards || cards.length === 0) return;
@@ -61,6 +64,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
   };
 
   const handleCollect = () => {
+    impactOccurred('light');
     setPhase('shop');
     setOpenedCards([]);
     setRevealIndex(-1);
@@ -222,7 +226,7 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
       {/* Back button */}
       <div className="shrink-0 px-4 pb-4 relative z-10">
         <button
-          onClick={onBack}
+          onClick={() => { impactOccurred('soft'); onBack(); }}
           className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all"
         >
           {t('deck.back')}

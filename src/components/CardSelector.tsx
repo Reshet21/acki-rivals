@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import type { Card } from '../types';
 import { abilityIcons, abilityColors, abilityNames } from '../data/abilityVisuals';
 import { cardArt } from '../data/cardArt';
+import { useHaptic } from '../hooks/useHaptic';
+import { useI18n } from '../i18n';
 
 interface Props {
   cards: Card[];
@@ -23,12 +25,15 @@ function estimateAttack(power: number, pillz: number) {
 }
 
 export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
+  const { selectionChanged, impactOccurred } = useHaptic();
+  const { t } = useI18n();
   const [sel, setSel] = useState<Card | null>(null);
   const [pillz, setPillz] = useState(0);
   const preview = useMemo(() => sel ? estimateAttack(sel.power, pillz) : null, [sel, pillz]);
 
   const go = () => {
     if (!sel) return;
+    impactOccurred('heavy');
     onSelect(sel, pillz);
     setSel(null);
     setPillz(0);
@@ -83,7 +88,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
               )}
               {preview && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>Атака:</span>
+                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{t('battle.attack')}:</span>
                   <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{preview.min}</span>
                   <span style={{ fontSize: 14, fontWeight: 900, color: '#00d4ff' }}>{preview.avg}</span>
                   <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{preview.max}</span>
@@ -93,7 +98,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
           </div>
         ) : (
           <div style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.3)', padding: '4px 0' }}>
-            Выберите карту
+            {t('battle.selectCard')}
           </div>
         )}
       </div>
@@ -107,7 +112,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
             return (
               <button
                 key={card.uid || card.id}
-                onClick={() => setSel(card)}
+                onClick={() => { selectionChanged(); setSel(card); }}
                 style={{
                   position: 'relative', borderRadius: 8, overflow: 'hidden',
                   border: `2px solid ${isSel ? '#fbbf24' : rc + '40'}`,
@@ -145,14 +150,14 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
       >
         <div className="flex flex-col items-center gap-0.5 min-w-[60px]">
           <div className="text-[9px] text-white/50">
-            <span className="text-neon-blue font-bold">{maxPillz}</span> пиллз
+            <span className="text-neon-blue font-bold">{maxPillz}</span> {t('battle.pillz')}
           </div>
           <input
             type="range" min={0} max={maxPillz} value={pillz}
             onChange={(e) => setPillz(Number(e.target.value))}
             className="w-full h-1 rounded-full appearance-none cursor-pointer bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink accent-neon-blue"
           />
-          <div className="text-[9px] text-white/40">тратишь: {pillz}</div>
+          <div className="text-[9px] text-white/40">{t('battle.spend')}: {pillz}</div>
         </div>
         <button
           onClick={go}
@@ -163,7 +168,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
               : 'bg-white/5 text-white/20 cursor-not-allowed'
           }`}
         >
-          ⚔️ Атаковать
+          {t('battle.attackButton')}
         </button>
       </div>
     </div>

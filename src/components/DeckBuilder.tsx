@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Card, Rarity } from '../types';
 import CardComponent from './CardComponent';
+import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
   collection: Card[];
@@ -19,6 +20,7 @@ const RARITY_FILTERS: { value: Rarity | 'all'; labelKey: string; color: string }
 ];
 
 export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: Props) {
+  const { selectionChanged, impactOccurred } = useHaptic();
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
   const deckUids = new Set(deck.map((c) => c.uid));
@@ -44,7 +46,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
       <div className="shrink-0 px-4 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)' }}>
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
-            <button onClick={onBack} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
               ←
             </button>
             <h1 className="text-lg font-bold" style={{ color: '#FFD700' }}>📚 Коллекция ({collection.length})</h1>
@@ -74,7 +76,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
           {RARITY_FILTERS.map((f) => (
             <button
               key={f.value}
-              onClick={() => setRarityFilter(f.value)}
+              onClick={() => { selectionChanged(); setRarityFilter(f.value); }}
               className="px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all active:scale-95"
               style={{
                 background: rarityFilter === f.value ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.03)',
@@ -104,7 +106,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
                 card={card}
                 compact
                 isSelected={inDeck}
-                onClick={() => onToggleDeck(card)}
+                onClick={() => { selectionChanged(); onToggleDeck(card); }}
               />
             );
           })}
@@ -119,7 +121,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
 
       {/* Bottom panel */}
       <div className="shrink-0 px-4 py-3" style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <button onClick={onBack} className="w-full py-2.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
           Назад
         </button>
       </div>

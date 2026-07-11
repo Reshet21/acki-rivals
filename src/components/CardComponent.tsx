@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
-import { getCardName, getAbilityName, getStatLabel } from '../i18n/cardTranslations';
+import { getCardName, getAbilityName, getStatLabel, getRarityLabel } from '../i18n/cardTranslations';
 import CardDetailPopup from './CardDetailPopup';
 import { abilityInfo } from '../data/abilityVisuals';
 import { cardArt } from '../data/cardArt';
+import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
   card: Card;
@@ -25,6 +26,7 @@ const R: Record<string, { gc:string; gg:string; bg:string; fg:string; bt:string;
 
 export default function CardComponent({ card, isSelected, onClick, compact, hand, noPopup }: Props) {
   const { lang } = useI18n();
+  const { selectionChanged } = useHaptic();
   const [showDetail, setShowDetail] = useState(false);
   const s = card.stars ?? 0;
   const r = R[card.rarity || 'common'] || R.common;
@@ -34,6 +36,7 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
   const an = getAbilityName(lang, card.ability);
   const pl = getStatLabel(lang, 'power');
   const dl = getStatLabel(lang, 'damage');
+  const rl = getRarityLabel(lang, card.rarity);
   const pw = (card.power ?? 0) + s;
   const dm = (card.damage ?? 0) + s;
   const sel = isSelected;
@@ -83,7 +86,7 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
         {img ? <img src={img} alt="" style={S.img} /> : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:compact?28:44,opacity:0.15}}>🃏</div>}
         <div style={S.grad} />
         <div style={S.gem} />
-        <div style={S.badge}>{r.bt}</div>
+        <div style={S.badge}>{rl}</div>
         {r.sl && <div style={{position:'absolute',inset:0,background:r.sl,animation:'shimmer 2s infinite'}} />}
       </div>
       <div style={S.stats}>
@@ -104,7 +107,7 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
 
   return (
     <>
-      <button onClick={onClick} style={{ ...S.btn, position: 'relative' } as React.CSSProperties}>
+      <button onClick={() => { selectionChanged(); onClick?.(); }} style={{ ...S.btn, position: 'relative' } as React.CSSProperties}>
         {inner}
         {/* Info button — top right */}
         {!noPopup && (

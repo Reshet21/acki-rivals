@@ -7,6 +7,8 @@ import {
   getStoredMiningKeys,
   storeMiningKeys,
 } from '../services/beeEngine';
+import { useHaptic } from '../hooks/useHaptic';
+import { useI18n } from '../i18n';
 
 interface Props {
   connection: WalletConnection;
@@ -20,6 +22,8 @@ interface MinerState {
 }
 
 export default function MiningPanel({ connection, onBack }: Props) {
+  const { impactOccurred } = useHaptic();
+  const { t } = useI18n();
   const [miningKeys, setMiningKeys] = useState(() =>
     getStoredMiningKeys(connection.profileAddress)
   );
@@ -34,7 +38,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
   const [minerState, setMinerState] = useState<MinerState>({ running: false, canStart: false, debug: null });
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(
-    miningKeys?.areKeysPropagated ? 'Ключи восстановлены из кэша' : null
+    miningKeys?.areKeysPropagated ? t('mining.keysPropagated') : null
   );
 
   const minerRef = useRef<typeof miner>(null);
@@ -101,7 +105,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
 
       const keys = await requestMiningKeys(connection);
       setMiningKeys({ ...keys, minerAddress: null, areKeysPropagated: false });
-      setStatus('Ключи отправлены. Ожидание распространения в блокчейне...');
+      setStatus(t('mining.keysSent'));
 
       const token = ++propTokenRef.current;
       setIsWaitingPropagation(true);
@@ -112,7 +116,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
       setMinerAddress(addr);
       setKeysPropagated(true);
       setMiningKeys((prev) => prev ? { ...prev, minerAddress: addr, areKeysPropagated: true } : null);
-      setStatus('Ключи распространены. Можно инициализировать майнер.');
+      setStatus(t('mining.keysPropagated'));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setStatus(null);
@@ -131,7 +135,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
       const instance = await sdkInitMiner(minerAddress, miningKeys.ownerPublic, miningKeys.ownerSecret);
       setMiner(instance);
       setMinerState({ running: false, canStart: instance.can_start(), debug: null });
-      setStatus('Майнер инициализирован.');
+      setStatus(t('mining.initMiner'));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -176,20 +180,20 @@ export default function MiningPanel({ connection, onBack }: Props) {
 
   const handleGetReward = async () => {
     if (!miner) return;
-    try { await miner.get_reward(); setStatus('Награда получена!'); }
+    try { await miner.get_reward(); setStatus(t('mining.reward')); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
-      <div className="text-lg font-bold text-neon-green">⛏️ Майнинг</div>
+      <div className="text-lg font-bold text-neon-green">{t('mining.title')}</div>
 
       {/* Mining keys status */}
       <div className="w-full bg-white/5 rounded-lg p-3 text-xs">
         <div className="flex justify-between text-white/50 mb-1">
-          <span>Ключи майнинга</span>
+          <span>{t('mining.miningKeys')}</span>
           <span className={keysPropagated ? 'text-neon-green' : 'text-yellow-400'}>
-            {keysPropagated ? 'Готово' : miningKeys ? 'Ожидание' : 'Не настроены'}
+            {keysPropagated ? t('mining.ready') : miningKeys ? t('mining.waitingStatus') : t('mining.notConfigured')}
           </span>
         </div>
         {miningKeys?.ownerPublic && (
@@ -210,9 +214,9 @@ export default function MiningPanel({ connection, onBack }: Props) {
               shadow-[0_0_16px_rgba(0,255,159,0.3)]
               active:scale-95 transition-all disabled:opacity-50"
           >
-            {isRequestingKeys ? 'Запрос ключей...' :
-             isWaitingPropagation ? 'Ожидание блокчейна...' :
-             '🔑 Настроить ключи майнинга'}
+            {isRequestingKeys ? t('mining.requestingKeys') :
+             isWaitingPropagation ? t('mining.waitingBlockchain') :
+             t('mining.setupKeys')}
           </button>
         )}
 
@@ -225,30 +229,30 @@ export default function MiningPanel({ connection, onBack }: Props) {
               shadow-[0_0_16px_rgba(0,212,255,0.3)]
               active:scale-95 transition-all disabled:opacity-50"
           >
-            {isInitMiner ? 'Инициализация...' : '⚙️ Запустить майнер'}
+            {isInitMiner ? t('mining.initing') : t('mining.startMiner')}
           </button>
         )}
 
         {miner && (
           <div className="flex gap-2">
             <button
-              onClick={minerState.running ? handleStop : handleStart}
+              onClick={() => { impactOccurred('medium'); minerState.running ? handleStop() : handleStart(); }}
               className={`flex-1 py-3 rounded-lg font-bold text-sm active:scale-95 transition-all ${
                 minerState.running
                   ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                   : 'bg-gradient-to-r from-neon-green to-emerald-500 text-white shadow-[0_0_12px_rgba(0,255,159,0.3)]'
               }`}
             >
-              {minerState.running ? '⏹ Стоп' : '▶️ Старт'}
+              {minerState.running ? `⏹ ${t('mining.stop')}` : `▶️ ${t('mining.start')}`}
             </button>
             <button
-              onClick={handleAddTap}
+              onClick={() => { impactOccurred('light'); handleAddTap(); }}
               disabled={!minerState.running}
               className="flex-1 py-3 rounded-lg font-bold text-sm
                 bg-white/5 border border-white/10 text-white/60
                 active:scale-95 transition-all disabled:opacity-30"
             >
-              👆 Тапнуть
+              👆 {t('mining.tap')}
             </button>
             <button
               onClick={handleGetReward}
@@ -256,7 +260,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
                 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400
                 active:scale-95 transition-all"
             >
-              🎁 Награда
+              🎁 {t('mining.reward')}
             </button>
           </div>
         )}
@@ -269,13 +273,13 @@ export default function MiningPanel({ connection, onBack }: Props) {
       {/* Miner debug */}
       {minerState.debug && (
         <div className="w-full bg-white/5 rounded-lg p-2 text-[10px] text-white/40 font-mono">
-          <div>Тапов: {minerState.debug.tapSum} (5м: {minerState.debug.tapSum5m})</div>
-          <div>Обновлено: {minerState.debug.updatedAt}</div>
+          <div>{t('mining.taps')}: {minerState.debug.tapSum} ({t('mining.taps5m')}: {minerState.debug.tapSum5m})</div>
+          <div>{t('mining.updatedAt')}: {minerState.debug.updatedAt}</div>
         </div>
       )}
 
-      <button onClick={onBack} className="text-xs text-white/30 hover:text-white/50 transition-colors mt-2">
-        Назад
+      <button onClick={() => { impactOccurred('soft'); onBack(); }} className="text-xs text-white/30 hover:text-white/50 transition-colors mt-2">
+        {t('mining.back')}
       </button>
     </div>
   );

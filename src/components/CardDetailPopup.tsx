@@ -5,6 +5,7 @@ import { getCardName, getAbilityName, getClanName, getRarityLabel } from '../i18
 import { clanBonuses, comboAbilities } from '../data/cards';
 import { abilityInfo } from '../data/abilityVisuals';
 import { cardArt } from '../data/cardArt';
+import { useHaptic } from '../hooks/useHaptic';
 
 const rarityColor: Record<string, string> = {
   common: '#6b7280', uncommon: '#10b981', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b',
@@ -33,7 +34,8 @@ interface Props {
 }
 
 export default function CardDetailPopup({ card, hand, onClose }: Props) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
+  const { selectionChanged, impactOccurred } = useHaptic();
   const [tab, setTab] = useState<'info' | 'combo'>('info');
   const name = getCardName(lang, card.id);
   const abilityName = getAbilityName(lang, card.ability);
@@ -75,20 +77,20 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
         {/* Stats */}
         <div style={{ display: 'flex', justifyContent: 'space-around', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Сила</div>
+            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{t('card.power')}</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>{card.power + (card.stars ?? 0)}</div>
           </div>
           <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.1)' }} />
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Урон</div>
+            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{t('card.damage')}</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: '#fca5a5', textShadow: '0 0 12px rgba(252,165,165,0.3)' }}>{card.damage + (card.stars ?? 0)}</div>
           </div>
         </div>
 
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <button onClick={() => setTab('info')} style={{ flex: 1, padding: '8px 0', fontSize: 11, fontWeight: 700, color: tab === 'info' ? rc : 'rgba(255,255,255,0.4)', borderBottom: tab === 'info' ? `2px solid ${rc}` : '2px solid transparent', background: 'none', border: 'none', cursor: 'pointer' }}>Способность</button>
-          <button onClick={() => setTab('combo')} style={{ flex: 1, padding: '8px 0', fontSize: 11, fontWeight: 700, color: tab === 'combo' ? rc : 'rgba(255,255,255,0.4)', borderBottom: tab === 'combo' ? `2px solid ${rc}` : '2px solid transparent', background: 'none', border: 'none', cursor: 'pointer' }}>Комбо {combos.length > 0 && <span style={{ color: '#fbbf24' }}>({combos.length})</span>}</button>
+          <button onClick={() => { selectionChanged(); setTab('info'); }} style={{ flex: 1, padding: '8px 0', fontSize: 11, fontWeight: 700, color: tab === 'info' ? rc : 'rgba(255,255,255,0.4)', borderBottom: tab === 'info' ? `2px solid ${rc}` : '2px solid transparent', background: 'none', border: 'none', cursor: 'pointer' }}>{t('card.ability')}</button>
+          <button onClick={() => { selectionChanged(); setTab('combo'); }} style={{ flex: 1, padding: '8px 0', fontSize: 11, fontWeight: 700, color: tab === 'combo' ? rc : 'rgba(255,255,255,0.4)', borderBottom: tab === 'combo' ? `2px solid ${rc}` : '2px solid transparent', background: 'none', border: 'none', cursor: 'pointer' }}>{t('card.combo')} {combos.length > 0 && <span style={{ color: '#fbbf24' }}>({combos.length})</span>}</button>
         </div>
 
         {/* Content */}
@@ -112,7 +114,7 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
           )}
           {tab === 'combo' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {combos.length === 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 12 }}>Нет комбо для этой карты</div>}
+              {combos.length === 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 12 }}>{t('card.noCombo')}</div>}
               {combos.map((c, i) => {
                 const partnerId = c.card1 === card.id ? c.card2 : c.card1;
                 const isActive = activeCombos.includes(c);
@@ -122,11 +124,11 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
                       <span style={{ fontSize: 14 }}>{isActive ? '🔥' : '💤'}</span>
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: isActive ? '#fbbf24' : 'rgba(255,255,255,0.5)' }}>{c.name}</div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>С картой #{partnerId}</div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{t('card.withCard')}{partnerId}</div>
                       </div>
                     </div>
                     <div style={{ fontSize: 10, color: isActive ? '#fde047' : 'rgba(255,255,255,0.5)', marginTop: 4 }}>{c.desc}</div>
-                    {isActive && <div style={{ fontSize: 8, color: '#fbbf24', marginTop: 2 }}>⚡ Активно!</div>}
+                    {isActive && <div style={{ fontSize: 8, color: '#fbbf24', marginTop: 2 }}>{t('card.active')}</div>}
                   </div>
                 );
               })}
@@ -136,7 +138,7 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
 
         {/* Close */}
         <div style={{ padding: '8px 16px 16px' }}>
-          <button onClick={onClose} style={{ width: '100%', padding: '10px 0', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Закрыть</button>
+          <button onClick={() => { impactOccurred('soft'); onClose(); }} style={{ width: '100%', padding: '10px 0', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{t('card.close')}</button>
         </div>
       </div>
     </div>

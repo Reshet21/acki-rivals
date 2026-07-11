@@ -7,6 +7,7 @@ import type { WalletConnection } from './services/beeEngine';
 import { getStoredSession } from './services/beeEngine';
 import { I18nProvider } from './i18n';
 import { useTelegram } from './telegram';
+import { useHaptic } from './hooks/useHaptic';
 import BattleScreen from './components/BattleScreen';
 import Shop from './components/Shop';
 import WalletPanel from './components/WalletPanel';
@@ -24,6 +25,7 @@ type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgra
 
 function AppInner() {
   const { haptic, user } = useTelegram();
+  const { impactOccurred, selectionChanged } = useHaptic();
   const {
     collection,
     deck,
@@ -171,7 +173,7 @@ function AppInner() {
             {/* Premium Battle Buttons */}
             <div className="w-full max-w-xs space-y-2.5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
               {/* PvP Button - Hero */}
-              <button onClick={() => setScreen('pvp')} disabled={deck.length !== 8}
+              <button onClick={() => { impactOccurred('medium'); setScreen('pvp'); }} disabled={deck.length !== 8}
                 className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.98]"
                 style={{
                   background: deck.length === 8 ? 'linear-gradient(135deg, #FF3D00 0%, #FF6D00 50%, #FF9100 100%)' : 'rgba(255,255,255,0.03)',
@@ -187,7 +189,7 @@ function AppInner() {
               </button>
 
               {/* AI Battle Button */}
-              <button onClick={() => setScreen('battle')} disabled={deck.length !== 8}
+              <button onClick={() => { impactOccurred('medium'); setScreen('battle'); }} disabled={deck.length !== 8}
                 className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.98]"
                 style={{
                   background: deck.length === 8 ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' : 'rgba(255,255,255,0.03)',
@@ -205,13 +207,13 @@ function AppInner() {
 
             {/* Secondary Actions - Premium Cards */}
             <div className="w-full max-w-xs grid grid-cols-2 gap-2.5 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              <button onClick={() => setScreen('deck')}
+              <button onClick={() => { selectionChanged(); setScreen('deck'); }}
                 className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,140,0,0.06) 100%)', border: '1px solid rgba(255,215,0,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                 <span className="text-xl">📚</span>
                 <span style={{ color: '#FFD700' }}>Колода</span>
               </button>
-              <button onClick={() => setScreen('shop')}
+              <button onClick={() => { selectionChanged(); setScreen('shop'); }}
                 className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(139,92,246,0.06) 100%)', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                 <span className="text-xl">🛒</span>
@@ -221,19 +223,19 @@ function AppInner() {
 
             {/* Tertiary Actions - Minimal */}
             <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-              <button onClick={() => setScreen('upgrade')}
+              <button onClick={() => { selectionChanged(); setScreen('upgrade'); }}
                 className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <span className="text-base">⚒️</span>
                 <span style={{ color: 'rgba(255,255,255,0.5)' }}>Улучшить</span>
               </button>
-              <button onClick={() => setScreen('wallet')}
+              <button onClick={() => { selectionChanged(); setScreen('wallet'); }}
                 className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <span className="text-base">👛</span>
                 <span style={{ color: 'rgba(255,255,255,0.5)' }}>Кошелёк</span>
               </button>
-              <button onClick={() => setScreen('mining')}
+              <button onClick={() => { selectionChanged(); setScreen('mining'); }}
                 className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <span className="text-base">⛏️</span>
@@ -244,15 +246,15 @@ function AppInner() {
             {/* Bottom Navigation - Premium Tab Bar */}
             <div className="w-full max-w-xs mt-2 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-center justify-around py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <button onClick={() => setScreen('leaderboard')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">🏆</span>
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Топ</span>
                 </button>
-                <button onClick={() => setScreen('info')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                <button onClick={() => { selectionChanged(); setScreen('info'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">📖</span>
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Правила</span>
                 </button>
-                <button onClick={() => setScreen('settings')} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                <button onClick={() => { selectionChanged(); setScreen('settings'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">⚙️</span>
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Настройки</span>
                 </button>

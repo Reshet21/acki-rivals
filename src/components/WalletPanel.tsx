@@ -6,6 +6,8 @@ import {
   disconnectSession,
   getNacklBalance,
 } from '../services/beeEngine';
+import { useHaptic } from '../hooks/useHaptic';
+import { useI18n } from '../i18n';
 
 interface Props {
   onConnected: (conn: WalletConnection) => void;
@@ -13,6 +15,8 @@ interface Props {
 }
 
 export default function WalletPanel({ onConnected, onBack }: Props) {
+  const { impactOccurred } = useHaptic();
+  const { t } = useI18n();
   const [connection, setConnection] = useState<WalletConnection | null>(null);
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -97,7 +101,7 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
         <div className="text-center">
-          <div className="text-lg font-bold text-neon-green">✅ Кошелек подключен</div>
+          <div className="text-lg font-bold text-neon-green">✅ {t('wallet.connected')}</div>
           <div className="text-sm text-white/60 mt-1">{connection.walletName}</div>
           <div className="text-xs text-white/40 font-mono mt-0.5 truncate">
             {connection.walletAddress}
@@ -110,17 +114,17 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
         </div>
 
         <button
-          onClick={handleDisconnect}
+          onClick={() => { impactOccurred('light'); handleDisconnect(); }}
           disabled={isDisconnecting}
           className="w-full py-3 rounded-lg font-bold text-sm
             bg-white/5 border border-white/10 text-white/60
             hover:bg-white/10 active:scale-95 transition-all"
         >
-          {isDisconnecting ? 'Отключение...' : '🔌 Отключить'}
+          {isDisconnecting ? t('wallet.disconnecting') : `🔌 ${t('wallet.disconnect')}`}
         </button>
 
-        <button onClick={onBack} className="text-xs text-white/30 hover:text-white/50 transition-colors">
-          Назад
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="text-xs text-white/30 hover:text-white/50 transition-colors">
+          {t('wallet.back')}
         </button>
       </div>
     );
@@ -131,8 +135,8 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
         <div className="text-center">
-          <div className="text-lg font-bold text-white/70">Сканируйте QR</div>
-          <div className="text-xs text-white/40 mt-1">в приложении AN Wallet</div>
+          <div className="text-lg font-bold text-white/70">{t('wallet.scanQR')}</div>
+          <div className="text-xs text-white/40 mt-1">{t('wallet.openApp')}</div>
         </div>
 
         <div
@@ -147,18 +151,18 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
           rel="noreferrer"
           className="text-neon-blue text-sm underline"
         >
-          Открыть кошелек
+          {t('wallet.openWallet')}
         </a>
 
         <div className="text-xs text-white/40">
-          {isWaiting ? 'Ожидание подтверждения...' : 'Сессия создана'}
+          {isWaiting ? t('wallet.waitForConfirmation') : t('wallet.sessionCreated')}
         </div>
 
         <button
           onClick={cancelWaiting}
           className="text-xs text-white/30 hover:text-white/50 transition-colors"
         >
-          Отмена
+          {t('wallet.cancel')}
         </button>
 
         {error && <div className="text-xs text-red-400">{error}</div>}
@@ -169,13 +173,13 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
   // Initial connect state
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
-      <div className="text-lg font-bold text-white/70">Подключить кошелек</div>
+      <div className="text-lg font-bold text-white/70">{t('wallet.connectWallet')}</div>
       <div className="text-xs text-white/40 text-center">
-        Подключите AN Wallet для участия в боях и майнинга
+        {t('wallet.connectDescription')}
       </div>
 
       <button
-        onClick={handleConnect}
+        onClick={() => { impactOccurred('medium'); handleConnect(); }}
         disabled={isCreating}
         className="w-full py-3 rounded-lg font-bold text-sm
           bg-gradient-to-r from-neon-blue to-neon-purple text-white
@@ -183,13 +187,13 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
           hover:opacity-90 active:scale-95 transition-all
           disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isCreating ? 'Создание сессии...' : '🔗 Подключить AN Wallet'}
+        {isCreating ? t('wallet.creatingSession') : t('wallet.connectAnWallet')}
       </button>
 
       {error && <div className="text-xs text-red-400 text-center">{error}</div>}
 
-      <button onClick={onBack} className="text-xs text-white/30 hover:text-white/50 transition-colors">
-        Назад
+      <button onClick={() => { impactOccurred('soft'); onBack(); }} className="text-xs text-white/30 hover:text-white/50 transition-colors">
+        {t('wallet.back')}
       </button>
     </div>
   );

@@ -4,6 +4,7 @@ import { resolveRound } from '../utils/battleLogic';
 import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
+import { useHaptic } from '../hooks/useHaptic';
 import {
   submitMove,
   getRoundMoves,
@@ -44,6 +45,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 
 export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, onSurrender }: Props) {
   const { t } = useI18n();
+  const { impactOccurred } = useHaptic();
 
   const rawMyDeck: Card[] = isHost ? (game.host_deck || []) : (game.guest_deck || []);
   const rawOppDeck: Card[] = isHost ? (game.guest_deck || []) : (game.host_deck || []);
@@ -439,7 +441,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
         <span className="text-xs text-white/60">Р {round}/{TOTAL_ROUNDS}</span>
         <span className="text-[10px] text-neon-red/70">{opponentName}: {opponentPillz} п</span>
 
-        <button onClick={handleSurrender}
+        <button onClick={() => { impactOccurred('heavy'); handleSurrender(); }}
           className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/40 active:text-white/70 active:bg-white/10 transition-all">
           {t('battle.surrender')}
         </button>
@@ -678,7 +680,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
             </div>
 
             <button
-              onClick={() => onBattleEnd(battleResult)}
+              onClick={() => { impactOccurred('soft'); onBattleEnd(battleResult); }}
               className="w-full max-w-xs py-2.5 rounded-lg font-bold text-base
                 bg-gradient-to-r from-neon-purple to-neon-blue
                 active:scale-95 transition-all duration-150

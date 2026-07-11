@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
+import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
   collection: Card[];
@@ -23,6 +24,7 @@ const rarityLabels: Record<string, string> = {
 
 export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) {
   const { t } = useI18n();
+  const { notificationOccurred, selectionChanged, impactOccurred } = useHaptic();
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -54,6 +56,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
 
   const handleUpgrade = () => {
     if (!selectedUid) return;
+    notificationOccurred('success');
     const result = onUpgrade(selectedUid);
     setMessage({ text: result.message, type: result.success ? 'success' : 'error' });
     if (result.success) {
@@ -140,7 +143,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             return (
               <button
                 key={base.id}
-                onClick={() => setSelectedUid(base.uid!)}
+                onClick={() => { selectionChanged(); setSelectedUid(base.uid!); }}
                 className={`
                   flex items-center gap-3 p-2.5 rounded-xl text-left transition-all
                   ${selectedUid === base.uid
@@ -200,7 +203,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
       {/* Back button */}
       <div className="shrink-0 px-3 pb-3">
         <button
-          onClick={onBack}
+          onClick={() => { impactOccurred('soft'); onBack(); }}
           className="w-full py-2.5 rounded-lg font-bold text-sm
             bg-white/5 border border-white/10 text-white/60
             active:bg-white/10 active:scale-[0.98]

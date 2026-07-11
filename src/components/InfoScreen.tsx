@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useI18n } from '../i18n';
+import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
   onBack: () => void;
@@ -9,6 +10,7 @@ type Tab = 'about' | 'cards' | 'battle' | 'combos' | 'packs' | 'pvp';
 
 export default function InfoScreen({ onBack }: Props) {
   const { t } = useI18n();
+  const { selectionChanged, impactOccurred } = useHaptic();
   const [tab, setTab] = useState<Tab>('about');
 
   const tabs: { id: Tab; label: string }[] = [
@@ -27,7 +29,7 @@ export default function InfoScreen({ onBack }: Props) {
         {tabs.map((tabItem) => (
           <button
             key={tabItem.id}
-            onClick={() => setTab(tabItem.id)}
+            onClick={() => { selectionChanged(); setTab(tabItem.id); }}
             className={`shrink-0 px-3 py-2 text-[10px] font-bold transition-colors whitespace-nowrap ${
               tab === tabItem.id ? 'text-neon-blue border-b-2 border-neon-blue' : 'text-white/40'
             }`}
@@ -49,7 +51,7 @@ export default function InfoScreen({ onBack }: Props) {
 
       {/* Back */}
       <div className="shrink-0 px-4 pb-3">
-        <button onClick={onBack} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 transition-all">
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 transition-all">
           {t('deck.back')}
         </button>
       </div>
