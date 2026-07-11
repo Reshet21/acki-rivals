@@ -165,8 +165,17 @@ function AppInner() {
                 {/* Stats grid */}
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <div className="text-xl font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{credits.toLocaleString()}</div>
-                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>{t('menu.credits')}</div>
+                    {walletConnection ? (
+                      <>
+                        <div className="text-xl font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{nacklBalance ?? '—'}</div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>NACKL</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xl font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{credits.toLocaleString()}</div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>{t('menu.credits')}</div>
+                      </>
+                    )}
                   </div>
                   <div>
                     <div className="text-xl font-black" style={{ color: '#4ADE80' }}>{battlesWon}</div>

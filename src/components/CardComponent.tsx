@@ -16,12 +16,12 @@ interface Props {
   noPopup?: boolean;
 }
 
-const R: Record<string, { gc:string; gg:string; bg:string; fg:string; bt:string; bc:string; sl:string }> = {
-  common:    { gc:'radial-gradient(circle at 35% 30%,#c0c0c0,#6b7280 50%,#374151)', gg:'0 0 6px #9ca3af', bg:'linear-gradient(135deg,#4b5563,#6b7280,#374151,#4b5563)', fg:'', bt:'ОБЫЧНАЯ', bc:'#6b7280', sl:'' },
-  uncommon:  { gc:'radial-gradient(circle at 35% 30%,#6ee7b7,#10b981 50%,#065f46)', gg:'0 0 10px #10b981', bg:'linear-gradient(135deg,#064e3b,#10b981,#065f46,#059669)', fg:'0 0 12px rgba(16,185,129,0.4)', bt:'НЕОБЫЧНАЯ', bc:'#10b981', sl:'' },
-  rare:      { gc:'radial-gradient(circle at 35% 30%,#93c5fd,#3b82f6 50%,#1e3a8a)', gg:'0 0 14px #3b82f6', bg:'linear-gradient(135deg,#1e3a8a,#3b82f6,#1d4ed8,#2563eb)', fg:'0 0 18px rgba(59,130,246,0.5)', bt:'РЕДКАЯ', bc:'#3b82f6', sl:'' },
-  epic:      { gc:'radial-gradient(circle at 35% 30%,#e9d5ff,#a855f7 50%,#581c87)', gg:'0 0 18px #a855f7', bg:'linear-gradient(135deg,#581c87,#a855f7,#7e22ce,#9333ea)', fg:'0 0 24px rgba(168,85,247,0.6)', bt:'ЭПИЧЕСКАЯ', bc:'#a855f7', sl:'linear-gradient(90deg,transparent,rgba(168,85,247,0.3),transparent)' },
-  legendary: { gc:'radial-gradient(circle at 35% 30%,#fef08a,#f59e0b 50%,#78350f)', gg:'0 0 22px #f59e0b,0 0 40px rgba(245,158,11,0.4)', bg:'linear-gradient(135deg,#78350f,#f59e0b,#b45309,#fbbf24)', fg:'0 0 30px rgba(245,158,11,0.5),0 0 60px rgba(245,158,11,0.2)', bt:'ЛЕГЕНДАРНАЯ', bc:'#f59e0b', sl:'linear-gradient(90deg,transparent,rgba(245,158,11,0.3),transparent)' },
+const R: Record<string, { gc:string; gg:string; bg:string; fg:string; bc:string; sl:string }> = {
+  common:    { gc:'radial-gradient(circle at 35% 30%,#c0c0c0,#6b7280 50%,#374151)', gg:'0 0 6px #9ca3af', bg:'linear-gradient(135deg,#4b5563,#6b7280,#374151,#4b5563)', fg:'', bc:'#6b7280', sl:'' },
+  uncommon:  { gc:'radial-gradient(circle at 35% 30%,#6ee7b7,#10b981 50%,#065f46)', gg:'0 0 10px #10b981', bg:'linear-gradient(135deg,#064e3b,#10b981,#065f46,#059669)', fg:'0 0 12px rgba(16,185,129,0.4)', bc:'#10b981', sl:'' },
+  rare:      { gc:'radial-gradient(circle at 35% 30%,#93c5fd,#3b82f6 50%,#1e3a8a)', gg:'0 0 14px #3b82f6', bg:'linear-gradient(135deg,#1e3a8a,#3b82f6,#1d4ed8,#2563eb)', fg:'0 0 18px rgba(59,130,246,0.5)', bc:'#3b82f6', sl:'' },
+  epic:      { gc:'radial-gradient(circle at 35% 30%,#e9d5ff,#a855f7 50%,#581c87)', gg:'0 0 18px #a855f7', bg:'linear-gradient(135deg,#581c87,#a855f7,#7e22ce,#9333ea)', fg:'0 0 24px rgba(168,85,247,0.6)', bc:'#a855f7', sl:'linear-gradient(90deg,transparent,rgba(168,85,247,0.3),transparent)' },
+  legendary: { gc:'radial-gradient(circle at 35% 30%,#fef08a,#f59e0b 50%,#78350f)', gg:'0 0 22px #f59e0b,0 0 40px rgba(245,158,11,0.4)', bg:'linear-gradient(135deg,#78350f,#f59e0b,#b45309,#fbbf24)', fg:'0 0 30px rgba(245,158,11,0.5),0 0 60px rgba(245,158,11,0.2)', bc:'#f59e0b', sl:'linear-gradient(90deg,transparent,rgba(245,158,11,0.3),transparent)' },
 };
 
 export default function CardComponent({ card, isSelected, onClick, compact, hand, noPopup }: Props) {
