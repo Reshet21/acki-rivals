@@ -41,6 +41,14 @@ function AppInner() {
     recordLoss,
   } = useGameState();
 
+  const [playerId] = useState(() => {
+    const stored = localStorage.getItem('pvp_player_id');
+    if (stored) return stored;
+    const newId = 'p_' + crypto.randomUUID().slice(0, 8);
+    localStorage.setItem('pvp_player_id', newId);
+    return newId;
+  });
+
   const [screen, setScreen] = useState<Screen>('menu');
   const [walletConnection, setWalletConnection] = useState<WalletConnection | null>(() =>
     getStoredSession()
@@ -335,7 +343,7 @@ function AppInner() {
       {screen === 'pvp' && (
         <div className="flex-1">
           <PvpLobby
-            playerId={walletConnection?.walletName || 'player_' + Date.now()}
+            playerId={playerId}
             deck={deck}
             onStartBattle={(game, isHost) => {
               setPvpGame(game);
@@ -351,7 +359,7 @@ function AppInner() {
         <div className="flex-1">
           <PvpBattleScreen
             game={pvpGame}
-            playerId={walletConnection?.walletName || 'player_' + Date.now()}
+            playerId={playerId}
             isHost={pvpIsHost}
             onBattleEnd={(result) => {
               if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }

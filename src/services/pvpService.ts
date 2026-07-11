@@ -22,6 +22,25 @@ export interface GameState {
   guestHP: number;
   hostPillz: number;
   guestPillz: number;
+  lastResolvedRound?: number;
+  roundResult?: {
+    hostCardId: number;
+    guestCardId: number;
+    hostPillzUsed: number;
+    guestPillzUsed: number;
+    hostAttack: number;
+    guestAttack: number;
+    hostBasePower: number;
+    hostFinalPower: number;
+    guestBasePower: number;
+    guestFinalPower: number;
+    winner: 'host' | 'guest' | 'draw';
+    damage: number;
+    healAmount: number;
+    poisonAmount: number;
+    lifeStealAmount: number;
+    opponentDamageReduction: number;
+  };
   currentRound?: {
     hostCard?: Card;
     hostPillz: number;
@@ -206,7 +225,7 @@ export async function abandonGame(gameId: string): Promise<void> {
 
   const { error } = await client
     .from('games')
-    .delete()
+    .update({ status: 'finished' })
     .eq('id', gameId);
 
   if (error) throw error;

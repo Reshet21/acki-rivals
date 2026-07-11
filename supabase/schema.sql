@@ -11,7 +11,7 @@ create table games (
   guest_id text,
   host_deck jsonb not null,
   guest_deck jsonb,
-  state jsonb default '{"phase":"waiting","round":0,"hostHP":30,"guestHP":30,"hostPillz":12,"guestPillz":12}'::jsonb,
+  state jsonb default '{"phase":"waiting","round":0,"hostHP":12,"guestHP":12,"hostPillz":12,"guestPillz":12}'::jsonb,
   status text default 'waiting' check (status in ('waiting', 'full', 'active', 'finished')),
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()

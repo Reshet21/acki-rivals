@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Card } from '../types';
+import type { Card, RoundResult } from '../types';
 import { resolveRound } from '../utils/battleLogic';
 import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
@@ -100,6 +100,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
   const opponentPillzRef = useRef(12);
   const playerCardsUsedRef = useRef<string[]>([]);
   const opponentCardsUsedRef = useRef<string[]>([]);
+  const animatedRoundsRef = useRef<Set<number>>(new Set());
 
   playerHPRef.current = playerHP;
   opponentHPRef.current = opponentHP;
@@ -113,26 +114,15 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
   const playerCardsRemaining = myHand.filter((c) => c.uid && !playerCardsUsed.includes(c.uid));
   const opponentCardsRemaining = oppHand.filter((c) => c.uid && !opponentCardsUsed.includes(c.uid));
 
-  const findCardByUid = useCallback((deck: Card[], uid: string): Card | undefined => {
-    return deck.find((c) => c.uid === uid);
-  }, []);
-
   const findCardById = useCallback((deck: Card[], id: number, excludeUids: string[]): Card | undefined => {
     return deck.find((c) => c.id === id && c.uid && !excludeUids.includes(c.uid));
   }, []);
 
-  const resolveAndAnimate = useCallback((myMove: Move, oppMove: Move) => {
-    const myCard = findCardById(myDeck, myMove.card_id, playerCardsUsedRef.current);
-    const oppCard = findCardById(oppDeck, oppMove.card_id, opponentCardsUsedRef.current);
-
-    if (!myCard || !oppCard) return;
-
+  const runRoundAnimation = useCallback((myCard: Card, myPillz: number, oppCard: Card, oppPillz: number, result: RoundResult) => {
     setCurrentPlayerCard(myCard);
-    setCurrentPlayerPillz(myMove.pillz);
+    setCurrentPlayerPillz(myPillz);
     setCurrentOpponentCard(oppCard);
-    setCurrentOpponentPillz(oppMove.pillz);
-
-    const result = resolveRound(myCard, myMove.pillz, oppCard, oppMove.pillz, myDeck, oppDeck);
+    setCurrentOpponentPillz(oppPillz);
 
     const mappedResult = {
       winner: result.winner === 'player' ? ('player' as const) : result.winner === 'ai' ? ('opponent' as const) : ('draw' as const),
@@ -145,8 +135,8 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     };
     setCurrentResult(mappedResult);
 
-    setPlayerPillz((p) => Math.max(0, p - myMove.pillz));
-    setOpponentPillz((p) => Math.max(0, p - oppMove.pillz));
+    setPlayerPillz((p) => Math.max(0, p - myPillz));
+    setOpponentPillz((p) => Math.max(0, p - oppPillz));
 
     if (myCard.uid) setPlayerCardsUsed((prev) => [...prev, myCard.uid!]);
     if (oppCard.uid) setOpponentCardsUsed((prev) => [...prev, oppCard.uid!]);
@@ -154,9 +144,9 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     setRoundLog((prev) => [...prev, {
       round: roundRef.current,
       playerCard: myCard,
-      playerPillz: myMove.pillz,
+      playerPillz: myPillz,
       aiCard: oppCard,
-      aiPillz: oppMove.pillz,
+      aiPillz: oppPillz,
       winner: mappedResult.winner === 'player' ? 'player' : mappedResult.winner === 'opponent' ? 'ai' : 'draw',
       damageDealt: result.damageDealt,
       playerAttack: result.playerAttack,
@@ -254,7 +244,50 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
         }
       }, DAMAGE_DURATION);
     }, VS_DURATION);
-  }, [game.id, isHost, myDeck, oppDeck, findCardByUid, findCardById]);
+  }, [game.id, isHost]);
+
+  const resolveAndAnimate = useCallback((myMove: Move, oppMove: Move) => {
+    if (!isHost) return; // Only host resolves rounds authoritatively
+
+    const myCard = findCardById(myDeck, myMove.card_id, playerCardsUsedRef.current);
+    const oppCard = findCardById(oppDeck, oppMove.card_id, opponentCardsUsedRef.current);
+    if (!myCard || !oppCard) return;
+
+    const result = resolveRound(myCard, myMove.pillz, oppCard, oppMove.pillz, myDeck, oppDeck);
+
+    // Write round result to Supabase for guest to read
+    const roundResult = {
+      hostCardId: isHost ? myMove.card_id : oppMove.card_id,
+      guestCardId: isHost ? oppMove.card_id : myMove.card_id,
+      hostPillzUsed: isHost ? myMove.pillz : oppMove.pillz,
+      guestPillzUsed: isHost ? oppMove.pillz : myMove.pillz,
+      hostAttack: isHost ? result.playerAttack : result.aiAttack,
+      guestAttack: isHost ? result.aiAttack : result.playerAttack,
+      hostBasePower: isHost ? result.playerBasePower : result.aiBasePower,
+      hostFinalPower: isHost ? result.playerFinalPower : result.aiFinalPower,
+      guestBasePower: isHost ? result.aiBasePower : result.playerBasePower,
+      guestFinalPower: isHost ? result.aiFinalPower : result.playerFinalPower,
+      winner: (result.winner === 'player' ? 'host' : result.winner === 'ai' ? 'guest' : 'draw') as 'host' | 'guest' | 'draw',
+      damage: result.damageDealt,
+      healAmount: result.healAmount,
+      poisonAmount: result.poisonAmount,
+      lifeStealAmount: result.lifeStealAmount,
+      opponentDamageReduction: result.opponentDamageReduction,
+    };
+
+    updateGameState(game.id, {
+      phase: 'resolve',
+      round: roundRef.current,
+      hostHP: isHost ? playerHPRef.current : opponentHPRef.current,
+      guestHP: isHost ? opponentHPRef.current : playerHPRef.current,
+      hostPillz: isHost ? playerPillzRef.current : opponentPillzRef.current,
+      guestPillz: isHost ? opponentPillzRef.current : playerPillzRef.current,
+      lastResolvedRound: roundRef.current,
+      roundResult,
+    }).catch(console.error);
+
+    runRoundAnimation(myCard, myMove.pillz, oppCard, oppMove.pillz, result);
+  }, [isHost, myDeck, oppDeck, findCardById, game.id, runRoundAnimation]);
 
   useEffect(() => {
     const cleanup = subscribeToGame(
@@ -276,19 +309,49 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
         }
       },
       (updatedGame: Game) => {
-        if (updatedGame.status === 'finished') {
-          const state = updatedGame.state;
-          if (state?.phase === 'ended') {
-            const myHP = isHost ? state.hostHP : state.guestHP;
-            const oppHP = isHost ? state.guestHP : state.hostHP;
-            let r: 'win' | 'loss' | 'draw' = 'draw';
-            if (myHP > oppHP) r = 'win';
-            else if (oppHP > myHP) r = 'loss';
-            setBattleResult(r);
-            setBattlePhase('ended');
-            abandonGame(game.id).catch(console.error);
+        const state = updatedGame.state;
+
+        // Handle finished game
+        if (updatedGame.status === 'finished' && state?.phase === 'ended') {
+          const myHP = isHost ? state.hostHP : state.guestHP;
+          const oppHP = isHost ? state.guestHP : state.hostHP;
+          let r: 'win' | 'loss' | 'draw' = 'draw';
+          if (myHP > oppHP) r = 'win';
+          else if (oppHP > myHP) r = 'loss';
+          setBattleResult(r);
+          setBattlePhase('ended');
+          abandonGame(game.id).catch(console.error);
+          return;
+        }
+
+        // Handle mid-game round result (guest reads host's authoritative resolution)
+        if (!isHost && state?.lastResolvedRound === roundRef.current && state?.roundResult && battlePhaseRef.current === 'waiting_opponent') {
+          if (animatedRoundsRef.current.has(state.lastResolvedRound)) return;
+          animatedRoundsRef.current.add(state.lastResolvedRound);
+
+          const rr = state.roundResult;
+          const myCard = findCardById(myDeck, rr.guestCardId, playerCardsUsedRef.current);
+          const oppCard = findCardById(oppDeck, rr.hostCardId, opponentCardsUsedRef.current);
+
+          if (myCard && oppCard) {
+            const result: RoundResult = {
+              winner: rr.winner === 'host' ? 'ai' : rr.winner === 'guest' ? 'player' : 'draw',
+              damageDealt: rr.damage,
+              playerAttack: rr.guestAttack,
+              aiAttack: rr.hostAttack,
+              playerBasePower: rr.guestBasePower,
+              playerFinalPower: rr.guestFinalPower,
+              aiBasePower: rr.hostBasePower,
+              aiFinalPower: rr.hostFinalPower,
+              healAmount: rr.healAmount,
+              poisonAmount: rr.poisonAmount,
+              lifeStealAmount: rr.lifeStealAmount,
+              opponentDamageReduction: rr.opponentDamageReduction,
+            };
+            runRoundAnimation(myCard, rr.guestPillzUsed, oppCard, rr.hostPillzUsed, result);
           }
         }
+
         if (!updatedGame.guest_id && !isHost) {
           setOpponentDisconnected(true);
         }
@@ -296,7 +359,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     );
 
     return cleanup;
-  }, [game.id, playerId, isHost, resolveAndAnimate]);
+  }, [game.id, playerId, isHost, resolveAndAnimate, myDeck, oppDeck, findCardById, runRoundAnimation]);
 
   useEffect(() => {
     const fetchOpponentMoves = async () => {
