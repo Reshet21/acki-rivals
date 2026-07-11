@@ -61,13 +61,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     if (!pack) return;
 
     if (!walletConnection) {
-      setPaymentError('Подключите кошелёк для покупки');
+      setPaymentError(t('shop.connectWalletError'));
       return;
     }
 
     const balance = parseFloat(nacklBalance || '0');
     if (balance < pack.nacklPrice) {
-      setPaymentError('Недостаточно NACKL');
+      setPaymentError(t('shop.notEnoughNackl'));
       return;
     }
 
@@ -85,10 +85,10 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
         setRevealIndex(-1);
         setPhase('opening');
       } else {
-        setPaymentError(result.error || 'Ошибка оплаты');
+        setPaymentError(result.error || t('shop.paymentError'));
       }
     } catch (e) {
-      setPaymentError('Ошибка сети');
+      setPaymentError(t('shop.networkError'));
     } finally {
       setBuyingPackId(null);
     }
@@ -197,7 +197,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       {!walletConnection && (
         <div className="px-4 mb-3">
           <div className="px-3 py-2 rounded-lg text-xs text-center" style={{ background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
-            <span style={{ color: 'rgba(255,215,0,0.8)' }}>Подключите кошелёк для покупки пакетов</span>
+            <span style={{ color: 'rgba(255,215,0,0.8)' }}>{t('shop.connectWalletInfo')}</span>
           </div>
         </div>
       )}
@@ -239,7 +239,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     <div className="text-3xl">{visual.icon}</div>
                     <div className="flex-1">
                       <div className="text-lg font-black text-white">{getPackName(lang, pack.id)}</div>
-                      <div className="text-[10px] text-white/70">{pack.description}</div>
+                      <div className="text-[10px] text-white/70">{t(pack.descKey)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xl font-black text-white">{pack.nacklPrice} NACKL</div>
@@ -277,12 +277,12 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     }`}
                   >
                     {isBuying
-                      ? 'Отправка транзакции...'
+                      ? t('shop.sendingTransaction')
                       : canBuy
                         ? `${t('shop.buy')} — ${pack.nacklPrice} NACKL`
                         : walletConnection
                           ? t('shop.notEnough')
-                          : 'Нет кошелька'
+                          : t('shop.noWallet')
                     }
                   </button>
                 </div>

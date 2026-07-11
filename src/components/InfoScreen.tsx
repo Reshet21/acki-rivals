@@ -17,7 +17,7 @@ export default function InfoScreen({ onBack }: Props) {
     { id: 'about', label: t('info.aboutTab') },
     { id: 'cards', label: t('info.cardsTab') },
     { id: 'battle', label: t('info.battleTab') },
-    { id: 'combos', label: '🔗 Комбо' },
+    { id: 'combos', label: t('info.combosTab') },
     { id: 'packs', label: t('info.packsTab') },
     { id: 'pvp', label: t('info.pvpTab') },
   ];
@@ -195,32 +195,33 @@ function PacksSection() {
 }
 
 function CombosSection() {
+  const { t } = useI18n();
   return (
     <>
-      <Section title="🔗 Комбо карты">
-        <p>Когда определённые карты оказываются в одной руке, они получают бонусы!</p>
+      <Section title={t('info.combosTitle')}>
+        <p>{t('info.combos')}</p>
       </Section>
-      <Section title="⚔️ Клан Неоновых Наемников">
-        <p>Бонус клана: +1 к силе всех карт когда 2+ карты клана в руке</p>
-        <p>Комбо: Дрон+Курьер → +2 силы обоим</p>
-        <p>Комбо: Волк+Убийца → +2 урона убийце</p>
-        <p>Комбо: Берсерк+Император → +3 урона берсерку</p>
-        <p>Комбо: Тень+Фантом → двойная кража жизни</p>
+      <Section title={t('info.clanNeon')}>
+        <p>{t('info.clanNeonBonus')}</p>
+        <p>{t('info.combos')}: Дрон+Курьер → +2 силы обоим</p>
+        <p>{t('info.combos')}: Волк+Убийца → +2 урона убийце</p>
+        <p>{t('info.combos')}: Берсерк+Император → +3 урона берсерку</p>
+        <p>{t('info.combos')}: Тень+Фантом → двойная кража жизни</p>
       </Section>
-      <Section title="🧘 Цифровые Монахи">
-        <p>Бонус клана: +1 к урону всех карт когда 2+ карты клана в руке</p>
-        <p>Комбо: Медитативный+Страж → +2 исцеления обоим</p>
-        <p>Комбо: Мастер+Архонт → двойной яд</p>
-        <p>Комбо: Император+Страж → +3 силы императору</p>
-        <p>Комбо: Будда+Дух → тройное исцеление</p>
+      <Section title={t('info.clanDigi')}>
+        <p>{t('info.clanDigiBonus')}</p>
+        <p>{t('info.combos')}: Медитативный+Страж → +2 исцеления обоим</p>
+        <p>{t('info.combos')}: Мастер+Архонт → двойной яд</p>
+        <p>{t('info.combos')}: Император+Страж → +3 силы императору</p>
+        <p>{t('info.combos')}: Будда+Дух → тройное исцеление</p>
       </Section>
-      <Section title="🌐 Кросс-клан комбо">
+      <Section title={t('info.crossClan')}>
         <p>Берсерк + Император Кода → +2 урона обоим</p>
         <p>Неоновый Бог + Будда Машин → +3 силы обоим</p>
       </Section>
-      <Section title="💡 Как работают комбо">
-        <p>Комбо активируется автоматически когда обе карты в руке.</p>
-        <p>Посмотри подробности нажав кнопку «i» на карточке.</p>
+      <Section title={t('info.howCombosWork')}>
+        <p>{t('info.combosAutoActivate')}</p>
+        <p>{t('info.combosSeeDetails')}</p>
       </Section>
     </>
   );

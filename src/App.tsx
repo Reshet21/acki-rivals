@@ -4,7 +4,7 @@ import { openPack as openPackCards } from './utils/packGenerator';
 import type { Card } from './types';
 import type { WalletConnection } from './services/beeEngine';
 import { getStoredSession, getNacklBalance } from './services/beeEngine';
-import { I18nProvider } from './i18n';
+import { I18nProvider, useI18n } from './i18n';
 import { useTelegram } from './telegram';
 import { useHaptic } from './hooks/useHaptic';
 import BattleScreen from './components/BattleScreen';
@@ -25,6 +25,7 @@ type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgra
 function AppInner() {
   const { haptic, user } = useTelegram();
   const { impactOccurred, selectionChanged } = useHaptic();
+  const { t } = useI18n();
   const {
     collection,
     deck,
@@ -165,20 +166,20 @@ function AppInner() {
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
                     <div className="text-xl font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{credits.toLocaleString()}</div>
-                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>Кредиты</div>
+                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>{t('menu.credits')}</div>
                   </div>
                   <div>
                     <div className="text-xl font-black" style={{ color: '#4ADE80' }}>{battlesWon}</div>
-                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Победы</div>
+                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.wins')}</div>
                   </div>
                   <div>
                     <div className="text-xl font-black" style={{ color: '#FF6B6B' }}>{battlesLost}</div>
-                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Поражения</div>
+                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.losses')}</div>
                   </div>
                 </div>
                 {walletConnection && (
                   <div className="mt-3 pt-2 flex items-center justify-center gap-1" style={{ borderTop: '1px solid rgba(255,215,0,0.1)' }}>
-                    <span className="text-[9px]" style={{ color: 'rgba(255,215,0,0.4)' }}>🔗 Кошелёк подключён</span>
+                    <span className="text-[9px]" style={{ color: 'rgba(255,215,0,0.4)' }}>{t('menu.walletConnected')}</span>
                   </div>
                 )}
               </div>
@@ -187,7 +188,7 @@ function AppInner() {
             {/* Deck warning */}
             {deck.length !== 8 && (
               <div className="w-full max-w-xs px-4 py-2.5 rounded-xl text-center animate-fade-in" style={{ background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
-                <span className="text-xs font-medium" style={{ color: 'rgba(255,215,0,0.8)' }}>📚 Соберите колоду из 8 карт для боёв</span>
+                <span className="text-xs font-medium" style={{ color: 'rgba(255,215,0,0.8)' }}>{t('menu.deckHint')}</span>
               </div>
             )}
 
@@ -204,8 +205,8 @@ function AppInner() {
                 }}>
                 <span className="text-xl">⚔️</span>
                 <div className="flex flex-col items-start">
-                  <span className="font-bold">PvP Бой</span>
-                  <span className="text-[10px] font-normal opacity-70">Против других игроков</span>
+                  <span className="font-bold">{t('menu.pvpBattle')}</span>
+                  <span className="text-[10px] font-normal opacity-70">{t('menu.pvpDesc')}</span>
                 </div>
               </button>
 
@@ -220,8 +221,8 @@ function AppInner() {
                 }}>
                 <span className="text-xl">🤖</span>
                 <div className="flex flex-col items-start">
-                  <span className="font-bold">Бой ИИ</span>
-                  <span className="text-[10px] font-normal opacity-70">Практика и награды</span>
+                  <span className="font-bold">{t('menu.aiBattle')}</span>
+                  <span className="text-[10px] font-normal opacity-70">{t('menu.aiDesc')}</span>
                 </div>
               </button>
             </div>
@@ -232,13 +233,13 @@ function AppInner() {
                 className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,140,0,0.06) 100%)', border: '1px solid rgba(255,215,0,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                 <span className="text-xl">📚</span>
-                <span style={{ color: '#FFD700' }}>Колода</span>
+                <span style={{ color: '#FFD700' }}>{t('menu.deck')}</span>
               </button>
               <button onClick={() => { selectionChanged(); setScreen('shop'); }}
                 className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(139,92,246,0.06) 100%)', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                 <span className="text-xl">🛒</span>
-                <span style={{ color: '#A855F7' }}>Магазин</span>
+                <span style={{ color: '#A855F7' }}>{t('menu.shop')}</span>
               </button>
             </div>
 
@@ -248,19 +249,19 @@ function AppInner() {
                 className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <span className="text-base">⚒️</span>
-                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Улучшить</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.upgrade')}</span>
               </button>
               <button onClick={() => { selectionChanged(); setScreen('wallet'); }}
                 className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <span className="text-base">👛</span>
-                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Кошелёк</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.wallet')}</span>
               </button>
               <button onClick={() => { selectionChanged(); setScreen('mining'); }}
                 className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <span className="text-base">⛏️</span>
-                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Майнинг</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.mining')}</span>
               </button>
             </div>
 
@@ -269,15 +270,15 @@ function AppInner() {
               <div className="flex items-center justify-around py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">🏆</span>
-                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Топ</span>
+                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.leaderboard')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('info'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">📖</span>
-                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Правила</span>
+                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.rules')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('settings'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">⚙️</span>
-                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Настройки</span>
+                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.settings')}</span>
                 </button>
               </div>
             </div>
@@ -321,7 +322,7 @@ function AppInner() {
       {screen === 'mining' && !walletConnection && (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
           <div className="text-white/50 text-center">
-            Подключите кошелек для майнинга
+            {t('menu.connectWalletForMining')}
           </div>
           <button
             onClick={() => setScreen('wallet')}
@@ -329,10 +330,10 @@ function AppInner() {
               bg-gradient-to-r from-neon-blue to-neon-purple text-white
               active:scale-95 transition-all"
           >
-            Подключить кошелек
+            {t('menu.connectWallet')}
           </button>
           <button onClick={() => setScreen('menu')} className="text-xs text-white/30">
-            Назад
+            {t('menu.back')}
           </button>
         </div>
       )}

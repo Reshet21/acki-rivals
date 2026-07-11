@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
+import { getRarityLabel } from '../i18n/cardTranslations';
 import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
   collection: Card[];
-  onUpgrade: (cardUid: string) => { success: boolean; message: string };
+  onUpgrade: (cardUid: string, t?: (key: string) => string) => { success: boolean; message: string };
   onBack: () => void;
 }
 
@@ -16,14 +17,8 @@ const clanEmojis: Record<string, string> = {
   'Цифровые Монахи': '🧘',
 };
 
-const rarityLabels: Record<string, string> = {
-  common: 'Обыч.',
-  rare: 'Редк.',
-  legendary: 'Леген.',
-};
-
 export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { notificationOccurred, selectionChanged, impactOccurred } = useHaptic();
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -57,7 +52,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
   const handleUpgrade = () => {
     if (!selectedUid) return;
     notificationOccurred('success');
-    const result = onUpgrade(selectedUid);
+    const result = onUpgrade(selectedUid, t);
     setMessage({ text: result.message, type: result.success ? 'success' : 'error' });
     if (result.success) {
       setSelectedUid(null);
@@ -71,10 +66,10 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
       <div className="shrink-0 px-3 pt-3 pb-2">
         <div className="flex justify-between items-center text-sm mb-1">
           <div className="text-neon-purple font-bold">⚒️ {t('upgrade.title')}</div>
-          <div className="text-white/40 text-xs">{collection.length} карт</div>
+          <div className="text-white/40 text-xs">{collection.length} {t('upgrade.cards')}</div>
         </div>
         <div className="text-[10px] text-white/30">
-          Объединяйте дубликаты для улучшения. ★1 → 2 копии, ★2 → 3 копии...
+          {t('upgrade.mergeHint')}
         </div>
       </div>
 
@@ -83,7 +78,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
         <div className={`mx-3 mb-2 px-3 py-2 rounded-lg text-xs font-bold text-center ${
           message.type ? 'bg-neon-green/10 text-neon-green border border-neon-green/30' : 'bg-neon-red/10 text-neon-red border border-neon-red/30'
         }`}>
-          {message.text}
+          {t(message.text)}
         </div>
       )}
 
@@ -99,7 +94,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
               <div className="flex items-center gap-2 text-[10px] text-white/50">
                 <span>{selectedGroup.base.power}⚡ {selectedGroup.base.damage}💥</span>
                 <span>★{selectedGroup.stars}</span>
-                <span className="text-white/30">×{selectedGroup.copies.length} копий</span>
+                <span className="text-white/30">×{selectedGroup.copies.length} {t('upgrade.copies')}</span>
               </div>
             </div>
           </div>
@@ -107,7 +102,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
           {selectedGroup.stars < MAX_STARS ? (
             <div className="mt-2 flex items-center justify-between">
               <div className="text-[10px] text-white/40">
-                Доп. копий: <span className="text-white/70 font-bold">{selectedGroup.copies.length - 1}</span>
+                {t('upgrade.extraCopies')}: <span className="text-white/70 font-bold">{selectedGroup.copies.length - 1}</span>
                 <span className="text-white/30 ml-1">({t('upgrade.needed')} {selectedGroup.stars === 0 ? 1 : selectedGroup.stars})</span>
               </div>
               <button
@@ -119,7 +114,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
                     : 'bg-white/5 text-white/20 cursor-not-allowed'
                 }`}
               >
-                ★ Улучшить → ★{selectedGroup.stars + 1}
+                ★ {t('upgrade.upgradeTo')} → ★{selectedGroup.stars + 1}
               </button>
             </div>
           ) : (
@@ -172,7 +167,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
                       base.rarity === 'rare' ? 'bg-blue-500/20 text-blue-400' :
                       'bg-white/10 text-white/40'
                     }`}>
-                      {rarityLabels[base.rarity]}
+                      {getRarityLabel(lang, base.rarity)}
                     </span>
                   </div>
                 </div>
@@ -187,7 +182,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
                         ? 'bg-neon-green/20 text-neon-green'
                         : 'bg-white/5 text-white/30'
                     }`}>
-                      →★{stars + 1} ({copiesNeeded} коп.)
+                      →★{stars + 1} ({copiesNeeded} {t('upgrade.copies')})
                     </div>
                   )}
                   {stars >= MAX_STARS && (

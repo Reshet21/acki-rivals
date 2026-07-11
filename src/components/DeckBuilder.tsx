@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Card, Rarity } from '../types';
+import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
 import { useHaptic } from '../hooks/useHaptic';
 
@@ -11,15 +12,16 @@ interface Props {
 }
 
 const RARITY_FILTERS: { value: Rarity | 'all'; labelKey: string; color: string }[] = [
-  { value: 'all', labelKey: 'deck.all', color: 'text-white' },
-  { value: 'common', labelKey: 'deck.common', color: 'text-gray-400' },
-  { value: 'uncommon', labelKey: 'deck.uncommon', color: 'text-green-400' },
-  { value: 'rare', labelKey: 'deck.rare', color: 'text-blue-400' },
-  { value: 'epic', labelKey: 'deck.epic', color: 'text-purple-400' },
-  { value: 'legendary', labelKey: 'deck.legendary', color: 'text-yellow-400' },
+  { value: 'all', labelKey: 'deck.filterAll', color: 'text-white' },
+  { value: 'common', labelKey: 'deck.filterCommon', color: 'text-gray-400' },
+  { value: 'uncommon', labelKey: 'deck.filterUncommon', color: 'text-green-400' },
+  { value: 'rare', labelKey: 'deck.filterRare', color: 'text-blue-400' },
+  { value: 'epic', labelKey: 'deck.filterEpic', color: 'text-purple-400' },
+  { value: 'legendary', labelKey: 'deck.filterLegendary', color: 'text-yellow-400' },
 ];
 
 export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: Props) {
+  const { t } = useI18n();
   const { selectionChanged, impactOccurred } = useHaptic();
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
@@ -49,7 +51,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
             <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
               ←
             </button>
-            <h1 className="text-lg font-bold" style={{ color: '#FFD700' }}>📚 Коллекция ({collection.length})</h1>
+            <h1 className="text-lg font-bold" style={{ color: '#FFD700' }}>{t('deck.title')} ({collection.length})</h1>
           </div>
           <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: deck.length >= 8 ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${deck.length >= 8 ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`, color: deck.length >= 8 ? '#4ADE80' : 'rgba(255,255,255,0.5)' }}>
             ⚔️ {deck.length}/8
@@ -62,7 +64,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск карт..."
+            placeholder={t('deck.search')}
             className="w-full px-4 py-2.5 pl-10 rounded-xl text-sm text-white placeholder-white/30 focus:outline-none"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
           />
@@ -84,12 +86,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
                 color: rarityFilter === f.value ? '#FFD700' : 'rgba(255,255,255,0.4)',
               }}
             >
-              {f.value === 'all' && '🎯 Все'}
-              {f.value === 'common' && '⚪ Обычные'}
-              {f.value === 'uncommon' && '🟢 Необычные'}
-              {f.value === 'rare' && '🔵 Редкие'}
-              {f.value === 'epic' && '🟣 Эпические'}
-              {f.value === 'legendary' && '🟡 Легендарные'}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
@@ -114,7 +111,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
         {filtered.length === 0 && (
           <div className="text-center py-12">
             <div className="text-3xl mb-2">🔍</div>
-            <div className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Нет карт по фильтру</div>
+            <div className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('deck.noCards')}</div>
           </div>
         )}
       </div>
@@ -122,7 +119,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
       {/* Bottom panel */}
       <div className="shrink-0 px-4 py-3" style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
-          Назад
+          {t('deck.back')}
         </button>
       </div>
     </div>

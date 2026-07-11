@@ -489,7 +489,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     timer > 5 ? 'text-yellow-400' :
     'text-neon-red';
 
-  const opponentName = isHost ? (game.guest_id || 'Ожидание...') : game.host_id;
+  const opponentName = isHost ? (game.guest_id || t('pvp.waitingShort')) : game.host_id;
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
@@ -501,8 +501,8 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
       </div>
 
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
-        <span className="text-xs text-white/60">Р {round}/{TOTAL_ROUNDS}</span>
-        <span className="text-[10px] text-neon-red/70">{opponentName}: {opponentPillz} п</span>
+        <span className="text-xs text-white/60">{t('pvp.roundShort')} {round}/{TOTAL_ROUNDS}</span>
+        <span className="text-[10px] text-neon-red/70">{opponentName}: {opponentPillz} {t('battle.pillzShort')}</span>
 
         <button onClick={() => { impactOccurred('heavy'); handleSurrender(); }}
           className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/40 active:text-white/70 active:bg-white/10 transition-all">
@@ -513,21 +513,21 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
           <div className={`text-xl font-bold tabular-nums ${timerColor}`}>{timer}s</div>
         )}
         {battlePhase === 'waiting_opponent' && (
-          <div className="text-[10px] text-yellow-400 animate-pulse">Ожидание соперника...</div>
+          <div className="text-[10px] text-yellow-400 animate-pulse">{t('pvp.waiting')}</div>
         )}
         {battlePhase === 'submitting' && (
-          <div className="text-[10px] text-neon-blue animate-pulse">Отправка...</div>
+          <div className="text-[10px] text-neon-blue animate-pulse">{t('pvp.sending')}</div>
         )}
         {battlePhase !== 'select' && battlePhase !== 'waiting_opponent' && battlePhase !== 'submitting' && (
           <span className="text-xl font-bold tabular-nums text-white/20">—</span>
         )}
 
-        <span className="text-xs text-white/60">П: {playerPillz}</span>
+        <span className="text-xs text-white/60">{t('battle.pillzShort')}: {playerPillz}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 px-3 py-1.5 shrink-0">
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-green font-bold">ВЫ</div>
+          <div className="text-[9px] text-neon-green font-bold">{t('pvp.youShort')}</div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-neon-green to-emerald-400 rounded-full transition-all duration-700"
               style={{ width: `${(playerHP / TOTAL_HP) * 100}%` }} />
@@ -535,7 +535,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
           <div className="text-[10px] text-white font-bold text-right">{playerHP}</div>
         </div>
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-red font-bold text-right">ПРОТИВНИК</div>
+          <div className="text-[9px] text-neon-red font-bold text-right">{t('pvp.opponent')}</div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-neon-red to-orange-400 rounded-full transition-all duration-700"
               style={{ width: `${(opponentHP / TOTAL_HP) * 100}%` }} />
@@ -558,17 +558,17 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
         {battlePhase === 'waiting' && !game.guest_id && (
           <div className="flex flex-col items-center gap-3 px-4 animate-fade-in">
-            <div className="text-lg font-bold text-white/60">Ожидание соперника...</div>
-            <div className="text-xs text-white/30">Код игры:</div>
+            <div className="text-lg font-bold text-white/60">{t('pvp.waiting')}</div>
+            <div className="text-xs text-white/30">{t('pvp.gameCode')}:</div>
             <div className="text-sm font-mono font-bold text-neon-green break-all text-center px-4 py-2 rounded-lg bg-white/5 border border-neon-green/30">
               {game.id}
             </div>
-            <div className="text-[10px] text-white/30 text-center">Поделитесь кодом с другом</div>
+            <div className="text-[10px] text-white/30 text-center">{t('pvp.shareCodeHint')}</div>
           </div>
         )}
 
         {battlePhase === 'waiting' && game.guest_id && (
-          <div className="text-sm text-white/50 animate-pulse">Начало боя...</div>
+          <div className="text-sm text-white/50 animate-pulse">{t('pvp.battleStart')}</div>
         )}
 
         {battlePhase === 'select' && (
@@ -577,18 +577,18 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
 
         {battlePhase === 'submitting' && (
           <div className="flex flex-col items-center gap-2">
-            <div className="text-sm text-neon-blue animate-pulse">Отправка хода...</div>
+            <div className="text-sm text-neon-blue animate-pulse">{t('pvp.sendingMove')}</div>
           </div>
         )}
 
         {battlePhase === 'waiting_opponent' && (
           <div className="flex flex-col items-center gap-3 px-4">
-            <div className="text-sm text-yellow-400 animate-pulse">Ожидание хода соперника...</div>
+            <div className="text-sm text-yellow-400 animate-pulse">{t('pvp.waitingMove')}</div>
             {currentPlayerCard && (
               <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-green mb-0.5">Ваш ход</div>
+                <div className="text-[9px] text-neon-green mb-0.5">{t('pvp.yourTurn')}</div>
                 <CardComponent card={currentPlayerCard} compact />
-                <div className="text-[10px] text-white/60 mt-0.5">П: {currentPlayerPillz}</div>
+                <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentPlayerPillz}</div>
               </div>
             )}
           </div>
@@ -598,9 +598,9 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
           <div className="flex flex-col items-center gap-3 w-full animate-fade-in px-3">
             <div className="flex items-center gap-4 justify-center">
               <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-green mb-0.5">Вы</div>
+                <div className="text-[9px] text-neon-green mb-0.5">{t('pvp.youShort')}</div>
                 <CardComponent card={currentPlayerCard} compact />
-                <div className="text-[10px] text-white/60 mt-0.5">П: {currentPlayerPillz}</div>
+                <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentPlayerPillz}</div>
               </div>
 
               <div className="flex flex-col items-center gap-1">
@@ -634,9 +634,9 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-red mb-0.5">Противник</div>
+                <div className="text-[9px] text-neon-red mb-0.5">{t('pvp.opponent')}</div>
                 <CardComponent card={currentOpponentCard} compact />
-                <div className="text-[10px] text-white/60 mt-0.5">П: {currentOpponentPillz}</div>
+                <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentOpponentPillz}</div>
               </div>
             </div>
           </div>
@@ -660,9 +660,9 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
               ${currentResult.winner === 'opponent' ? 'text-red-400' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
             `}>
-              {currentResult.winner === 'player' && 'HP Противника'}
-              {currentResult.winner === 'opponent' && 'HP Ваша'}
-              {currentResult.winner === 'draw' && 'Ничья'}
+              {currentResult.winner === 'player' && t('pvp.hpOpponent')}
+              {currentResult.winner === 'opponent' && t('pvp.hpYour')}
+              {currentResult.winner === 'draw' && t('pvp.draw')}
             </div>
           </div>
         )}
@@ -685,7 +685,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
             </div>
 
             <div className="flex flex-col gap-1.5 w-full max-w-xs">
-              <div className="text-[8px] text-white/30 uppercase tracking-wider mb-0.5">📜 Лог боя</div>
+              <div className="text-[8px] text-white/30 uppercase tracking-wider mb-0.5">📜 {t('pvp.log')}</div>
               {roundLog.map((entry, i) => (
                 <div key={i} className="bg-white/5 rounded-lg px-2 py-2 text-[10px]">
                   <div className="flex justify-between items-center mb-1.5">
@@ -710,7 +710,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
                         )}
                       </span>
                     </div>
-                    <span className="text-white/30">{entry.playerPillz} п</span>
+                    <span className="text-white/30">{entry.playerPillz} {t('battle.pillzShort')}</span>
                   </div>
 
                   <div className="flex items-center justify-between mb-1">
@@ -723,11 +723,11 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
                         )}
                       </span>
                     </div>
-                    <span className="text-white/30">{entry.aiPillz} п</span>
+                    <span className="text-white/30">{entry.aiPillz} {t('battle.pillzShort')}</span>
                   </div>
 
                   <div className="border-t border-white/5 pt-1.5 mt-1 flex items-center justify-between">
-                    <span className="text-white/40">Итого:</span>
+                    <span className="text-white/40">{t('battle.total')}:</span>
                     <div className="flex items-center gap-2">
                       {entry.damageDealt > 0 && <span className="text-red-300 font-bold">💥{entry.damageDealt}</span>}
                       {entry.healAmount > 0 && <span className="text-green-300">💚+{entry.healAmount}</span>}

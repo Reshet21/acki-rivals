@@ -2,8 +2,8 @@ import type { Rarity } from '../types';
 
 export interface PackConfig {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descKey: string;
   price: number; // Legacy credits price (kept for battles reward)
   nacklPrice: number; // Real NACKL token price
   cardCount: number;
@@ -14,8 +14,8 @@ export interface PackConfig {
 export const PACKS: PackConfig[] = [
   {
     id: 'basic',
-    name: 'Базовый набор',
-    description: '5 карт. Обычные и необычные.',
+    nameKey: 'pack.basic',
+    descKey: 'pack.basicDesc',
     price: 500,
     nacklPrice: 5,
     cardCount: 5,
@@ -24,8 +24,8 @@ export const PACKS: PackConfig[] = [
   },
   {
     id: 'standard',
-    name: 'Стандартный набор',
-    description: '5 карт. Обычные, необычные, редкие.',
+    nameKey: 'pack.standard',
+    descKey: 'pack.standardDesc',
     price: 700,
     nacklPrice: 7,
     cardCount: 5,
@@ -34,8 +34,8 @@ export const PACKS: PackConfig[] = [
   },
   {
     id: 'advanced',
-    name: 'Продвинутый набор',
-    description: '5 карт. Необычные, редкие, эпические, легендарные.',
+    nameKey: 'pack.advanced',
+    descKey: 'pack.advancedDesc',
     price: 1000,
     nacklPrice: 10,
     cardCount: 5,

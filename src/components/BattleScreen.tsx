@@ -305,8 +305,8 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
 
       {/* Header */}
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
-        <span className="text-xs text-white/60">Р {round}/{TOTAL_ROUNDS}</span>
-        <span className="text-[10px] text-neon-red/70">ИИ: {aiPillz} п</span>
+        <span className="text-xs text-white/60">{t('battle.roundShort')} {round}/{TOTAL_ROUNDS}</span>
+        <span className="text-[10px] text-neon-red/70">{t('battle.ai')}: {aiPillz} {t('battle.pillzShort')}</span>
 
         <button
           onClick={handleSurrender}
@@ -325,13 +325,13 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           <span className="text-xl font-bold tabular-nums text-white/20">—</span>
         )}
 
-        <span className="text-xs text-white/60">П: {playerPillz}</span>
+        <span className="text-xs text-white/60">{t('battle.pillzShort')}: {playerPillz}</span>
       </div>
 
       {/* HP Bars */}
       <div className="grid grid-cols-2 gap-2 px-3 py-1.5 shrink-0">
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-green font-bold">ИГРОК</div>
+          <div className="text-[9px] text-neon-green font-bold">{t('battle.player')}</div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-neon-green to-emerald-400 rounded-full transition-all duration-700"
@@ -341,7 +341,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           <div className="text-[10px] text-white font-bold text-right">{playerHP}</div>
         </div>
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-red font-bold text-right">ИИ</div>
+          <div className="text-[9px] text-neon-red font-bold text-right">{t('battle.ai')}</div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-neon-red to-orange-400 rounded-full transition-all duration-700"
@@ -377,9 +377,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           <div className="flex flex-col items-center gap-3 w-full animate-fade-in px-3">
             <div className="flex items-center gap-4 justify-center">
               <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-green mb-0.5">Вы</div>
+                <div className="text-[9px] text-neon-green mb-0.5">{t('battle.you')}</div>
                 <CardComponent card={currentPlayerCard} compact />
-                <div className="text-[10px] text-white/60 mt-0.5">П: {currentPlayerPillz}</div>
+                <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentPlayerPillz}</div>
               </div>
 
               <div className="flex flex-col items-center gap-1">
@@ -403,7 +403,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                     return ab ? (
                       <div className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded bg-white/5">
                         <span>{ab.icon}</span>
-                        <span className="text-white/40">Ваша:</span>
+                        <span className="text-white/40">{t('battle.yours')}</span>
                         <span style={{ color: ab.color }}>{abilityNames[currentPlayerCard.ability] || currentPlayerCard.ability}</span>
                       </div>
                     ) : null;
@@ -413,7 +413,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                     return ab ? (
                       <div className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded bg-white/5">
                         <span>{ab.icon}</span>
-                        <span className="text-white/40">Врага:</span>
+                        <span className="text-white/40">{t('battle.enemy')}</span>
                         <span style={{ color: ab.color }}>{abilityNames[currentAiCard.ability] || currentAiCard.ability}</span>
                       </div>
                     ) : null;
@@ -446,9 +446,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-red mb-0.5">ИИ</div>
+                <div className="text-[9px] text-neon-red mb-0.5">{t('battle.ai')}</div>
                 <CardComponent card={currentAiCard} compact />
-                <div className="text-[10px] text-white/60 mt-0.5">П: {currentAiPillz}</div>
+                <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentAiPillz}</div>
               </div>
             </div>
           </div>
@@ -473,9 +473,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
               ${currentResult.winner === 'ai' ? 'text-red-400' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
             `}>
-              {currentResult.winner === 'player' && 'HP ИИ'}
-              {currentResult.winner === 'ai' && 'HP ИГРОКА'}
-              {currentResult.winner === 'draw' && 'Ничья'}
+              {currentResult.winner === 'player' && t('battle.hpAi')}
+              {currentResult.winner === 'ai' && t('battle.hpPlayer')}
+              {currentResult.winner === 'draw' && t('battle.draw')}
             </div>
           </div>
         )}
@@ -498,7 +498,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5 w-full max-w-xs">
-              <div className="text-[8px] text-white/30 uppercase tracking-wider mb-0.5">📜 Лог боя</div>
+              <div className="text-[8px] text-white/30 uppercase tracking-wider mb-0.5">📜 {t('battle.log')}</div>
               {roundLog.map((entry, i) => (
                 <div key={i} className="bg-white/5 rounded-lg px-2 py-2 text-[10px]">
                   {/* Header: round + result */}
@@ -526,10 +526,10 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                         )}
                       </span>
                     </div>
-                    <span className="text-white/30">{entry.playerPillz} п</span>
+                    <span className="text-white/30">{entry.playerPillz} {t('battle.pillzShort')}</span>
                   </div>
                   <div className="flex items-center justify-between mb-1.5 pl-2">
-                    <span className="text-white/30">Атака:</span>
+                    <span className="text-white/30">{t('battle.attack')}:</span>
                     <span className="text-white/60 font-bold">{entry.playerAttack}</span>
                     <span className="text-white/20 text-[8px]">
                       ({entry.playerFinalPower}×(1+{entry.playerPillz})×0.9–1.1)
@@ -548,10 +548,10 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                         )}
                       </span>
                     </div>
-                    <span className="text-white/30">{entry.aiPillz} п</span>
+                    <span className="text-white/30">{entry.aiPillz} {t('battle.pillzShort')}</span>
                   </div>
                   <div className="flex items-center justify-between mb-1.5 pl-2">
-                    <span className="text-white/30">Атака:</span>
+                    <span className="text-white/30">{t('battle.attack')}:</span>
                     <span className="text-white/60 font-bold">{entry.aiAttack}</span>
                     <span className="text-white/20 text-[8px]">
                       ({entry.aiFinalPower}×(1+{entry.aiPillz})×0.9–1.1)
@@ -560,7 +560,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
 
                   {/* Result */}
                   <div className="border-t border-white/5 pt-1.5 mt-1 flex items-center justify-between">
-                    <span className="text-white/40">Итого:</span>
+                    <span className="text-white/40">{t('battle.total')}:</span>
                     <div className="flex items-center gap-2">
                       {entry.damageDealt > 0 && (
                         <span className="text-red-300 font-bold">💥{entry.damageDealt}</span>

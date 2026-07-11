@@ -125,13 +125,13 @@ export function useGameState() {
    * Cost: N copies needed to go from star N-1 to star N.
    * Each star gives +1 power and +1 damage.
    */
-  const upgradeCard = useCallback((cardUid: string): { success: boolean; message: string } => {
+  const upgradeCard = useCallback((cardUid: string, t?: (key: string) => string): { success: boolean; message: string } => {
     const card = collection.find((c) => c.uid === cardUid);
-    if (!card) return { success: false, message: 'Карта не найдена' };
+    if (!card) return { success: false, message: t ? t('game.cardNotFound') : 'Card not found' };
 
     const currentStars = card.stars ?? 0;
     if (currentStars >= MAX_STARS) {
-      return { success: false, message: 'Максимальный уровень звёзд' };
+      return { success: false, message: t ? t('game.maxStars') : 'Max star level reached' };
     }
 
     const copiesNeeded = currentStars === 0 ? 1 : currentStars;
@@ -142,7 +142,7 @@ export function useGameState() {
     if (duplicates.length < copiesNeeded) {
       return {
         success: false,
-        message: `Нужно ${copiesNeeded} копий, есть ${duplicates.length}`,
+        message: t ? t('game.needCopies') : `Need ${copiesNeeded} copies, have ${duplicates.length}`,
       };
     }
 
@@ -167,7 +167,7 @@ export function useGameState() {
       )
     );
 
-    return { success: true, message: `★${currentStars + 1} — +1 сила, +1 урон` };
+    return { success: true, message: t ? t('game.starUpgraded') : 'Star upgraded' };
   }, [collection]);
 
   const saveToStorage = useCallback(() => {
