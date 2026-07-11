@@ -3,6 +3,8 @@ import type { Card } from '../types';
 import { useI18n } from '../i18n';
 import { getCardName, getAbilityName, getStatLabel } from '../i18n/cardTranslations';
 import CardDetailPopup from './CardDetailPopup';
+import { abilityInfo } from '../data/abilityVisuals';
+import { cardArt } from '../data/cardArt';
 
 interface Props {
   card: Card;
@@ -12,74 +14,6 @@ interface Props {
   hand?: Card[];
   noPopup?: boolean;
 }
-
-const abInfo: Record<string, { icon: string; color: string }> = {
-  '+1 power': { icon: '⚔️', color: '#60a5fa' }, '+2 power': { icon: '⚔️', color: '#93c5fd' },
-  '+3 power': { icon: '⚔️', color: '#bfdbfe' }, '+4 power': { icon: '⚔️', color: '#67e8f9' },
-  '+1 damage': { icon: '💥', color: '#f87171' }, '+2 damage': { icon: '💥', color: '#fca5a5' },
-  '+1 pillz': { icon: '💊', color: '#4ade80' }, '+3 pillz': { icon: '💊', color: '#86efac' },
-  '-1 opponent power': { icon: '🛡️', color: '#fb923c' }, '-2 opponent power': { icon: '🛡️', color: '#fdba74' },
-  '-2 opponent damage': { icon: '🛡️', color: '#fb923c' },
-  'heal 1': { icon: '💚', color: '#4ade80' }, 'heal 2': { icon: '💚', color: '#86efac' }, 'heal 3': { icon: '💚', color: '#bbf7d0' },
-  'poison 1': { icon: '☠️', color: '#facc15' }, 'poison 2': { icon: '☠️', color: '#fde047' }, 'poison 3': { icon: '☠️', color: '#fef08a' },
-  'life steal 1': { icon: '🩸', color: '#c084fc' }, 'life steal 2': { icon: '🩸', color: '#d8b4fe' }, 'life steal 3': { icon: '🩸', color: '#e9d5ff' },
-  'stop opponent ability': { icon: '🚫', color: '#f87171' }, 'double damage': { icon: '⚡', color: '#fde047' },
-};
-
-const art: Record<number, string> = {
-  // Legendary - лучшие изображения
-  8:'/cards/an-girl-main.jpg',   // Готическая девушка - Гиперблок
-  16:'/cards/an-popit-main.jpg', // Popit - Император Кода
-  28:'/cards/an-red-block.jpg',  // Красный блок-кипер - Бог Блокчейна
-  34:'/cards/an-smiley-yellow.jpg', // Жёлтый смайлик - Будда Блокчейна
-  39:'/cards/an-girl-art.jpg',   // Арт девушки - Дракон Консенсуса
-  44:'/cards/an-block-keeper.jpg', // Блок-кипер - Дракон Эпох
-
-  // Epic - хорошие изображения
-  17:'/cards/an-block-keeper2.jpg', // Блок-кипер 2 - Император Блоков
-  27:'/cards/an-logo-yellow.jpg',  // Жёлтый лого - Паладин Валидации
-  33:'/cards/an-tokenomics.jpg',   // Токеномика - Архонт Блоков
-  38:'/cards/an-key-logo.jpg',     // Ключ - Адмирал Цепи
-  43:'/cards/an-block-keeper3.jpg', // Блок-кипер 3 - Верховный Жрец
-
-  // Rare - средние изображения
-  5:'/cards/card-acki-nacki.jpeg',  // Оригинальная карта
-  6:'/cards/card-circuit-guardian.jpeg',
-  7:'/cards/card-phantom.png',
-  13:'/cards/card-block-keeper.jpeg',
-  14:'/cards/card-block-manager.jpeg',
-  15:'/cards/card-malicious-block.jpeg',
-  26:'/cards/card-cyber-killer.png',
-  32:'/cards/card-mamabord.jpeg',
-  37:'/cards/card-courier.png',
-  42:'/cards/card-raider.png',
-
-  // Uncommon
-  19:'/cards/card-hacker.png',
-  20:'/cards/card-cyber-wolf.png',
-  21:'/cards/card-patrol.png',
-  22:'/cards/card-rusty-drone.png',
-  24:'/cards/card-saboteur.png',
-  25:'/cards/card-neon-sniper.png',
-  30:'/cards/card-phantom.png',
-  31:'/cards/card-phantom.png',
-  36:'/cards/card-hacker.png',
-  41:'/cards/card-courier.png',
-
-  // Common - базовые изображения
-  1:'/cards/card-rusty-drone.png',
-  2:'/cards/card-patrol.png',
-  3:'/cards/card-hacker.png',
-  4:'/cards/card-neon-sniper.png',
-  9:'/cards/card-mamabord.jpeg',
-  10:'/cards/card-block-keeper.jpeg',
-  11:'/cards/card-circuit-guardian.jpeg',
-  12:'/cards/card-block-keeper.jpeg',
-  23:'/cards/card-courier.png',
-  29:'/cards/card-mamabord.jpeg',
-  35:'/cards/card-patrol.png',
-  40:'/cards/card-rusty-drone.png',
-};
 
 const R: Record<string, { gc:string; gg:string; bg:string; fg:string; bt:string; bc:string; sl:string }> = {
   common:    { gc:'radial-gradient(circle at 35% 30%,#c0c0c0,#6b7280 50%,#374151)', gg:'0 0 6px #9ca3af', bg:'linear-gradient(135deg,#4b5563,#6b7280,#374151,#4b5563)', fg:'', bt:'ОБЫЧНАЯ', bc:'#6b7280', sl:'' },
@@ -94,8 +28,8 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
   const [showDetail, setShowDetail] = useState(false);
   const s = card.stars ?? 0;
   const r = R[card.rarity || 'common'] || R.common;
-  const img = art[card.id];
-  const ab = abInfo[card.ability] || { icon: '❓', color: '#9ca3af' };
+  const img = cardArt[card.id];
+  const ab = abilityInfo[card.ability] || { icon: '❓', color: '#9ca3af' };
   const nm = getCardName(lang, card.id);
   const an = getAbilityName(lang, card.ability);
   const pl = getStatLabel(lang, 'power');

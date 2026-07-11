@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import type { Card, Rarity } from '../types';
 import { PACKS, getPackById } from '../data/packs';
-import { openPack } from '../utils/packGenerator';
 import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
 import { getRarityLabel, getPackName } from '../i18n/cardTranslations';
 
 interface Props {
   credits: number;
-  onBuyPack: (packId: string) => void;
+  onBuyPack: (packId: string) => Card[] | void;
   onBack: () => void;
 }
 
@@ -54,8 +53,8 @@ export default function Shop({ credits, onBuyPack, onBack }: Props) {
     const pack = getPackById(packId);
     if (!pack || credits < pack.price) return;
 
-    onBuyPack(packId);
-    const cards = openPack(packId);
+    const cards = onBuyPack(packId);
+    if (!cards || cards.length === 0) return;
     setOpenedCards(cards);
     setRevealIndex(-1);
     setPhase('opening');

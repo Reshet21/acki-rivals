@@ -130,7 +130,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     setCurrentOpponentCard(oppCard);
     setCurrentOpponentPillz(oppMove.pillz);
 
-    const result = resolveRound(myCard, myMove.pillz, oppCard, oppMove.pillz);
+    const result = resolveRound(myCard, myMove.pillz, oppCard, oppMove.pillz, myDeck, oppDeck);
 
     const mappedResult = {
       winner: result.winner === 'player' ? ('player' as const) : result.winner === 'ai' ? ('opponent' as const) : ('draw' as const),

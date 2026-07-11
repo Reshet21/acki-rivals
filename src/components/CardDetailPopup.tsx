@@ -3,37 +3,8 @@ import type { Card } from '../types';
 import { useI18n } from '../i18n';
 import { getCardName, getAbilityName, getClanName, getRarityLabel } from '../i18n/cardTranslations';
 import { clanBonuses, comboAbilities } from '../data/cards';
-
-const abInfo: Record<string, { icon: string; color: string }> = {
-  '+1 power': { icon: '⚔️', color: '#60a5fa' }, '+2 power': { icon: '⚔️', color: '#93c5fd' },
-  '+3 power': { icon: '⚔️', color: '#bfdbfe' }, '+4 power': { icon: '⚔️', color: '#67e8f9' },
-  '+1 damage': { icon: '💥', color: '#f87171' }, '+2 damage': { icon: '💥', color: '#fca5a5' },
-  '+1 pillz': { icon: '💊', color: '#4ade80' }, '+3 pillz': { icon: '💊', color: '#86efac' },
-  '-1 opponent power': { icon: '🛡️', color: '#fb923c' }, '-2 opponent power': { icon: '🛡️', color: '#fdba74' },
-  '-2 opponent damage': { icon: '🛡️', color: '#fb923c' },
-  'heal 1': { icon: '💚', color: '#4ade80' }, 'heal 2': { icon: '💚', color: '#86efac' }, 'heal 3': { icon: '💚', color: '#bbf7d0' },
-  'poison 1': { icon: '☠️', color: '#facc15' }, 'poison 2': { icon: '☠️', color: '#fde047' }, 'poison 3': { icon: '☠️', color: '#fef08a' },
-  'life steal 1': { icon: '🩸', color: '#c084fc' }, 'life steal 2': { icon: '🩸', color: '#d8b4fe' }, 'life steal 3': { icon: '🩸', color: '#e9d5ff' },
-  'stop opponent ability': { icon: '🚫', color: '#f87171' }, 'double damage': { icon: '⚡', color: '#fde047' },
-};
-
-const cardArt: Record<number, string> = {
-  1:'/cards/card-rusty-drone.png',2:'/cards/card-patrol.png',3:'/cards/card-hacker.png',
-  4:'/cards/card-neon-sniper.png',5:'/cards/card-cyber-wolf.png',6:'/cards/card-circuit-guardian.jpeg',
-  7:'/cards/card-phantom.png',8:'/cards/card-acki-nacki.jpeg',9:'/cards/card-mamabord.jpeg',
-  10:'/cards/card-mamabord.jpeg',11:'/cards/card-block-keeper.jpeg',12:'/cards/card-block-keeper.jpeg',
-  13:'/cards/card-block-keeper.jpeg',14:'/cards/card-block-manager.jpeg',15:'/cards/card-block-manager.jpeg',
-  16:'/cards/card-block-manager.jpeg',17:'/cards/card-malicious-block.jpeg',18:'/cards/card-circuit-guardian.jpeg',
-  19:'/cards/card-phantom.png',20:'/cards/card-cyber-killer.png',21:'/cards/card-mamabord.jpeg',
-  22:'/cards/card-block-keeper.jpeg',23:'/cards/card-courier.png',24:'/cards/card-raider.png',
-  25:'/cards/card-saboteur.png',26:'/cards/card-cyber-killer.png',27:'/cards/card-circuit-guardian.jpeg',
-  28:'/cards/card-malicious-block.jpeg',29:'/cards/card-block-keeper.jpeg',30:'/cards/card-mamabord.jpeg',
-  31:'/cards/card-saboteur.png',32:'/cards/card-block-keeper.jpeg',33:'/cards/card-circuit-guardian.jpeg',
-  34:'/cards/card-malicious-block.jpeg',35:'/cards/card-rusty-drone.png',36:'/cards/card-saboteur.png',
-  37:'/cards/card-neon-sniper.png',38:'/cards/card-malicious-block.jpeg',39:'/cards/card-cyber-wolf.png',
-  40:'/cards/card-mamabord.jpeg',41:'/cards/card-block-keeper.jpeg',42:'/cards/card-circuit-guardian.jpeg',
-  43:'/cards/card-block-manager.jpeg',44:'/cards/card-malicious-block.jpeg',
-};
+import { abilityInfo } from '../data/abilityVisuals';
+import { cardArt } from '../data/cardArt';
 
 const rarityColor: Record<string, string> = {
   common: '#6b7280', uncommon: '#10b981', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b',
@@ -125,9 +96,9 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
           {tab === 'info' && (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontSize: 20 }}>{abInfo[card.ability]?.icon || '❓'}</span>
+                <span style={{ fontSize: 20 }}>{abilityInfo[card.ability]?.icon || '❓'}</span>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: abInfo[card.ability]?.color || '#fff' }}>{abilityName}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: abilityInfo[card.ability]?.color || '#fff' }}>{abilityName}</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{ab}</div>
                 </div>
               </div>
@@ -171,6 +142,3 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
     </div>
   );
 }
-
-// Re-export ability info for use in battle
-export { abInfo };

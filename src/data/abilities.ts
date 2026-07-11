@@ -30,7 +30,7 @@ export const abilities: Ability[] = [
   // ═══ LEGENDARY ═══
   { id: 'stop opponent ability', name: 'Глушитель', description: 'Отменяет способность противника.', apply: (): AbilityResult => ({ cancelOpponentAbility: true }) },
   { id: '+4 power', name: 'Абсолютная сила', description: '+4 к своей силе.', apply: (): AbilityResult => ({ powerModifier: 4 }) },
-  { id: 'double damage', name: 'Двойной удар', description: 'Урон удваивается при победе.', apply: (): AbilityResult => ({ damageModifier: 10 }) },
+  { id: 'double damage', name: 'Двойной удар', description: 'Урон удваивается при победе.', apply: (): AbilityResult => ({ doubleDamage: true }) },
   { id: 'life steal 3', name: 'Вампиризм', description: 'Восстанови 3 HP при победе.', apply: (): AbilityResult => ({ lifeStealModifier: 3 }) },
 ];
 

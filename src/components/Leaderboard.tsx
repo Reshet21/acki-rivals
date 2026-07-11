@@ -1,8 +1,9 @@
-import { useState } from 'react';
 import { useI18n } from '../i18n';
 
 interface Props {
   walletAddress: string | null;
+  wins: number;
+  losses: number;
   onBack: () => void;
 }
 
@@ -49,14 +50,8 @@ function getLeaderboard(playerWins: number, playerLosses: number, walletName: st
   return entries;
 }
 
-export default function Leaderboard({ walletAddress, onBack }: Props) {
+export default function Leaderboard({ walletAddress, wins, losses, onBack }: Props) {
   const { t } = useI18n();
-  const [wins] = useState(() => {
-    try { return parseInt(localStorage.getItem('acki-wins') || '0'); } catch { return 0; }
-  });
-  const [losses] = useState(() => {
-    try { return parseInt(localStorage.getItem('acki-losses') || '0'); } catch { return 0; }
-  });
 
   const entries = getLeaderboard(wins, losses, walletAddress);
 

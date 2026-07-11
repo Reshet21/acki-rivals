@@ -135,18 +135,11 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
           <div className="text-xs text-white/40 mt-1">в приложении AN Wallet</div>
         </div>
 
-        <a
-          href={deepLink}
-          target="_blank"
-          rel="noreferrer"
-          className="w-48 h-48 bg-white rounded-xl flex items-center justify-center"
+        <div
+          className="w-full max-w-xs bg-white/10 rounded-xl p-3 break-all text-xs font-mono text-white/70 border border-white/10"
         >
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(deepLink)}`}
-            alt="QR Code"
-            className="w-44 h-44"
-          />
-        </a>
+          {deepLink}
+        </div>
 
         <a
           href={deepLink}

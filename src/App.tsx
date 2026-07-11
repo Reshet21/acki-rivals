@@ -57,13 +57,14 @@ function AppInner() {
     setScreen('menu');
   }, [recordWin, recordLoss, haptic]);
 
-  const handleBuyPack = useCallback((packId: string) => {
+  const handleBuyPack = useCallback((packId: string): Card[] | void => {
     const pack = getPackById(packId);
     if (!pack || credits < pack.price) return;
     addCredits(-pack.price);
     const newCards = openPackCards(packId);
     newCards.forEach((c) => addCard(c));
     haptic.notificationOccurred('success');
+    return newCards;
   }, [credits, addCredits, addCard, haptic]);
 
   const handleToggleDeck = useCallback((card: Card) => {
@@ -382,6 +383,8 @@ function AppInner() {
         <div className="flex-1">
           <Leaderboard
             walletAddress={walletConnection?.walletName || null}
+            wins={battlesWon}
+            losses={battlesLost}
             onBack={() => setScreen('menu')}
           />
         </div>

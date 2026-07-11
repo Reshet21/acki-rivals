@@ -175,18 +175,6 @@ export function useGameState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [collection, deck, credits, walletName, battlesWon, battlesLost]);
 
-  const loadStorage = useCallback(() => {
-    const data = loadFromStorage();
-    if (data) {
-      setCollection(data.collection);
-      setDeck(data.deck);
-      setCredits(data.credits);
-      setWalletNameState(data.walletName);
-      setBattlesWon(data.battlesWon);
-      setBattlesLost(data.battlesLost);
-    }
-  }, []);
-
   const recordWin = useCallback(() => {
     setBattlesWon((prev) => prev + 1);
     setCredits((prev) => prev + 50);
@@ -209,7 +197,6 @@ export function useGameState() {
     upgradeCard,
     setWalletName,
     saveToStorage,
-    loadStorage,
     recordWin,
     recordLoss,
   };

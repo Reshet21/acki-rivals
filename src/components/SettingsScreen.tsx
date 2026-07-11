@@ -66,7 +66,16 @@ export default function SettingsScreen({ onBack }: Props) {
         <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,215,0,0.5)' }}>Аккаунт</div>
           <div className="space-y-2">
-            <button className="w-full py-3 rounded-lg text-sm font-medium text-left flex items-center justify-between transition-all active:scale-[0.98]"
+            <button onClick={() => {
+              const data = localStorage.getItem('acki-rivals-save');
+              const blob = new Blob([data || '{}'], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'acki-rivals-save.json';
+              a.click();
+              URL.revokeObjectURL(url);
+            }} className="w-full py-3 rounded-lg text-sm font-medium text-left flex items-center justify-between transition-all active:scale-[0.98]"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ color: 'rgba(255,255,255,0.6)' }}>📊 Экспорт данных</span>
               <span style={{ color: 'rgba(255,255,255,0.3)' }}>→</span>

@@ -124,11 +124,11 @@ export function resolveRound(
 
   if (playerAbilityResult) {
     playerPower += playerAbilityResult.powerModifier ?? 0;
-    playerPower += playerAbilityResult.opponentPowerModifier ?? 0;
+    aiPower += playerAbilityResult.opponentPowerModifier ?? 0;
   }
   if (aiAbilityResult) {
     aiPower += aiAbilityResult.powerModifier ?? 0;
-    aiPower += aiAbilityResult.opponentPowerModifier ?? 0;
+    playerPower += aiAbilityResult.opponentPowerModifier ?? 0;
   }
   if (playerAbilityResult) playerDamage += playerAbilityResult.damageModifier ?? 0;
   if (aiAbilityResult) aiDamage += aiAbilityResult.damageModifier ?? 0;
@@ -146,6 +146,9 @@ export function resolveRound(
 
   if (playerAttack > aiAttack) { winner = 'player'; damage = playerDamage; }
   else if (aiAttack > playerAttack) { winner = 'ai'; damage = aiDamage; }
+
+  if (winner === 'player' && playerAbilityResult?.doubleDamage) damage *= 2;
+  if (winner === 'ai' && aiAbilityResult?.doubleDamage) damage *= 2;
 
   let healAmount = 0;
   let poisonAmount = 0;
