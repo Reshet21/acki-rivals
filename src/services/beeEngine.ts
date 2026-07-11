@@ -8,7 +8,7 @@
  * If SDK is not installed, all functions will throw on first call.
  */
 
-const ENDPOINTS = ['https://shellnet.ackinacki.org'];
+const ENDPOINTS = ['https://mainnet.ackinacki.org'];
 const API_URL = 'https://app-backend-dev.ackinacki.org/api';
 const APP_ID = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
