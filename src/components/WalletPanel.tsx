@@ -154,9 +154,19 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
           {t('wallet.openWallet')}
         </a>
 
-        <div className="text-xs text-white/40">
-          {isWaiting ? t('wallet.waitForConfirmation') : t('wallet.sessionCreated')}
-        </div>
+        {isWaiting && (
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-xs text-white/40">{t('wallet.waitForConfirmation')}</div>
+            <div className="text-xs text-yellow-400/80 text-center max-w-xs">
+              1. Откройте ссылку в AN Wallet{'\n'}
+              2. Нажмите "Подключить" в кошельке{'\n'}
+              3. Подождите подтверждения (до 3 мин)
+            </div>
+            <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full bg-neon-blue/50 rounded-full animate-pulse" />
+            </div>
+          </div>
+        )}
 
         <button
           onClick={cancelWaiting}

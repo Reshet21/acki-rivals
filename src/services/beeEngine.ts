@@ -141,7 +141,7 @@ export async function waitWalletHello(
     description,
     clientDhSecret,
     createdAt,
-    120,
+    180,
     1000,
   );
 
