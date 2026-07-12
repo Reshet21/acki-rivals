@@ -72,34 +72,73 @@ function migrateData(data: GameState): GameState {
   return { ...data, collection, deck };
 }
 
-export function useGameState() {
+function getStorageKey(walletAddress: string | null): string {
+  if (walletAddress) {
+    return `${STORAGE_KEY}-${walletAddress}`;
+  }
+  return STORAGE_KEY;
+}
+
+function loadFromStorage(walletAddress: string | null): GameState | null {
+  try {
+    const key = getStorageKey(walletAddress);
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      // Try to migrate from old generic key when first connecting a wallet
+      if (walletAddress) {
+        const oldRaw = localStorage.getItem(STORAGE_KEY);
+        if (oldRaw) {
+          const data = JSON.parse(oldRaw) as GameState;
+          localStorage.setItem(key, oldRaw);
+          return migrateData(data);
+        }
+      }
+      return null;
+    }
+    const data = JSON.parse(raw) as GameState;
+    return migrateData(data);
+  } catch {
+    return null;
+  }
+}
+
+function saveToStorageInternal(data: GameState, walletAddress: string | null) {
+  const key = getStorageKey(walletAddress);
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+export function useGameState(initialWalletAddress?: string | null) {
+  const [walletAddress, setWalletAddressState] = useState<string | null>(
+    () => initialWalletAddress ?? null
+  );
+
   const [collection, setCollection] = useState<Card[]>(() => {
-    const saved = loadFromStorage();
+    const saved = loadFromStorage(initialWalletAddress ?? null);
     return saved ? saved.collection : ensureUniqueUids(defaultState.collection);
   });
 
   const [deck, setDeck] = useState<Card[]>(() => {
-    const saved = loadFromStorage();
+    const saved = loadFromStorage(initialWalletAddress ?? null);
     return saved ? saved.deck : [];
   });
 
   const [credits, setCredits] = useState<number>(() => {
-    const saved = loadFromStorage();
+    const saved = loadFromStorage(initialWalletAddress ?? null);
     return saved?.credits ?? defaultState.credits;
   });
 
   const [walletName, setWalletNameState] = useState<string | null>(() => {
-    const saved = loadFromStorage();
+    const saved = loadFromStorage(initialWalletAddress ?? null);
     return saved?.walletName ?? defaultState.walletName;
   });
 
   const [battlesWon, setBattlesWon] = useState<number>(() => {
-    const saved = loadFromStorage();
+    const saved = loadFromStorage(initialWalletAddress ?? null);
     return saved?.battlesWon ?? defaultState.battlesWon;
   });
 
   const [battlesLost, setBattlesLost] = useState<number>(() => {
-    const saved = loadFromStorage();
+    const saved = loadFromStorage(initialWalletAddress ?? null);
     return saved?.battlesLost ?? defaultState.battlesLost;
   });
 
@@ -172,8 +211,8 @@ export function useGameState() {
 
   const saveToStorage = useCallback(() => {
     const data: GameState = { collection, deck, credits, walletName, battlesWon, battlesLost };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [collection, deck, credits, walletName, battlesWon, battlesLost]);
+    saveToStorageInternal(data, walletAddress);
+  }, [collection, deck, credits, walletName, battlesWon, battlesLost, walletAddress]);
 
   const recordWin = useCallback(() => {
     setBattlesWon((prev) => prev + 1);
@@ -184,6 +223,39 @@ export function useGameState() {
     setBattlesLost((prev) => prev + 1);
   }, []);
 
+  /**
+   * Switch the active wallet address and reload the appropriate saved state.
+   * - saves current state to the old key first
+   * - loads state from the new key (or defaults)
+   */
+  const setWalletAddress = useCallback((newAddress: string | null) => {
+    // Save current state to old key before switching
+    const oldData: GameState = { collection, deck, credits, walletName, battlesWon, battlesLost };
+    saveToStorageInternal(oldData, walletAddress);
+
+    // Update wallet address
+    setWalletAddressState(newAddress);
+
+    // Load state from new key
+    const saved = loadFromStorage(newAddress);
+    if (saved) {
+      setCollection(saved.collection);
+      setDeck(saved.deck);
+      setCredits(saved.credits);
+      setWalletNameState(saved.walletName);
+      setBattlesWon(saved.battlesWon);
+      setBattlesLost(saved.battlesLost);
+    } else {
+      // New wallet — start fresh
+      setCollection(ensureUniqueUids(defaultState.collection));
+      setDeck([]);
+      setCredits(defaultState.credits);
+      setWalletNameState(defaultState.walletName);
+      setBattlesWon(defaultState.battlesWon);
+      setBattlesLost(defaultState.battlesLost);
+    }
+  }, [collection, deck, credits, walletName, battlesWon, battlesLost, walletAddress]);
+
   return {
     collection,
     deck,
@@ -192,6 +264,7 @@ export function useGameState() {
     walletName,
     battlesWon,
     battlesLost,
+    walletAddress,
     addCard,
     addCredits,
     upgradeCard,
@@ -199,16 +272,6 @@ export function useGameState() {
     saveToStorage,
     recordWin,
     recordLoss,
+    setWalletAddress,
   };
-}
-
-function loadFromStorage(): GameState | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as GameState;
-    return migrateData(data);
-  } catch {
-    return null;
-  }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useGameState } from './hooks/useGameState';
 import { openPack as openPackCards } from './utils/packGenerator';
 import type { Card } from './types';
@@ -28,6 +28,12 @@ function AppInner() {
   const { impactOccurred, selectionChanged } = useHaptic();
   const { t } = useI18n();
   const { isEnabled: musicEnabled, toggle: toggleMusic, pause: pauseMusic, resume: resumeMusic } = useMusic();
+
+  const [walletConnection, setWalletConnection] = useState<WalletConnection | null>(() =>
+    getStoredSession()
+  );
+  const walletAddress = useMemo(() => walletConnection?.walletAddress ?? null, [walletConnection]);
+
   const {
     collection,
     deck,
@@ -41,7 +47,8 @@ function AppInner() {
     saveToStorage,
     recordWin,
     recordLoss,
-  } = useGameState();
+    setWalletAddress,
+  } = useGameState(walletAddress);
 
   const [playerId] = useState(() => {
     const stored = localStorage.getItem('pvp_player_id');
@@ -61,9 +68,6 @@ function AppInner() {
       pauseMusic();
     }
   }, [screen, resumeMusic, pauseMusic]);
-  const [walletConnection, setWalletConnection] = useState<WalletConnection | null>(() =>
-    getStoredSession()
-  );
   const [nacklBalance, setNacklBalance] = useState<string | null>(null);
   const [pvpGame, setPvpGame] = useState<Game | null>(null);
   const [pvpIsHost, setPvpIsHost] = useState(false);
@@ -118,20 +122,16 @@ function AppInner() {
 
   const handleWalletConnected = useCallback((conn: WalletConnection) => {
     setWalletConnection(conn);
-  }, []);
+    setWalletAddress(conn.walletAddress);
+  }, [setWalletAddress]);
 
   const handleWalletDisconnect = useCallback(() => {
-    // Clear wallet state
+    // Just disconnect wallet session — game progress stays saved
     setWalletConnection(null);
     setNacklBalance(null);
-    // Clear all game data — start fresh like a new user
-    localStorage.removeItem('acki-rivals-save');
-    localStorage.removeItem('acki-lang');
-    localStorage.removeItem('pvp_player_id');
-    localStorage.removeItem('acki-rivals-wallet-session');
-    // Reload to reset all in-memory state
-    location.reload();
-  }, []);
+    // Switch to anonymous mode (no wallet) — progress for this wallet is saved
+    setWalletAddress(null);
+  }, [setWalletAddress]);
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto text-white flex flex-col relative" style={{ background: '#050508' }}>
