@@ -161,51 +161,11 @@ function AppInner() {
           <div className="relative z-10 flex flex-col items-center w-full px-5 pt-10 pb-6 gap-4">
             {/* Premium Logo Section */}
             <div className="flex flex-col items-center animate-slide-down" style={{ animationDelay: '0.05s' }}>
-              {/* Spinning NACKL Coin */}
+              {/* Original NACKL Logo - Now Spinning */}
               <div className="relative mb-2">
-                <div className="absolute -inset-6 rounded-full opacity-40 animate-coin-pulse" style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%)', filter: 'blur(25px)' }} />
-                <div className="animate-coin-spin w-20 h-20 relative">
-                  {/* Coin face */}
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center relative overflow-hidden" style={{
-                    background: 'radial-gradient(circle at 35% 30%, #FFD700 0%, #FF8C00 30%, #CC7000 60%, #8B4513 100%)',
-                    boxShadow: '0 0 40px rgba(255,215,0,0.4), inset 0 -4px 8px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.2)',
-                    border: '3px solid rgba(255,215,0,0.6)',
-                  }}>
-                    {/* Coin inner ring */}
-                    <div className="absolute inset-2 rounded-full" style={{
-                      background: 'radial-gradient(circle at 35% 30%, rgba(255,215,0,0.3) 0%, transparent 70%)',
-                      border: '2px solid rgba(255,215,0,0.3)',
-                    }} />
-                    {/* NACKL text */}
-                    <span className="text-[10px] font-black tracking-tight z-10" style={{
-                      color: '#1a0a00',
-                      textShadow: '0 1px 2px rgba(255,215,0,0.5)',
-                      transform: 'rotate(-15deg)',
-                    }}>
-                      NACKL
-                    </span>
-                    {/* Smiley face on coin */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#1a0a00' }} />
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#1a0a00' }} />
-                    </div>
-                    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-3 h-1 rounded-full" style={{
-                      background: '#1a0a00',
-                      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 20% 100%)',
-                    }} />
-                    {/* Shine effect */}
-                    <div className="absolute inset-0 rounded-full" style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.1) 100%)',
-                      pointerEvents: 'none',
-                    }} />
-                  </div>
-                </div>
-                {/* Orbiting sparkles */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 animate-orbit-slow" style={{ pointerEvents: 'none' }}>
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 text-[8px]" style={{ color: 'rgba(255,215,0,0.5)' }}>✦</div>
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[6px]" style={{ color: 'rgba(255,215,0,0.3)' }}>✧</div>
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 text-[6px]" style={{ color: 'rgba(255,215,0,0.4)' }}>·</div>
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[8px]" style={{ color: 'rgba(255,215,0,0.3)' }}>✦</div>
+                <div className="absolute -inset-4 rounded-full opacity-30 animate-coin-pulse" style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+                <div className="animate-coin-spin w-16 h-16 relative">
+                  <img src="/cards/an-smiley-yellow.jpg" alt="" className="w-16 h-16 rounded-full border-2 relative z-10" style={{ borderColor: 'rgba(255,215,0,0.4)', boxShadow: '0 0 30px rgba(255,215,0,0.3)' }} />
                 </div>
               </div>
               <h1 className="text-3xl font-black tracking-tight animate-title-glow" style={{ background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 60%, #FFD700 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.05em' }}>

@@ -39,7 +39,7 @@ async function getSdk(): Promise<any> {
 
 /**
  * Get the NACKL token root address from blockchain balances.
- * Returns the first token root (token '1') which is NACKL.
+ * Returns the actual token root address from the wallet's balances.
  */
 async function getNacklTokenRoot(walletAddress: string): Promise<string | null> {
   const sdk = await getSdk();
@@ -50,9 +50,12 @@ async function getNacklTokenRoot(walletAddress: string): Promise<string | null> 
       multifactor_address: walletAddress,
     });
 
-    // NACKL is token root '1' in the multifactor balances
-    if (balances.ecc && balances.ecc['1']) {
-      return '1'; // Token root ID
+    // Token roots are keys in the ecc map — return the actual address
+    if (balances.ecc) {
+      const keys = Object.keys(balances.ecc);
+      if (keys.length > 0) {
+        return keys[0];
+      }
     }
     return null;
   } catch (e) {
@@ -79,10 +82,10 @@ export async function buyPack(
       // Convert NACKL amount to nano (multiply by 10^9)
       const nanoAmount = BigInt(Math.floor(nacklAmount * 1e9)).toString();
 
-      // Get token root for NACKL
+      // Get token root for NACKL from wallet balances
       const tokenRoot = await getNacklTokenRoot(conn.walletAddress);
       if (!tokenRoot) {
-        return { success: false, error: 'NACKL token not found in wallet' };
+        return { success: false, error: 'NACKL token not found in wallet. Make sure you have NACKL tokens.' };
       }
 
       // Send tokens using the SDK
@@ -108,9 +111,10 @@ export async function buyPack(
     }
   } catch (e) {
     console.error('Payment failed:', e);
+    const msg = e instanceof Error ? e.message : 'Unknown payment error';
     return {
       success: false,
-      error: e instanceof Error ? e.message : 'Payment failed',
+      error: msg,
     };
   }
 }

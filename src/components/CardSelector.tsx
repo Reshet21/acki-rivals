@@ -122,14 +122,15 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
                   background: 'linear-gradient(160deg, #0f0a05, #1a120a)',
                 }}
               >
-                {/* Image - bigger like Urban Rivals */}
+                {/* Image — full-bleed like Urban Rivals */}
                 <div style={{ width: '100%', aspectRatio: '3/4', overflow: 'hidden', background: '#080503', position: 'relative' }}>
                   {cardArt[card.id] ? (
-                    <img src={cardArt[card.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', opacity: 0.9 }} />
+                    <img src={cardArt[card.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', opacity: 1 }} />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, opacity: 0.2 }}>🃏</div>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, opacity: 0.2 }}>🃏</div>
                   )}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f0a05 0%, transparent 30%)' }} />
+                  {/* Dark gradient overlay at bottom for readability */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 40%)' }} />
                   {/* Rarity gem */}
                   <div style={{ position: 'absolute', top: 4, left: 4, width: 10, height: 10, borderRadius: 3, background: rc, boxShadow: `0 0 6px ${rc}80` }} />
                   {/* Card name overlay */}
@@ -142,11 +143,11 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
                       {card.name}
                     </div>
                   </div>
-                </div>
-                {/* Stats */}
-                <div style={{ padding: '3px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 9, fontWeight: 900, color: '#e2e8f0' }}>⚡{card.power}</span>
-                  <span style={{ fontSize: 9, fontWeight: 900, color: '#fca5a5' }}>💥{card.damage}</span>
+                  {/* Stats overlayed */}
+                  <div style={{ position: 'absolute', bottom: 14, right: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                    <span style={{ fontSize: 8, fontWeight: 900, color: '#e2e8f0', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>⚡{card.power}</span>
+                    <span style={{ fontSize: 8, fontWeight: 900, color: '#fca5a5', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>💥{card.damage}</span>
+                  </div>
                 </div>
               </button>
             );

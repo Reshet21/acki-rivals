@@ -41,6 +41,9 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
   const dm = (card.damage ?? 0) + s;
   const sel = isSelected;
 
+  const C = compact;
+  const maxH = C ? 220 : 320;
+
   const S = {
     btn: {
       width: '100%',
@@ -57,51 +60,51 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
       overflow: 'hidden' as const,
       display: 'flex' as const,
       flexDirection: 'column' as const,
+      maxHeight: maxH,
     } as React.CSSProperties,
-    borderTop: { height: 2, background: r.bg } as React.CSSProperties,
-    borderBottom: { height: 2, background: r.bg } as React.CSSProperties,
-    imgBox: { position: 'relative' as const, width: '100%', height: compact ? 80 : 180, overflow: 'hidden' as const, background: '#080503' } as React.CSSProperties,
-    img: { width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center 30%', opacity: 0.95 } as React.CSSProperties,
-    grad: { position: 'absolute' as const, inset: 0, background: 'linear-gradient(to top, #0f0a05 0%, transparent 60%)' } as React.CSSProperties,
-    gem: { position: 'absolute' as const, top: compact ? 4 : 8, left: compact ? 4 : 8, width: compact ? 16 : 20, height: compact ? 16 : 20, borderRadius: 4, background: r.gc, boxShadow: r.gg, border: '1px solid rgba(255,255,255,0.15)', zIndex: 2 } as React.CSSProperties,
-    badge: { position: 'absolute' as const, top: compact ? 4 : 8, right: compact ? 4 : 8, fontSize: compact ? 7 : 8, fontWeight: 700, color: r.bc, background: 'rgba(0,0,0,0.8)', padding: compact ? '2px 5px' : '3px 8px', borderRadius: 4, border: `1px solid ${r.bc}50`, letterSpacing: '0.08em', zIndex: 2 } as React.CSSProperties,
-    stats: { padding: compact ? '8px 10px' : '12px 14px', display: 'flex' as const, flexDirection: 'column' as const, gap: compact ? 4 : 6 } as React.CSSProperties,
-    name: { fontWeight: 900, fontSize: compact ? 12 : 14, color: '#e5d5b0', textAlign: 'center' as const, lineHeight: 1.2, textShadow: '0 2px 6px rgba(0,0,0,0.9)' } as React.CSSProperties,
-    stars: { color: '#fbbf24', marginLeft: 4, fontSize: compact ? 10 : 12 } as React.CSSProperties,
-    abBox: { background: 'rgba(0,0,0,0.6)', borderRadius: 6, padding: compact ? '3px 6px' : '4px 8px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex' as const, alignItems: 'center' as const, gap: compact ? 4 : 5 } as React.CSSProperties,
-    abIcon: { fontSize: compact ? 10 : 12 } as React.CSSProperties,
-    abName: { fontSize: compact ? 9 : 10, color: ab.color, fontWeight: 700, flex: 1, overflow: 'hidden' as const, whiteSpace: 'nowrap' as const, textOverflow: 'ellipsis' as const } as React.CSSProperties,
-    row: { display: 'flex' as const, alignItems: 'center' as const, justifyContent: 'space-around' as const } as React.CSSProperties,
-    stat: { textAlign: 'center' as const } as React.CSSProperties,
-    label: { fontSize: compact ? 7 : 8, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' as const, letterSpacing: '0.1em' } as React.CSSProperties,
-    val: { fontSize: compact ? 18 : 22, fontWeight: 900, color: '#e2e8f0', lineHeight: 1, textShadow: '0 0 12px rgba(255,255,255,0.4)' } as React.CSSProperties,
-    dmg: { fontSize: compact ? 18 : 22, fontWeight: 900, color: '#fca5a5', lineHeight: 1, textShadow: '0 0 12px rgba(252,165,165,0.5)' } as React.CSSProperties,
-    div: { width: 1, height: compact ? 24 : 30, background: 'rgba(255,255,255,0.15)' } as React.CSSProperties,
+    imgBox: { position: 'relative' as const, width: '100%', flex: 1, minHeight: C ? 140 : 200, overflow: 'hidden' as const, background: '#080503' } as React.CSSProperties,
+    img: { width: '100%', height: '100%', objectFit: 'cover' as const, objectPosition: 'center center', opacity: 1 } as React.CSSProperties,
+    grad: { position: 'absolute' as const, inset: 0, background: 'linear-gradient(to top, rgba(15,10,5,0.95) 0%, rgba(15,10,5,0.4) 40%, transparent 70%)' } as React.CSSProperties,
+    gem: { position: 'absolute' as const, top: C ? 4 : 8, left: C ? 4 : 8, width: C ? 16 : 20, height: C ? 16 : 20, borderRadius: 4, background: r.gc, boxShadow: r.gg, border: '1px solid rgba(255,255,255,0.15)', zIndex: 2 } as React.CSSProperties,
+    badge: { position: 'absolute' as const, top: C ? 4 : 8, right: C ? 4 : 8, fontSize: C ? 7 : 8, fontWeight: 700, color: r.bc, background: 'rgba(0,0,0,0.8)', padding: C ? '2px 5px' : '3px 8px', borderRadius: 4, border: `1px solid ${r.bc}50`, letterSpacing: '0.08em', zIndex: 2 } as React.CSSProperties,
+    overlay: { position: 'absolute' as const, bottom: 0, left: 0, right: 0, padding: C ? '6px 8px' : '10px 12px', zIndex: 2, display: 'flex' as const, flexDirection: 'column' as const, gap: C ? 2 : 3 } as React.CSSProperties,
+    name: { fontWeight: 900, fontSize: C ? 11 : 14, color: '#e5d5b0', textAlign: 'center' as const, lineHeight: 1.2, textShadow: '0 2px 8px rgba(0,0,0,0.9)' } as React.CSSProperties,
+    stars: { color: '#fbbf24', marginLeft: 4, fontSize: C ? 9 : 11 } as React.CSSProperties,
+    abBox: { background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: C ? '2px 5px' : '3px 7px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex' as const, alignItems: 'center' as const, gap: C ? 3 : 4 } as React.CSSProperties,
+    abIcon: { fontSize: C ? 9 : 11 } as React.CSSProperties,
+    abName: { fontSize: C ? 8 : 9, color: ab.color, fontWeight: 700, flex: 1, overflow: 'hidden' as const, whiteSpace: 'nowrap' as const, textOverflow: 'ellipsis' as const } as React.CSSProperties,
+    row: { display: 'flex' as const, alignItems: 'center' as const, justifyContent: 'space-around' as const, gap: 4 } as React.CSSProperties,
+    stat: { textAlign: 'center' as const, flex: 1 } as React.CSSProperties,
+    label: { fontSize: C ? 6 : 7, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' as const, letterSpacing: '0.12em' } as React.CSSProperties,
+    val: { fontSize: C ? 16 : 20, fontWeight: 900, color: '#e2e8f0', lineHeight: 1, textShadow: '0 0 12px rgba(255,255,255,0.4)' } as React.CSSProperties,
+    dmg: { fontSize: C ? 16 : 20, fontWeight: 900, color: '#fca5a5', lineHeight: 1, textShadow: '0 0 12px rgba(252,165,165,0.5)' } as React.CSSProperties,
+    div: { width: 1, height: C ? 20 : 26, background: 'rgba(255,255,255,0.15)' } as React.CSSProperties,
   };
 
   const inner = (
     <>
-      <div style={S.borderTop} />
       <div style={S.imgBox}>
-        {img ? <img src={img} alt="" style={S.img} /> : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:compact?28:44,opacity:0.15}}>🃏</div>}
+        {img ? <img src={img} alt="" style={S.img} /> : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:C?28:44,opacity:0.15}}>🃏</div>}
         <div style={S.grad} />
         <div style={S.gem} />
         <div style={S.badge}>{rl}</div>
         {r.sl && <div style={{position:'absolute',inset:0,background:r.sl,animation:'shimmer 2s infinite'}} />}
-      </div>
-      <div style={S.stats}>
-        <div style={S.name}>{nm || '???'}{s > 0 && <span style={S.stars}>{'★'.repeat(s)}</span>}</div>
-        <div style={S.abBox}>
-          <span style={S.abIcon}>{ab.icon}</span>
-          <span style={S.abName}>{an}</span>
+        {/* Stats overlaid on image — Urban Rivals style */}
+        <div style={S.overlay}>
+          <div style={S.name}>{nm || '???'}{s > 0 && <span style={S.stars}>{'★'.repeat(s)}</span>}</div>
+          {!C && (
+            <div style={S.abBox}>
+              <span style={S.abIcon}>{ab.icon}</span>
+              <span style={S.abName}>{an}</span>
+            </div>
+          )}
+          <div style={S.row}>
+            <div style={S.stat}><div style={S.label}>{pl}</div><div style={S.val}>{pw}</div></div>
+            <div style={S.div} />
+            <div style={S.stat}><div style={S.dmg}>{dm}</div><div style={S.label}>{dl}</div></div>
+          </div>
         </div>
-        <div style={S.row}>
-          <div style={S.stat}><div style={S.label}>{pl}</div><div style={S.val}>{pw}</div></div>
-          <div style={S.div} />
-          <div style={S.stat}><div style={S.dmg}>{dm}</div><div style={S.label}>{dl}</div></div>
-        </div>
       </div>
-      <div style={S.borderBottom} />
     </>
   );
 

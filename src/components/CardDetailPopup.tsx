@@ -42,21 +42,21 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
       <div style={{ width: '90%', maxWidth: 320, background: 'linear-gradient(160deg, #0f0a05, #1a120a, #0f0a05)', borderRadius: 16, border: `2px solid ${rc}40`, overflow: 'hidden', boxShadow: `0 0 40px ${rc}30` }} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={{ position: 'relative', width: '100%', height: 160, overflow: 'hidden', background: '#080503' }}>
+        {/* Header — Full-bleed image like Urban Rivals */}
+        <div style={{ position: 'relative', width: '100%', minHeight: 240, overflow: 'hidden', background: '#080503' }}>
           {cardArt[card.id] ? (
-            <img src={cardArt[card.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+            <img src={cardArt[card.id]} alt="" style={{ width: '100%', minHeight: 240, objectFit: 'cover', objectPosition: 'center center', display: 'block' }} />
           ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, opacity: 0.2 }}>🃏</div>
+            <div style={{ width: '100%', height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64, opacity: 0.2 }}>🃏</div>
           )}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f0a05 0%, transparent 50%)' }} />
-          <div style={{ position: 'absolute', top: 8, left: 8 }}>
-            <div style={{ width: 18, height: 18, borderRadius: 4, background: `radial-gradient(circle at 35% 30%, ${rc}cc, ${rc} 50%, ${rc}80)`, boxShadow: `0 0 10px ${rc}60`, border: '1px solid rgba(255,255,255,0.1)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,10,5,0.95) 0%, rgba(15,10,5,0.3) 40%, transparent 65%)' }} />
+          <div style={{ position: 'absolute', top: 10, left: 10 }}>
+            <div style={{ width: 20, height: 20, borderRadius: 4, background: `radial-gradient(circle at 35% 30%, ${rc}cc, ${rc} 50%, ${rc}80)`, boxShadow: `0 0 10px ${rc}60`, border: '1px solid rgba(255,255,255,0.1)' }} />
           </div>
-          <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: rc, background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: 4, border: `1px solid ${rc}40` }}>{rarityLabel}</div>
-          <div style={{ position: 'absolute', bottom: 8, left: 0, right: 0, textAlign: 'center' }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#e5d5b0', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>{name}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>{clanName}</div>
+          <div style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, fontWeight: 700, color: rc, background: 'rgba(0,0,0,0.75)', padding: '3px 10px', borderRadius: 4, border: `1px solid ${rc}40`, letterSpacing: '0.08em' }}>{rarityLabel}</div>
+          <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#e5d5b0', textShadow: '0 2px 12px rgba(0,0,0,0.95)' }}>{name}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}>{clanName}</div>
           </div>
         </div>
 
