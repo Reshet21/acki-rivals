@@ -280,7 +280,8 @@ export async function getShellBalance(walletAddress: string): Promise<string | n
     if (balance === undefined || balance === null) return null;
 
     return formatNano(balance);
-  } catch {
+  } catch (e) {
+    console.error('Failed to fetch SHELL balance via GraphQL:', e);
     return null;
   }
 }
