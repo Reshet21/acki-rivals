@@ -246,6 +246,31 @@ export async function getNacklBalance(walletAddress: string): Promise<string> {
   }
 }
 
+/**
+ * Get SHELL balance (native coin) from wallet.
+ * SHELL is the native gas token on Acki Nacki.
+ * Returns null if balance can't be fetched.
+ */
+export async function getShellBalance(walletAddress: string): Promise<string | null> {
+  const sdk = await loadSdk();
+  const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
+
+  try {
+    const balances = await wallet.get_multifactor_balances({
+      multifactor_address: walletAddress,
+    });
+    // SHELL might be at a different key in ecc or the native balance
+    // Try common patterns — experimental, may need adjustment
+    const shell = balances.ecc['0'] ?? balances.native ?? null;
+    if (shell === null) return null;
+    return formatNano(shell);
+  } catch {
+    return null;
+  } finally {
+    wallet.free();
+  }
+}
+
 export async function initMiner(
   minerAddress: string,
   ownerPublic: string,

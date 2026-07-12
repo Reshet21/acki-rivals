@@ -3,7 +3,7 @@ import { useGameState } from './hooks/useGameState';
 import { openPack as openPackCards } from './utils/packGenerator';
 import type { Card } from './types';
 import type { WalletConnection } from './services/beeEngine';
-import { getStoredSession, getNacklBalance } from './services/beeEngine';
+import { getStoredSession, getNacklBalance, getShellBalance } from './services/beeEngine';
 import { I18nProvider, useI18n } from './i18n';
 import { useTelegram } from './telegram';
 import { useHaptic } from './hooks/useHaptic';
@@ -24,7 +24,7 @@ import type { Game } from './services/pvpService';
 type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
 function AppInner() {
-  const { haptic, user } = useTelegram();
+  const { haptic } = useTelegram();
   const { impactOccurred, selectionChanged } = useHaptic();
   const { t } = useI18n();
   const { isEnabled: musicEnabled, toggle: toggleMusic, pause: pauseMusic, resume: resumeMusic } = useMusic();
@@ -69,6 +69,7 @@ function AppInner() {
     }
   }, [screen, resumeMusic, pauseMusic]);
   const [nacklBalance, setNacklBalance] = useState<string | null>(null);
+  const [shellBalance, setShellBalance] = useState<string | null>(null);
   const [pvpGame, setPvpGame] = useState<Game | null>(null);
   const [pvpIsHost, setPvpIsHost] = useState(false);
 
@@ -76,15 +77,23 @@ function AppInner() {
     saveToStorage();
   }, [collection, deck, credits, battlesWon, battlesLost, saveToStorage]);
 
-  // Poll NACKL balance when wallet connected
+  // Poll NACKL + SHELL balances when wallet connected
   useEffect(() => {
-    if (!walletConnection) { setNacklBalance(null); return; }
+    if (!walletConnection) {
+      setNacklBalance(null);
+      setShellBalance(null);
+      return;
+    }
 
     let cancelled = false;
     const poll = async () => {
       try {
-        const b = await getNacklBalance(walletConnection.walletAddress);
-        if (!cancelled) setNacklBalance(b);
+        const n = await getNacklBalance(walletConnection.walletAddress);
+        if (!cancelled) setNacklBalance(n);
+      } catch { /* ignore */ }
+      try {
+        const s = await getShellBalance(walletConnection.walletAddress);
+        if (!cancelled) setShellBalance(s);
       } catch { /* ignore */ }
     };
     poll();
@@ -129,6 +138,7 @@ function AppInner() {
     // Just disconnect wallet session — game progress stays saved
     setWalletConnection(null);
     setNacklBalance(null);
+    setShellBalance(null);
     // Switch to anonymous mode (no wallet) — progress for this wallet is saved
     setWalletAddress(null);
   }, [setWalletAddress]);
@@ -187,53 +197,56 @@ function AppInner() {
               <p className="text-[10px] tracking-[0.4em] uppercase mt-1" style={{ color: 'rgba(255,215,0,0.35)' }}>BLOCKCHAIN CARD BATTLE</p>
             </div>
 
-            {/* Premium Stats Card */}
+            {/* Wallet / Stats Card */}
             <div className="w-full max-w-xs animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.04) 100%)', border: '1px solid rgba(255,215,0,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,215,0,0.1)' }}>
-                {/* Shimmer effect */}
-                <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.05) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
-                {/* User info */}
-                {user && (
+              {walletConnection ? (
+                /* Connected wallet — show wallet info + balances */
+                <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.04) 100%)', border: '1px solid rgba(255,215,0,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,215,0,0.1)' }}>
+                  <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.05) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
+                  {/* Wallet info */}
                   <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.3)' }}>
-                      {user.firstName.charAt(0).toUpperCase()}
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black" style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.3)', color: '#FFD700' }}>
+                      {walletConnection.walletName.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-white">{user.firstName}</div>
-                      {user.username && <div className="text-[10px]" style={{ color: 'rgba(255,215,0,0.5)' }}>@{user.username}</div>}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold text-white truncate">{walletConnection.walletName}</div>
+                      <div className="text-[9px] truncate" style={{ color: 'rgba(255,215,0,0.4)', fontFamily: 'monospace' }}>{walletConnection.walletAddress.slice(0, 14)}...</div>
+                    </div>
+                    <div className="text-[8px] px-2 py-1 rounded-full font-bold" style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ADE80' }}>{t('menu.walletConnected')}</div>
+                  </div>
+                  {/* Balances grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-2 rounded-xl" style={{ background: 'rgba(255,215,0,0.06)' }}>
+                      <div className="text-lg font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{nacklBalance ?? '—'}</div>
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>NACKL</div>
+                    </div>
+                    <div className="text-center p-2 rounded-xl" style={{ background: 'rgba(0,212,255,0.06)' }}>
+                      <div className="text-lg font-black" style={{ color: '#00d4ff', textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{shellBalance ?? '—'}</div>
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(0,212,255,0.4)' }}>SHELL</div>
                     </div>
                   </div>
-                )}
-                {/* Stats grid */}
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    {walletConnection ? (
-                      <>
-                        <div className="text-xl font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{nacklBalance ?? '—'}</div>
-                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>NACKL</div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-xl font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{credits.toLocaleString()}</div>
-                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>{t('menu.credits')}</div>
-                      </>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xl font-black" style={{ color: '#4ADE80' }}>{battlesWon}</div>
-                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.wins')}</div>
-                  </div>
-                  <div>
-                    <div className="text-xl font-black" style={{ color: '#FF6B6B' }}>{battlesLost}</div>
-                    <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.losses')}</div>
+                  {/* Battle stats */}
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="text-center">
+                      <div className="text-lg font-black" style={{ color: '#4ADE80' }}>{battlesWon}</div>
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.wins')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-black" style={{ color: '#FF6B6B' }}>{battlesLost}</div>
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.losses')}</div>
+                    </div>
                   </div>
                 </div>
-                {walletConnection && (
-                  <div className="mt-3 pt-2 flex items-center justify-center gap-1" style={{ borderTop: '1px solid rgba(255,215,0,0.1)' }}>
-                    <span className="text-[9px]" style={{ color: 'rgba(255,215,0,0.4)' }}>{t('menu.walletConnected')}</span>
-                  </div>
-                )}
-              </div>
+              ) : (
+                /* No wallet — prompt to connect */
+                <button onClick={() => { impactOccurred('medium'); setScreen('wallet'); }}
+                  className="w-full rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.06) 0%, rgba(139,92,246,0.04) 100%)', border: '1px solid rgba(0,212,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                  <div className="text-2xl mb-2">👛</div>
+                  <div className="text-sm font-bold" style={{ color: '#00d4ff' }}>{t('menu.connectWallet')}</div>
+                  <div className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.connectWalletDesc') || 'Подключите AN Wallet для игры'}</div>
+                </button>
+              )}
             </div>
 
             {/* Deck warning */}
