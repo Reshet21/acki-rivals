@@ -83,6 +83,7 @@ const translations: Record<string, Record<string, string>> = {
     'info.packs': 'Наборы',
     'info.pvpInfo': 'PvP',
     'info.combosTab': '🔗 Комбо',
+    'info.walletTab': '👛 Кошелёк',
     'info.combosTitle': '🔗 Комбо карты',
     'info.clanNeon': '⚔️ Клан Неоновых Наемников',
     'info.clanNeonBonus': 'Бонус клана: +1 к силе всех карт когда 2+ карты клана в руке',

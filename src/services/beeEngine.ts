@@ -248,42 +248,86 @@ export async function getNacklBalance(walletAddress: string): Promise<string> {
 
 /**
  * Get SHELL balance (native gas token) from wallet.
- * SHELL is the native coin on Acki Nacki, queried via GraphQL.
- * Returns null if balance can't be fetched.
+ * Tries multiple strategies: multifactor balances, API backend, then GraphQL.
  */
 export async function getShellBalance(walletAddress: string): Promise<string | null> {
-  const graphqlUrl = `${ENDPOINTS[0]}/graphql`;
-  const query = `
-    query {
-      blockchain {
-        account(address: "${walletAddress}") {
-          info {
-            balance(format: DEC)
+  // Strategy 1: Try multifactor balances (SDK handles CORS)
+  try {
+    const sdk = await loadSdk();
+    const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
+    try {
+      const balances = await wallet.get_multifactor_balances({
+        multifactor_address: walletAddress,
+      });
+      // Try native field first, then ecc['0'], then any ecc key
+      if (balances.native && balances.native !== '0') {
+        return formatNano(balances.native);
+      }
+      // SHELL might be at a different key in ecc
+      if (balances.ecc && typeof balances.ecc === 'object') {
+        const keys = Object.keys(balances.ecc);
+        // Try '0' first as it's often the native token wrapper
+        if (balances.ecc['0'] && balances.ecc['0'] !== '0') {
+          return formatNano(balances.ecc['0']);
+        }
+        // Try any key that isn't '1' (which is NACKL)
+        for (const key of keys) {
+          if (key !== '1' && balances.ecc[key] && balances.ecc[key] !== '0') {
+            return formatNano(balances.ecc[key]);
           }
         }
       }
+    } finally {
+      wallet.free();
     }
-  `;
+  } catch (e) {
+    console.warn('getShellBalance: multifactor approach failed', e);
+  }
 
+  // Strategy 2: Try GraphQL through API backend (has CORS for web apps)
   try {
-    const response = await fetch(graphqlUrl, {
+    const apiGraphql = API_URL.replace('/api', '/graphql');
+    const query = JSON.stringify({
+      query: `query { blockchain { account(address: "${walletAddress}") { info { balance(format: DEC) } } } }`,
+    });
+    const res = await fetch(apiGraphql, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+      body: query,
     });
-
-    if (!response.ok) return null;
-
-    const result = await response.json();
-    const balance = result?.data?.blockchain?.account?.info?.balance;
-
-    if (balance === undefined || balance === null) return null;
-
-    return formatNano(balance);
+    if (res.ok) {
+      const data = await res.json();
+      const balance = data?.data?.blockchain?.account?.info?.balance;
+      if (balance && balance !== '0' && balance !== 0) {
+        return formatNano(String(balance));
+      }
+    }
   } catch (e) {
-    console.error('Failed to fetch SHELL balance via GraphQL:', e);
-    return null;
+    console.warn('getShellBalance: API GraphQL failed', e);
   }
+
+  // Strategy 3: Try direct GraphQL on mainnet endpoint
+  try {
+    const query = JSON.stringify({
+      query: `query { blockchain { account(address: "${walletAddress}") { info { balance(format: DEC) } } } }`,
+    });
+    const res = await fetch(`${ENDPOINTS[0]}/graphql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: query,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const balance = data?.data?.blockchain?.account?.info?.balance;
+      if (balance && balance !== '0' && balance !== 0) {
+        return formatNano(String(balance));
+      }
+    }
+  } catch (e) {
+    console.warn('getShellBalance: direct GraphQL failed', e);
+  }
+
+  return null;
 }
 
 export async function initMiner(

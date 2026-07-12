@@ -6,7 +6,7 @@ import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
 import { useTelegram } from '../telegram';
-import { abilityInfo, abilityNames } from '../data/abilityVisuals';
+import { abilityInfo, abilityNames, abilityDescriptions } from '../data/abilityVisuals';
 
 interface Props {
   playerDeck: Card[];
@@ -474,29 +474,39 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             </div>
 
             {/* Abilities & Effects Row */}
-            <div className="flex flex-wrap gap-2 justify-center w-full max-w-xs">
-              {/* Player ability */}
-              {currentPlayerCard && (() => {
-                const ab = abilityInfo[currentPlayerCard.ability];
-                return ab ? (
-                  <div className="flex items-center gap-1 text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5">
-                    <span>{ab.icon}</span>
-                    <span className="text-white/30 text-[8px]">{t('battle.yours')}</span>
-                    <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentPlayerCard.ability] || currentPlayerCard.ability}</span>
-                  </div>
-                ) : null;
-              })()}
-              {/* AI ability */}
-              {currentAiCard && (() => {
-                const ab = abilityInfo[currentAiCard.ability];
-                return ab ? (
-                  <div className="flex items-center gap-1 text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5">
-                    <span>{ab.icon}</span>
-                    <span className="text-white/30 text-[8px]">{t('battle.enemy')}</span>
-                    <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentAiCard.ability] || currentAiCard.ability}</span>
-                  </div>
-                ) : null;
-              })()}
+            <div className="flex flex-col gap-2 justify-center w-full max-w-xs">
+              <div className="flex flex-wrap gap-2 justify-center">
+                {/* Player ability */}
+                {currentPlayerCard && (() => {
+                  const ab = abilityInfo[currentPlayerCard.ability];
+                  const desc = abilityDescriptions[currentPlayerCard.ability];
+                  return ab ? (
+                    <div className="text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                      <div className="flex items-center gap-1">
+                        <span>{ab.icon}</span>
+                        <span className="text-white/30 text-[8px]">{t('battle.yours')}</span>
+                        <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentPlayerCard.ability] || currentPlayerCard.ability}</span>
+                      </div>
+                      {desc && <div className="text-white/40 text-[8px] mt-0.5 leading-tight max-w-[200px]">{desc}</div>}
+                    </div>
+                  ) : null;
+                })()}
+                {/* AI ability */}
+                {currentAiCard && (() => {
+                  const ab = abilityInfo[currentAiCard.ability];
+                  const desc = abilityDescriptions[currentAiCard.ability];
+                  return ab ? (
+                    <div className="text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                      <div className="flex items-center gap-1">
+                        <span>{ab.icon}</span>
+                        <span className="text-white/30 text-[8px]">{t('battle.enemy')}</span>
+                        <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentAiCard.ability] || currentAiCard.ability}</span>
+                      </div>
+                      {desc && <div className="text-white/40 text-[8px] mt-0.5 leading-tight max-w-[200px]">{desc}</div>}
+                    </div>
+                  ) : null;
+                })()}
+              </div>
             </div>
 
             {/* Damage Effects */}
