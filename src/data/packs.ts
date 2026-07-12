@@ -13,6 +13,16 @@ export interface PackConfig {
 
 export const PACKS: PackConfig[] = [
   {
+    id: 'starter',
+    nameKey: 'pack.starter',
+    descKey: 'pack.starterDesc',
+    price: 0,
+    nacklPrice: 0,
+    cardCount: 10,
+    rarityWeights: { common: 80, uncommon: 20 },
+    allowedRarities: ['common', 'uncommon'],
+  },
+  {
     id: 'basic',
     nameKey: 'pack.basic',
     descKey: 'pack.basicDesc',

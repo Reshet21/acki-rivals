@@ -13,6 +13,8 @@ interface Props {
   nacklBalance: string | null;
   onBuyPack: (packId: string) => Card[] | void;
   onBack: () => void;
+  starterPackClaimed: boolean;
+  onClaimStarterPack: () => void;
 }
 
 const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; text: string; gradient: string }> = {
@@ -26,12 +28,13 @@ const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; t
 type Phase = 'shop' | 'opening' | 'result';
 
 const packVisuals: Record<string, { gradient: string; icon: string }> = {
+  starter: { gradient: 'from-green-600 via-emerald-500 to-teal-600', icon: '🎉' },
   basic: { gradient: 'from-gray-600 via-gray-500 to-gray-700', icon: '📦' },
   standard: { gradient: 'from-blue-600 via-blue-500 to-purple-600', icon: '🎁' },
   advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: '💎' },
 };
 
-export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack }: Props) {
+export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack }: Props) {
   const { t, lang } = useI18n();
   const { impactOccurred } = useHaptic();
   const [phase, setPhase] = useState<Phase>('shop');
@@ -60,23 +63,39 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     const pack = getPackById(packId);
     if (!pack) return;
 
-    if (!walletConnection) {
+    // Starter pack is free — no wallet needed
+    if (packId !== 'starter' && !walletConnection) {
       setPaymentError(t('shop.connectWalletError'));
       return;
     }
 
-    const balance = parseFloat(nacklBalance || '0');
-    if (balance < pack.nacklPrice) {
-      setPaymentError(t('shop.notEnoughNackl'));
-      return;
+    // Starter pack is free — skip NACKL check
+    if (packId !== 'starter') {
+      const balance = parseFloat(nacklBalance || '0');
+      if (balance < pack.nacklPrice) {
+        setPaymentError(t('shop.notEnoughNackl'));
+        return;
+      }
     }
 
     impactOccurred('medium');
     setBuyingPackId(packId);
     setPaymentError(null);
 
+    // Starter pack is free — skip blockchain payment
+    if (packId === 'starter') {
+      onClaimStarterPack();
+      const cards = onBuyPack(packId);
+      if (!cards || cards.length === 0) return;
+      setOpenedCards(cards);
+      setRevealIndex(-1);
+      setPhase('opening');
+      setBuyingPackId(null);
+      return;
+    }
+
     try {
-      const result = await buyPackWithNackl(walletConnection, pack.nacklPrice);
+      const result = await buyPackWithNackl(walletConnection!, pack.nacklPrice);
 
       if (result.success) {
         const cards = onBuyPack(packId);
@@ -102,9 +121,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   };
 
   const canBuyPack = (packId: string): boolean => {
-    if (!walletConnection) return false;
     const pack = getPackById(packId);
     if (!pack) return false;
+    // Starter pack is free — always available (if not claimed)
+    if (packId === 'starter') {
+      return !starterPackClaimed;
+    }
+    if (!walletConnection) return false;
     const balance = parseFloat(nacklBalance || '0');
     return balance >= pack.nacklPrice;
   };
@@ -326,7 +349,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                       <div className="text-[10px] text-white/70">{t(pack.descKey)}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xl font-black text-white">{pack.nacklPrice} NACKL</div>
+                      <div className="text-xl font-black text-white">{pack.nacklPrice > 0 ? `${pack.nacklPrice} NACKL` : '🎁 БЕСПЛАТНО'}</div>
                       <div className="text-[9px] text-white/60">{pack.cardCount} {t('deck.cards')}</div>
                     </div>
                   </div>
@@ -363,7 +386,9 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     {isBuying
                       ? t('shop.sendingTransaction')
                       : canBuy
-                        ? `${t('shop.buy')} — ${pack.nacklPrice} NACKL`
+                        ? pack.nacklPrice > 0
+                          ? `${t('shop.buy')} — ${pack.nacklPrice} NACKL`
+                          : '🎁 Забрать бесплатно'
                         : walletConnection
                           ? t('shop.notEnough')
                           : t('shop.noWallet')

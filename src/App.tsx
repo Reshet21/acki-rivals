@@ -38,11 +38,9 @@ function AppInner() {
     collection,
     deck,
     setDeck,
-    credits,
     battlesWon,
     battlesLost,
     addCard,
-    addCredits: _addCredits,
     upgradeCard,
     saveToStorage,
     recordWin,
@@ -72,10 +70,13 @@ function AppInner() {
   const [shellBalance, setShellBalance] = useState<string | null>(null);
   const [pvpGame, setPvpGame] = useState<Game | null>(null);
   const [pvpIsHost, setPvpIsHost] = useState(false);
+  const [starterPackClaimed, setStarterPackClaimed] = useState<boolean>(() => {
+    return localStorage.getItem('acki-starter-claimed') === 'true';
+  });
 
   useEffect(() => {
     saveToStorage();
-  }, [collection, deck, credits, battlesWon, battlesLost, saveToStorage]);
+  }, [collection, deck, battlesWon, battlesLost, saveToStorage]);
 
   // Poll NACKL + SHELL balances when wallet connected
   useEffect(() => {
@@ -114,6 +115,11 @@ function AppInner() {
     haptic.notificationOccurred('success');
     return newCards;
   }, [addCard, haptic]);
+
+  const handleClaimStarterPack = useCallback(() => {
+    localStorage.setItem('acki-starter-claimed', 'true');
+    setStarterPackClaimed(true);
+  }, []);
 
   const handleToggleDeck = useCallback((card: Card) => {
     setDeck((prev) => {
@@ -363,6 +369,8 @@ function AppInner() {
             nacklBalance={nacklBalance}
             onBuyPack={handleBuyPack}
             onBack={() => setScreen('menu')}
+            starterPackClaimed={starterPackClaimed}
+            onClaimStarterPack={handleClaimStarterPack}
           />
         </div>
       )}

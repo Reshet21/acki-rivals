@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { Card } from '../types';
-import { cards as starterCards } from '../data/cards';
+
 
 const STORAGE_KEY = 'acki-rivals-save';
 const MAX_STARS = 5;
@@ -14,10 +14,11 @@ interface GameState {
   battlesLost: number;
 }
 
+// Новые игроки начинают с пустой коллекцией — карты получают из паков
 const defaultState: GameState = {
-  collection: [...starterCards],
+  collection: [],
   deck: [],
-  credits: 1000,
+  credits: 0,
   walletName: null,
   battlesWon: 0,
   battlesLost: 0,
@@ -216,7 +217,6 @@ export function useGameState(initialWalletAddress?: string | null) {
 
   const recordWin = useCallback(() => {
     setBattlesWon((prev) => prev + 1);
-    setCredits((prev) => prev + 50);
   }, []);
 
   const recordLoss = useCallback(() => {

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useI18n, type Lang } from '../i18n';
 import { useHaptic } from '../hooks/useHaptic';
 
@@ -9,14 +8,6 @@ interface Props {
 export default function SettingsScreen({ onBack }: Props) {
   const { lang, setLang, t } = useI18n();
   const { selectionChanged, impactOccurred } = useHaptic();
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-
-  const handleReset = () => {
-    localStorage.removeItem('acki-rivals-save');
-    localStorage.removeItem('acki-lang');
-    localStorage.removeItem('pvp_player_id');
-    location.reload();
-  };
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
@@ -70,42 +61,6 @@ export default function SettingsScreen({ onBack }: Props) {
         </div>
 
 
-
-        {/* Danger Zone */}
-        <div className="rounded-xl p-4" style={{ background: 'rgba(255,61,0,0.05)', border: '1px solid rgba(255,61,0,0.15)' }}>
-          <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,61,0,0.6)' }}>{t('settings.dangerZone')}</div>
-          {!showResetConfirm ? (
-            <button
-              onClick={() => { impactOccurred('heavy'); setShowResetConfirm(true); }}
-              className="w-full py-3 rounded-lg text-sm font-medium transition-all active:scale-[0.98]"
-              style={{ background: 'rgba(255,61,0,0.1)', border: '1px solid rgba(255,61,0,0.3)', color: '#FF6B6B' }}
-            >
-              {t('settings.resetProgress')}
-            </button>
-          ) : (
-            <div className="space-y-3">
-              <div className="text-xs" style={{ color: 'rgba(255,107,107,0.8)' }}>
-                {t('settings.confirmReset')}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { impactOccurred('heavy'); handleReset(); }}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all active:scale-[0.98]"
-                  style={{ background: '#FF3D00', color: 'white' }}
-                >
-                  {t('settings.reset')}
-                </button>
-                <button
-                  onClick={() => setShowResetConfirm(false)}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98]"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}
-                >
-                  {t('settings.cancel')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* App Info */}
         <div className="text-center py-4">
