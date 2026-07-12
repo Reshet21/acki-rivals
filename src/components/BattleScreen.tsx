@@ -95,6 +95,8 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
   } | null>(null);
 
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | 'draw'>('draw');
+  const [damageFlash, setDamageFlash] = useState<'none' | 'player' | 'ai'>('none');
+  const [screenShake, setScreenShake] = useState(false);
   const [timer, setTimer] = useState(TURN_TIME);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -189,12 +191,20 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         let newPlayerHP = playerHPRef.current;
         let newAiHP = aiHPRef.current;
 
-        // Apply main damage
+        // Apply main damage with visual effects
         if (result.winner === 'player') {
           newAiHP = Math.max(0, newAiHP - result.damageDealt);
+          setDamageFlash('ai');
+          setScreenShake(true);
+          setTimeout(() => setScreenShake(false), 500);
         } else if (result.winner === 'ai') {
           newPlayerHP = Math.max(0, newPlayerHP - result.damageDealt);
+          setDamageFlash('player');
+          setScreenShake(true);
+          setTimeout(() => setScreenShake(false), 500);
         }
+
+        setTimeout(() => setDamageFlash('none'), 800);
 
         // Apply heal on loss (loser heals)
         if (result.winner === 'ai') {
@@ -293,7 +303,12 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
     'text-neon-red';
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
+    <div className={`flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative ${screenShake ? 'animate-damage-shake' : ''}`}>
+      {/* Damage Flash Overlay */}
+      {damageFlash !== 'none' && (
+        <div className={`absolute inset-0 pointer-events-none z-50 ${damageFlash === 'player' ? 'animate-red-flash' : 'animate-green-flash'}`} />
+      )}
+
       {/* Ambient particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute w-1 h-1 bg-neon-blue/20 rounded-full animate-drift" style={{ top: '10%', left: '20%' }} />
@@ -328,27 +343,50 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         <span className="text-xs text-white/60">{t('battle.pillzShort')}: {playerPillz}</span>
       </div>
 
-      {/* HP Bars */}
+      {/* HP Bars - Urban Rivals Style */}
       <div className="grid grid-cols-2 gap-2 px-3 py-1.5 shrink-0">
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-green font-bold">{t('battle.player')}</div>
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-neon-green to-emerald-400 rounded-full transition-all duration-700"
-              style={{ width: `${(playerHP / TOTAL_HP) * 100}%` }}
-            />
+          <div className="text-[9px] text-neon-green font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
+            {t('battle.player')}
           </div>
-          <div className="text-[10px] text-white font-bold text-right">{playerHP}</div>
+          <div className="h-3 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
+            <div
+              className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'player' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-neon-green to-emerald-400'}`}
+              style={{ width: `${Math.max(0, (playerHP / TOTAL_HP) * 100)}%`, boxShadow: '0 0 8px rgba(0,230,118,0.3)' }}
+            />
+            {/* Damage number animation */}
+            {currentResult?.winner === 'ai' && battlePhase === 'damage' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-red-400 animate-damage-float">-{currentResult.damageDealt}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-white font-bold">{playerHP}</span>
+            <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.2)' }}>{TOTAL_HP}</span>
+          </div>
         </div>
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-red font-bold text-right">{t('battle.ai')}</div>
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-neon-red to-orange-400 rounded-full transition-all duration-700"
-              style={{ width: `${(aiHP / TOTAL_HP) * 100}%` }}
-            />
+          <div className="text-[9px] text-neon-red font-bold flex items-center justify-end gap-1">
+            {t('battle.ai')}
+            <span className="w-1.5 h-1.5 rounded-full bg-neon-red animate-pulse" />
           </div>
-          <div className="text-[10px] text-white font-bold">{aiHP}</div>
+          <div className="h-3 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
+            <div
+              className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'ai' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-neon-red to-orange-400'}`}
+              style={{ width: `${Math.max(0, (aiHP / TOTAL_HP) * 100)}%`, boxShadow: '0 0 8px rgba(255,61,0,0.3)' }}
+            />
+            {currentResult?.winner === 'player' && battlePhase === 'damage' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-green-400 animate-damage-float">-{currentResult.damageDealt}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.2)' }}>{TOTAL_HP}</span>
+            <span className="text-[10px] text-white font-bold">{aiHP}</span>
+          </div>
         </div>
       </div>
 
@@ -372,110 +410,153 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
           <CardSelector cards={playerCardsRemaining} onSelect={handleSelect} maxPillz={playerPillz} />
         )}
 
-        {/* VS screen — first 2 seconds */}
+        {/* VS screen — Urban Rivals style dramatic reveal */}
         {battlePhase === 'vs' && currentPlayerCard && currentAiCard && currentResult && (
           <div className="flex flex-col items-center gap-3 w-full animate-fade-in px-3">
-            <div className="flex items-center gap-4 justify-center">
-              <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-green mb-0.5">{t('battle.you')}</div>
-                <CardComponent card={currentPlayerCard} compact />
-                <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentPlayerPillz}</div>
-              </div>
-
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-3xl font-black text-white">
-                  {currentResult.playerAttack} <span className="text-white/30">vs</span> {currentResult.aiAttack}
+            {/* VS Banner */}
+            <div className="text-4xl font-black animate-battle-vs" style={{
+              background: 'linear-gradient(90deg, #FF3D00, #FFD700, #FF3D00)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '0.2em',
+              textShadow: 'none',
+            }}>
+              VS
+            </div>
+            <div className="flex items-center gap-3 justify-center w-full">
+              {/* Player Card */}
+              <div className={`flex flex-col items-center ${currentResult.winner === 'player' ? 'animate-card-win' : currentResult.winner === 'ai' ? 'animate-card-loss' : ''}`}>
+                <div className="text-[9px] font-bold text-neon-green mb-1">{t('battle.you')}</div>
+                <div className="w-28">
+                  <CardComponent card={currentPlayerCard} />
                 </div>
-                <div className={`
-                  text-lg font-black
-                  ${currentResult.winner === 'player' ? 'text-neon-green' : ''}
-                  ${currentResult.winner === 'ai' ? 'text-neon-red' : ''}
-                  ${currentResult.winner === 'draw' ? 'text-white/50' : ''}
-                `}>
-                  {currentResult.winner === 'player' && `⚔️ ${t('battle.victory')}`}
-                  {currentResult.winner === 'ai' && `⚔️ ${t('battle.defeat')}`}
-                  {currentResult.winner === 'draw' && `⚔️ ${t('battle.draw')}`}
-                </div>
-                {/* Ability display */}
-                <div className="flex flex-col gap-1 mt-1 w-full max-w-[200px]">
-                  {currentPlayerCard && (() => {
-                    const ab = abilityInfo[currentPlayerCard.ability];
-                    return ab ? (
-                      <div className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded bg-white/5">
-                        <span>{ab.icon}</span>
-                        <span className="text-white/40">{t('battle.yours')}</span>
-                        <span style={{ color: ab.color }}>{abilityNames[currentPlayerCard.ability] || currentPlayerCard.ability}</span>
-                      </div>
-                    ) : null;
-                  })()}
-                  {currentAiCard && (() => {
-                    const ab = abilityInfo[currentAiCard.ability];
-                    return ab ? (
-                      <div className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded bg-white/5">
-                        <span>{ab.icon}</span>
-                        <span className="text-white/40">{t('battle.enemy')}</span>
-                        <span style={{ color: ab.color }}>{abilityNames[currentAiCard.ability] || currentAiCard.ability}</span>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-
-                {/* Secondary effects */}
-                <div className="flex flex-wrap gap-1 justify-center">
-                  {currentResult.damageDealt > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300">
-                      -{currentResult.damageDealt} HP
-                    </span>
-                  )}
-                  {currentResult.healAmount > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300">
-                      +{currentResult.healAmount} HP
-                    </span>
-                  )}
-                  {currentResult.lifeStealAmount > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
-                      +{currentResult.lifeStealAmount} HP
-                    </span>
-                  )}
-                  {currentResult.poisonAmount > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300">
-                      ☠️ {currentResult.poisonAmount}
-                    </span>
-                  )}
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-[10px] text-white/60">{t('battle.pillzShort')}:</span>
+                  <span className="text-sm font-bold text-neon-blue">{currentPlayerPillz}</span>
                 </div>
               </div>
 
-              <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-red mb-0.5">{t('battle.ai')}</div>
-                <CardComponent card={currentAiCard} compact />
-                <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentAiPillz}</div>
+              {/* Battle Stats Center */}
+              <div className="flex flex-col items-center gap-1 min-w-[80px]">
+                <div className="text-2xl font-black text-white animate-pulse">
+                  {currentResult.playerAttack}
+                </div>
+                <div className="text-[10px] text-white/30">VS</div>
+                <div className="text-2xl font-black text-white animate-pulse" style={{ animationDelay: '0.5s' }}>
+                  {currentResult.aiAttack}
+                </div>
               </div>
+
+              {/* AI Card */}
+              <div className={`flex flex-col items-center ${currentResult.winner === 'ai' ? 'animate-card-win' : currentResult.winner === 'player' ? 'animate-card-loss' : ''}`}>
+                <div className="text-[9px] font-bold text-neon-red mb-1">{t('battle.ai')}</div>
+                <div className="w-28">
+                  <CardComponent card={currentAiCard} />
+                </div>
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-[10px] text-white/60">{t('battle.pillzShort')}:</span>
+                  <span className="text-sm font-bold text-neon-red">{currentAiPillz}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Round Result Badge */}
+            <div className={`
+              text-lg font-black px-4 py-1 rounded-full animate-card-pop
+              ${currentResult.winner === 'player' ? 'text-neon-green bg-neon-green/10 border border-neon-green/30' : ''}
+              ${currentResult.winner === 'ai' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
+              ${currentResult.winner === 'draw' ? 'text-white/50 bg-white/5 border border-white/10' : ''}
+            `}>
+              {currentResult.winner === 'player' && `🔥 ${t('battle.victory')}`}
+              {currentResult.winner === 'ai' && `💀 ${t('battle.defeat')}`}
+              {currentResult.winner === 'draw' && `⚡ ${t('battle.draw')}`}
+            </div>
+
+            {/* Abilities & Effects Row */}
+            <div className="flex flex-wrap gap-2 justify-center w-full max-w-xs">
+              {/* Player ability */}
+              {currentPlayerCard && (() => {
+                const ab = abilityInfo[currentPlayerCard.ability];
+                return ab ? (
+                  <div className="flex items-center gap-1 text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5">
+                    <span>{ab.icon}</span>
+                    <span className="text-white/30 text-[8px]">{t('battle.yours')}</span>
+                    <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentPlayerCard.ability] || currentPlayerCard.ability}</span>
+                  </div>
+                ) : null;
+              })()}
+              {/* AI ability */}
+              {currentAiCard && (() => {
+                const ab = abilityInfo[currentAiCard.ability];
+                return ab ? (
+                  <div className="flex items-center gap-1 text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5">
+                    <span>{ab.icon}</span>
+                    <span className="text-white/30 text-[8px]">{t('battle.enemy')}</span>
+                    <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentAiCard.ability] || currentAiCard.ability}</span>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+
+            {/* Damage Effects */}
+            <div className="flex flex-wrap gap-2 justify-center animate-card-pop" style={{ animationDelay: '0.3s' }}>
+              {currentResult.damageDealt > 0 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-bold animate-pulse">
+                  💥 -{currentResult.damageDealt} HP
+                </span>
+              )}
+              {currentResult.healAmount > 0 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 font-bold animate-pulse">
+                  💚 +{currentResult.healAmount} HP
+                </span>
+              )}
+              {currentResult.lifeStealAmount > 0 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                  🩸 +{currentResult.lifeStealAmount} HP
+                </span>
+              )}
+              {currentResult.poisonAmount > 0 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-bold">
+                  ☠️ {currentResult.poisonAmount}
+                </span>
+              )}
             </div>
           </div>
         )}
 
-        {/* Damage phase — next 2 seconds */}
+        {/* Damage phase — Urban Rivals style impact */}
         {battlePhase === 'damage' && currentResult && (
-          <div className="flex flex-col items-center gap-2 w-full px-3">
-            <div className={`
-              text-4xl font-black animate-bounce
-              ${currentResult.winner === 'player' ? 'text-neon-red' : ''}
-              ${currentResult.winner === 'ai' ? 'text-red-500' : ''}
+          <div className="flex flex-col items-center gap-3 w-full px-3 animate-fade-in">
+            {/* Big Damage Number */}
+            <div className={`text-6xl font-black animate-damage-float
+              ${currentResult.winner === 'player' ? 'text-neon-green' : ''}
+              ${currentResult.winner === 'ai' ? 'text-neon-red' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
             `}>
-              {currentResult.winner === 'draw' && '0'}
-              {currentResult.winner === 'player' && `-${currentResult.damageDealt}`}
-              {currentResult.winner === 'ai' && `-${currentResult.damageDealt}`}
+              {currentResult.winner === 'draw' ? 'BLOCK' : `-${currentResult.damageDealt}`}
             </div>
-            <div className={`
-              text-sm font-bold
-              ${currentResult.winner === 'player' ? 'text-neon-red' : ''}
-              ${currentResult.winner === 'ai' ? 'text-red-400' : ''}
-              ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
+            {/* HP bar flash */}
+            <div className={`animate-health-flash text-sm font-bold px-3 py-1 rounded-full
+              ${currentResult.winner === 'player' ? 'text-neon-green bg-neon-green/10' : ''}
+              ${currentResult.winner === 'ai' ? 'text-neon-red bg-neon-red/10' : ''}
+              ${currentResult.winner === 'draw' ? 'text-white/40 bg-white/5' : ''}
             `}>
-              {currentResult.winner === 'player' && t('battle.hpAi')}
-              {currentResult.winner === 'ai' && t('battle.hpPlayer')}
+              {currentResult.winner === 'player' && `⚔️ ${t('battle.hpAi')} ↓`}
+              {currentResult.winner === 'ai' && `⚔️ ${t('battle.hpPlayer')} ↓`}
               {currentResult.winner === 'draw' && t('battle.draw')}
+            </div>
+            {/* Skill effects summary */}
+            <div className="flex gap-2 text-[10px]">
+              {currentResult.healAmount > 0 && (
+                <span className="text-green-300 bg-green-500/10 px-2 py-0.5 rounded-full">💚 +{currentResult.healAmount}</span>
+              )}
+              {currentResult.lifeStealAmount > 0 && (
+                <span className="text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full">🩸 +{currentResult.lifeStealAmount}</span>
+              )}
+              {currentResult.poisonAmount > 0 && (
+                <span className="text-yellow-300 bg-yellow-500/10 px-2 py-0.5 rounded-full">☠️ {currentResult.poisonAmount}</span>
+              )}
             </div>
           </div>
         )}

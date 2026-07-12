@@ -7,6 +7,7 @@ import { getStoredSession, getNacklBalance } from './services/beeEngine';
 import { I18nProvider, useI18n } from './i18n';
 import { useTelegram } from './telegram';
 import { useHaptic } from './hooks/useHaptic';
+import { useMusic } from './hooks/useMusic';
 import BattleScreen from './components/BattleScreen';
 import Shop from './components/Shop';
 import WalletPanel from './components/WalletPanel';
@@ -26,6 +27,7 @@ function AppInner() {
   const { haptic, user } = useTelegram();
   const { impactOccurred, selectionChanged } = useHaptic();
   const { t } = useI18n();
+  const { isEnabled: musicEnabled, toggle: toggleMusic, pause: pauseMusic, resume: resumeMusic } = useMusic();
   const {
     collection,
     deck,
@@ -50,6 +52,15 @@ function AppInner() {
   });
 
   const [screen, setScreen] = useState<Screen>('menu');
+
+  // Pause music during battles, resume when back to menu
+  useEffect(() => {
+    if (screen === 'menu' || screen === 'shop' || screen === 'deck') {
+      resumeMusic();
+    } else {
+      pauseMusic();
+    }
+  }, [screen, resumeMusic, pauseMusic]);
   const [walletConnection, setWalletConnection] = useState<WalletConnection | null>(() =>
     getStoredSession()
   );
@@ -128,18 +139,76 @@ function AppInner() {
                 {pos.size === 'lg' ? '✦' : pos.size === 'md' ? '✧' : '·'}
               </div>
             ))}
+            {/* Floating card previews - Urban Rivals style */}
+            <div className="absolute animate-card-float-1 pointer-events-none" style={{ top: '15%', right: '5%', opacity: 0.08, transform: 'rotate(12deg)' }}>
+              <div className="w-12 h-16 rounded-lg" style={{ background: 'linear-gradient(160deg, #1a120a, #2a1a0a)', border: '1px solid rgba(255,215,0,0.2)' }}>
+                <div className="w-full h-8 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #4b5563, #6b7280)' }} />
+              </div>
+            </div>
+            <div className="absolute animate-card-float-2 pointer-events-none" style={{ bottom: '20%', left: '3%', opacity: 0.06, transform: 'rotate(-8deg)' }}>
+              <div className="w-14 h-16 rounded-lg" style={{ background: 'linear-gradient(160deg, #1a120a, #2a1a0a)', border: '1px solid rgba(255,215,0,0.15)' }}>
+                <div className="w-full h-9 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #581c87, #a855f7)' }} />
+              </div>
+            </div>
+            <div className="absolute animate-card-float-3 pointer-events-none" style={{ top: '50%', right: '2%', opacity: 0.05, transform: 'rotate(18deg)' }}>
+              <div className="w-10 h-14 rounded-lg" style={{ background: 'linear-gradient(160deg, #1a120a, #2a1a0a)', border: '1px solid rgba(255,215,0,0.15)' }}>
+                <div className="w-full h-7 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #78350f, #f59e0b)' }} />
+              </div>
+            </div>
           </div>
 
           {/* Content */}
           <div className="relative z-10 flex flex-col items-center w-full px-5 pt-10 pb-6 gap-4">
             {/* Premium Logo Section */}
             <div className="flex flex-col items-center animate-slide-down" style={{ animationDelay: '0.05s' }}>
-              {/* Logo glow effect */}
-              <div className="relative">
-                <div className="absolute -inset-4 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-                <img src="/cards/an-smiley-yellow.jpg" alt="" className="w-16 h-16 rounded-full border-2 border-an-gold/40 relative z-10" style={{ boxShadow: '0 0 30px rgba(255,215,0,0.3)' }} />
+              {/* Spinning NACKL Coin */}
+              <div className="relative mb-2">
+                <div className="absolute -inset-6 rounded-full opacity-40 animate-coin-pulse" style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%)', filter: 'blur(25px)' }} />
+                <div className="animate-coin-spin w-20 h-20 relative">
+                  {/* Coin face */}
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center relative overflow-hidden" style={{
+                    background: 'radial-gradient(circle at 35% 30%, #FFD700 0%, #FF8C00 30%, #CC7000 60%, #8B4513 100%)',
+                    boxShadow: '0 0 40px rgba(255,215,0,0.4), inset 0 -4px 8px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.2)',
+                    border: '3px solid rgba(255,215,0,0.6)',
+                  }}>
+                    {/* Coin inner ring */}
+                    <div className="absolute inset-2 rounded-full" style={{
+                      background: 'radial-gradient(circle at 35% 30%, rgba(255,215,0,0.3) 0%, transparent 70%)',
+                      border: '2px solid rgba(255,215,0,0.3)',
+                    }} />
+                    {/* NACKL text */}
+                    <span className="text-[10px] font-black tracking-tight z-10" style={{
+                      color: '#1a0a00',
+                      textShadow: '0 1px 2px rgba(255,215,0,0.5)',
+                      transform: 'rotate(-15deg)',
+                    }}>
+                      NACKL
+                    </span>
+                    {/* Smiley face on coin */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#1a0a00' }} />
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#1a0a00' }} />
+                    </div>
+                    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-3 h-1 rounded-full" style={{
+                      background: '#1a0a00',
+                      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 20% 100%)',
+                    }} />
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 rounded-full" style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.1) 100%)',
+                      pointerEvents: 'none',
+                    }} />
+                  </div>
+                </div>
+                {/* Orbiting sparkles */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 animate-orbit-slow" style={{ pointerEvents: 'none' }}>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 text-[8px]" style={{ color: 'rgba(255,215,0,0.5)' }}>✦</div>
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[6px]" style={{ color: 'rgba(255,215,0,0.3)' }}>✧</div>
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 text-[6px]" style={{ color: 'rgba(255,215,0,0.4)' }}>·</div>
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[8px]" style={{ color: 'rgba(255,215,0,0.3)' }}>✦</div>
+                </div>
               </div>
-              <h1 className="text-3xl font-black tracking-tight mt-3 animate-title-glow" style={{ background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 60%, #FFD700 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.05em' }}>
+              <h1 className="text-3xl font-black tracking-tight animate-title-glow" style={{ background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 60%, #FFD700 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.05em' }}>
                 ACKI RIVALS
               </h1>
               <p className="text-[10px] tracking-[0.4em] uppercase mt-1" style={{ color: 'rgba(255,215,0,0.35)' }}>BLOCKCHAIN CARD BATTLE</p>
@@ -272,9 +341,7 @@ function AppInner() {
                 <span className="text-base">⛏️</span>
                 <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.mining')}</span>
               </button>
-            </div>
-
-            {/* Bottom Navigation - Premium Tab Bar */}
+            </div>              {/* Bottom Navigation - Premium Tab Bar */}
             <div className="w-full max-w-xs mt-2 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-center justify-around py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
@@ -284,6 +351,10 @@ function AppInner() {
                 <button onClick={() => { selectionChanged(); setScreen('info'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">📖</span>
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.rules')}</span>
+                </button>
+                <button onClick={() => { toggleMusic(); selectionChanged(); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
+                  <span className="text-lg">{musicEnabled ? '🎵' : '🔇'}</span>
+                  <span className="text-[9px]" style={{ color: musicEnabled ? 'rgba(255,215,0,0.6)' : 'rgba(255,255,255,0.3)' }}>{musicEnabled ? 'Музыка' : 'Тихо'}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('settings'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">⚙️</span>

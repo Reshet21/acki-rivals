@@ -12,7 +12,9 @@ export default function SettingsScreen({ onBack }: Props) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleReset = () => {
-    localStorage.clear();
+    localStorage.removeItem('acki-rivals-save');
+    localStorage.removeItem('acki-lang');
+    localStorage.removeItem('pvp_player_id');
     location.reload();
   };
 

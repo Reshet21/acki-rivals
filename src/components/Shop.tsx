@@ -115,55 +115,139 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       const order = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
       return (order[c.rarity] || 0) > (order[best] || 0) ? c.rarity : best;
     }, 'common' as Rarity);
-    const topStyle = rarityStyles[topRarity];
+    const rarityColors: Record<Rarity, string> = {
+      common: 'rgba(156,163,175,0.3)',
+      uncommon: 'rgba(74,222,128,0.3)',
+      rare: 'rgba(96,165,250,0.3)',
+      epic: 'rgba(168,85,247,0.3)',
+      legendary: 'rgba(250,204,21,0.3)',
+    };
+
+    const rarityNameColors: Record<Rarity, string> = {
+      common: 'text-gray-300',
+      uncommon: 'text-green-300',
+      rare: 'text-blue-300',
+      epic: 'text-purple-300',
+      legendary: 'text-yellow-300',
+    };
+
+    const allRevealed = revealIndex >= openedCards.length;
 
     return (
       <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
         {/* Background glow based on best rarity */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className={`absolute w-64 h-64 rounded-full animate-pulse-glow opacity-20 ${topStyle.glow}`}
-            style={{ top: '10%', left: '50%', transform: 'translateX(-50%)', background: `radial-gradient(circle, currentColor 0%, transparent 70%)` }} />
+          <div className={`absolute w-96 h-96 rounded-full opacity-20 ${topRarity === 'legendary' ? 'animate-title-glow' : 'animate-pulse-glow'}`}
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: `radial-gradient(circle, ${rarityColors[topRarity]} 0%, transparent 70%)`,
+            }} />
+          {/* Sparkle particles for high rarity */}
+          {(topRarity === 'epic' || topRarity === 'legendary') && [...Array(6)].map((_, i) => (
+            <div key={i}
+              className="absolute w-1 h-1 rounded-full"
+              style={{
+                background: rarityColors[topRarity],
+                top: `${20 + Math.random() * 60}%`,
+                left: `${20 + Math.random() * 60}%`,
+                animation: `sparkle ${1.5 + Math.random() * 2}s ease-in-out ${i * 0.3}s infinite`,
+                opacity: 0,
+              }} />
+          ))}
         </div>
 
         {/* Header */}
-        <div className="flex justify-between items-center px-4 py-3 shrink-0 relative z-10">
-          <div className="text-lg font-bold text-white">
-            {phase === 'opening' ? `✨ ${t('shop.opening')}` : `🎉 ${t('shop.opened')}`}
+        <div className="flex justify-between items-center px-5 py-4 shrink-0 relative z-10">
+          <div className="flex items-center gap-2">
+            {phase === 'opening' ? (
+              <span className="text-lg">✨</span>
+            ) : (
+              <span className="text-lg">🎉</span>
+            )}
+            <div>
+              <div className="text-base font-black text-white">
+                {phase === 'opening' ? t('shop.opening') : t('shop.opened')}
+              </div>
+              <div className={`text-[9px] uppercase tracking-wider font-bold ${rarityNameColors[topRarity]}`}>
+                {getRarityLabel(lang, topRarity)}
+              </div>
+            </div>
           </div>
           <div className="text-sm text-neon-blue font-bold">
             {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
           </div>
         </div>
 
-        {/* Cards grid */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-4 relative z-10">
-          <div className="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">
-            {openedCards.map((card, i) => {
-              const revealed = i <= revealIndex;
-              return (
-                <div
-                  key={i}
-                  className={`transition-all duration-500 ${
-                    revealed
-                      ? 'opacity-100 scale-100 translate-y-0'
-                      : 'opacity-0 scale-75 translate-y-4'
-                  }`}
-                >
-                  {revealed && <CardComponent card={card} compact />}
+        {/* Opening sequence - dramatic reveal */}
+        <div className="flex-1 min-h-0 flex items-center justify-center px-5 pb-4 relative z-10">
+          {phase === 'opening' && !allRevealed && (
+            <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto">
+              {/* Single card being revealed with 3D flip */}
+              {openedCards.map((card, i) => {
+                if (i !== revealIndex) return null;
+                return (
+                  <div key={i} className="w-full animate-card-reveal">
+                    <div className="relative">
+                      {/* Rarity glow ring */}
+                      <div className={`absolute -inset-3 rounded-2xl opacity-40 ${topRarity === 'legendary' ? 'animate-legendary-glow' : topRarity === 'epic' ? 'animate-epic-pulse' : ''}`}
+                        style={{
+                          background: `radial-gradient(circle, ${rarityColors[card.rarity]} 0%, transparent 70%)`,
+                        }} />
+                      <CardComponent card={card} />
+                      <div className={`text-center mt-2 text-[10px] font-bold ${rarityNameColors[card.rarity]}`}>
+                        {getRarityLabel(lang, card.rarity)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Reveal progress bar */}
+              <div className="w-full max-w-[200px] mt-4">
+                <div className="flex justify-between text-[8px] text-white/20 mb-1">
+                  <span>{t('shop.opening')}</span>
+                  <span>{revealIndex + 1}/{openedCards.length}</span>
                 </div>
-              );
-            })}
-          </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-an-gold to-an-orange rounded-full transition-all duration-300"
+                    style={{ width: `${((revealIndex + 1) / openedCards.length) * 100}%` }} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* All cards grid after reveal */}
+          {allRevealed && (
+            <div className="w-full max-w-sm mx-auto animate-fade-in">
+              <div className="grid grid-cols-2 gap-3">
+                {openedCards.map((card, i) => (
+                  <div key={i}
+                    className="animate-card-pop"
+                    style={{ animationDelay: `${i * 0.15}s` }}>
+                    <div className="relative">
+                      <div className={`absolute -inset-2 rounded-xl opacity-30 ${card.rarity === 'legendary' ? 'animate-legendary-glow' : card.rarity === 'epic' ? 'animate-epic-pulse' : ''}`}
+                        style={{
+                          background: `radial-gradient(circle, ${rarityColors[card.rarity]} 0%, transparent 70%)`,
+                        }} />
+                      <CardComponent card={card} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Collect button */}
         {phase === 'result' && (
-          <div className="shrink-0 px-4 pb-4 relative z-10">
+          <div className="shrink-0 px-5 pb-5 relative z-10 animate-slide-up">
             <button
               onClick={handleCollect}
-              className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 transition-all shadow-[0_0_16px_rgba(0,212,255,0.3)]"
+              className="w-full py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-an-gold via-yellow-500 to-an-orange text-an-dark active:scale-95 transition-all duration-200 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
             >
-              {t('shop.collect')}
+              {t('shop.collect')} 🎴
             </button>
           </div>
         )}

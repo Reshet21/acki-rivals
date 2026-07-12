@@ -122,16 +122,26 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
                   background: 'linear-gradient(160deg, #0f0a05, #1a120a)',
                 }}
               >
-                {/* Image */}
+                {/* Image - bigger like Urban Rivals */}
                 <div style={{ width: '100%', aspectRatio: '3/4', overflow: 'hidden', background: '#080503', position: 'relative' }}>
                   {cardArt[card.id] ? (
-                    <img src={cardArt[card.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+                    <img src={cardArt[card.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', opacity: 0.9 }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, opacity: 0.2 }}>🃏</div>
                   )}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f0a05 0%, transparent 40%)' }} />
-                  {/* Rarity dot */}
-                  <div style={{ position: 'absolute', top: 3, right: 3, width: 6, height: 6, borderRadius: 3, background: rc }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f0a05 0%, transparent 30%)' }} />
+                  {/* Rarity gem */}
+                  <div style={{ position: 'absolute', top: 4, left: 4, width: 10, height: 10, borderRadius: 3, background: rc, boxShadow: `0 0 6px ${rc}80` }} />
+                  {/* Card name overlay */}
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '4px 6px',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)',
+                  }}>
+                    <div style={{ fontSize: 8, fontWeight: 800, color: '#e5d5b0', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                      {card.name}
+                    </div>
+                  </div>
                 </div>
                 {/* Stats */}
                 <div style={{ padding: '3px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
