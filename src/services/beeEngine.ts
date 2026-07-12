@@ -247,27 +247,41 @@ export async function getNacklBalance(walletAddress: string): Promise<string> {
 }
 
 /**
- * Get SHELL balance (native coin) from wallet.
- * SHELL is the native gas token on Acki Nacki.
+ * Get SHELL balance (native gas token) from wallet.
+ * SHELL is the native coin on Acki Nacki, queried via GraphQL.
  * Returns null if balance can't be fetched.
  */
 export async function getShellBalance(walletAddress: string): Promise<string | null> {
-  const sdk = await loadSdk();
-  const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
+  const graphqlUrl = `${ENDPOINTS[0]}/graphql`;
+  const query = `
+    query {
+      blockchain {
+        account(address: "${walletAddress}") {
+          info {
+            balance(format: DEC)
+          }
+        }
+      }
+    }
+  `;
 
   try {
-    const balances = await wallet.get_multifactor_balances({
-      multifactor_address: walletAddress,
+    const response = await fetch(graphqlUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
     });
-    // SHELL might be at a different key in ecc or the native balance
-    // Try common patterns — experimental, may need adjustment
-    const shell = balances.ecc['0'] ?? balances.native ?? null;
-    if (shell === null) return null;
-    return formatNano(shell);
+
+    if (!response.ok) return null;
+
+    const result = await response.json();
+    const balance = result?.data?.blockchain?.account?.info?.balance;
+
+    if (balance === undefined || balance === null) return null;
+
+    return formatNano(balance);
   } catch {
     return null;
-  } finally {
-    wallet.free();
   }
 }
 
