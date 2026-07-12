@@ -120,6 +120,19 @@ function AppInner() {
     setWalletConnection(conn);
   }, []);
 
+  const handleWalletDisconnect = useCallback(() => {
+    // Clear wallet state
+    setWalletConnection(null);
+    setNacklBalance(null);
+    // Clear all game data — start fresh like a new user
+    localStorage.removeItem('acki-rivals-save');
+    localStorage.removeItem('acki-lang');
+    localStorage.removeItem('pvp_player_id');
+    localStorage.removeItem('acki-rivals-wallet-session');
+    // Reload to reset all in-memory state
+    location.reload();
+  }, []);
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto text-white flex flex-col relative" style={{ background: '#050508' }}>
       {screen === 'menu' && (
@@ -344,7 +357,9 @@ function AppInner() {
       {screen === 'wallet' && (
         <div className="flex-1 flex items-center justify-center">
           <WalletPanel
+            connection={walletConnection}
             onConnected={handleWalletConnected}
+            onDisconnect={handleWalletDisconnect}
             onBack={() => setScreen('menu')}
           />
         </div>

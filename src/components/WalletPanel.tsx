@@ -10,14 +10,16 @@ import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 
 interface Props {
+  connection: WalletConnection | null;
   onConnected: (conn: WalletConnection) => void;
+  onDisconnect: () => void;
   onBack: () => void;
 }
 
-export default function WalletPanel({ onConnected, onBack }: Props) {
+export default function WalletPanel({ connection: initialConnection, onConnected, onDisconnect, onBack }: Props) {
   const { impactOccurred } = useHaptic();
   const { t } = useI18n();
-  const [connection, setConnection] = useState<WalletConnection | null>(null);
+  const [connection, setConnection] = useState<WalletConnection | null>(() => initialConnection);
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
@@ -82,6 +84,7 @@ export default function WalletPanel({ onConnected, onBack }: Props) {
       setConnection(null);
       setDeepLink(null);
       setBalance(null);
+      onDisconnect();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

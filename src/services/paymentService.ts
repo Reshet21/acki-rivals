@@ -92,7 +92,7 @@ export async function buyPack(
       const result = await wallet.send_tokens_direct({
         session_state_json: conn.sessionStateJson,
         multifactor_address: conn.walletAddress,
-        recipient_address: DEVELOPER_WALLET,
+        destination_address: DEVELOPER_WALLET,
         token_root: tokenRoot,
         amount: nanoAmount,
       });
