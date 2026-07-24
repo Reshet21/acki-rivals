@@ -5,26 +5,26 @@
  *
  * NACKL — нативный ECC токен Acki Nacki с индексом 1.
  * У него НЕТ TIP-3 TokenRoot контракта — это встроенный токен сети.
- * Для отправки через bee-sdk Wallet.send_tokens_direct() нужно передать
- * token_root = "1" (ECC индекс NACKL).
  *
- * Спецификация ECC:
- *   NACKL → index 1
- *   SHELL  → index 2
- *   USDC   → index 3
+ * Для отправки через bee-sdk Wallet.send_tokens_direct() нужно:
+ *   token_root = "1"  (ECC индекс NACKL)
+ *   amount_raw        (не amount!)
+ *   flags: 0          (обычный перевод)
+ *   signer_keys       (EPK ключи, полученные через requestMiningKeys / gen_mining_keys)
  *
+ * @see bee_wallet/src/adapters/wasm/dto/mod.rs — TSendTokensDirectReq
  * @see https://docs.ackinacki.com/glossary#extra-currency-collection
  */
 
 import type { WalletConnection } from './beeEngine';
-import { ENDPOINTS, API_URL, APP_ID } from './beeEngine';
+import {
+  ENDPOINTS, API_URL, APP_ID,
+  getStoredMiningKeys,
+  requestMiningKeys,
+  storeMiningKeys,
+} from './beeEngine';
 
 const DEVELOPER_WALLET = '0:d9ed11eaef8f0ec7b475fe29e293bb721cb6a64dfba3fd069b8e2f9303ff6b36';
-
-/**
- * NACKL — это ECC (Extra Currency Collection) токен с индексом 1.
- * Для send_tokens_direct token_root = "1" (строка с индексом, не адрес контракта).
- */
 const NACKL_ECC_INDEX = '1';
 
 export interface PaymentResult {
@@ -58,43 +58,56 @@ async function getSdk(): Promise<any> {
 /**
  * Отправить NACKL с кошелька покупателя на кошелёк разработчика.
  *
- * NACKL — нативный ECC токен (index 1), не TIP-3.
- * token_root = "1" означает "использовать ECC токен с индексом 1".
+ * Для отправки нужны EPK ключи (signer_keys).
+ * Если их нет — автоматически запрашиваем через requestMiningKeys.
  *
- * @see bee_wallet_modules/tokens.rs is_native_ecc(token_root):
- *   fn is_native_ecc(token_root: &str) -> bool {
- *       token_root.parse::<u32>().is_ok()
- *   }
+ * @see TSendTokensDirectReq из bee-sdk:
+ *   { multifactor_address, destination_address, token_root,
+ *     amount_raw, flags, signer_keys, bounce?, value?, payload? }
  */
 export async function buyPack(
   conn: WalletConnection,
   nacklAmount: number,
 ): Promise<PaymentResult> {
   try {
+    // ── Получаем EPK ключи ──────────────────────────────────
+    let miningKeys = getStoredMiningKeys(conn.profileAddress);
+    if (!miningKeys || !miningKeys.areKeysPropagated) {
+      // Если ключей нет — запрашиваем через BeeConnect
+      // (кошелёк попросит подтвердить добавление ключей)
+      const keys = await requestMiningKeys(conn);
+      miningKeys = {
+        ownerPublic: keys.ownerPublic,
+        ownerSecret: keys.ownerSecret,
+        minerAddress: null,
+        areKeysPropagated: false,
+      };
+      storeMiningKeys(conn.profileAddress, miningKeys);
+    }
+
     const sdk = await getSdk();
     const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
 
     try {
-      // Convert NACKL amount to nano (multiply by 10^9)
       const nanoAmount = BigInt(Math.floor(nacklAmount * 1e9)).toString();
 
-      // Send native ECC token (index 1 = NACKL) via send_tokens_direct
+      // Правильный API из bee-sdk TSendTokensDirectReq
       const result = await wallet.send_tokens_direct({
-        session_state_json: conn.sessionStateJson,
         multifactor_address: conn.walletAddress,
         destination_address: DEVELOPER_WALLET,
-        token_root: NACKL_ECC_INDEX,
-        amount: nanoAmount,
+        token_root: NACKL_ECC_INDEX,        // ECC index 1 = NACKL
+        amount_raw: nanoAmount,              // amount_raw, не amount!
+        flags: 0,                             // 0 = обычный перевод
+        signer_keys: {                        // EPK ключи
+          public: miningKeys.ownerPublic,
+          secret: miningKeys.ownerSecret,
+        },
+        bounce: false,
       });
-
-      // Update session state if returned
-      if (result.updated_session_state_json) {
-        conn.sessionStateJson = result.updated_session_state_json;
-      }
 
       return {
         success: true,
-        txHash: result.tx_hash || 'pending',
+        txHash: result.message_ids?.[0] || 'pending',
       };
     } finally {
       wallet.free();
@@ -102,6 +115,15 @@ export async function buyPack(
   } catch (e) {
     console.error('Payment failed:', e);
     const msg = e instanceof Error ? e.message : 'Unknown payment error';
+
+    // Если ключи не прошли — предлагаем перезапросить
+    if (msg.includes('signer_keys') || msg.includes('EPK') || msg.includes('factor')) {
+      // Сбрасываем кеш ключей — в следующий раз перезапросим
+      if (conn?.profileAddress) {
+        storeMiningKeys(conn.profileAddress, null);
+      }
+    }
+
     return {
       success: false,
       error: msg,
