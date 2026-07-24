@@ -236,8 +236,6 @@ export async function buyCard(
 
     try {
       // Отправляем NACKL через TIP-3 transfer с payload "buy"
-      const tokenWallet = await getNacklWallet(conn);
-
       const payload = sdk.abi.encode({
         abi: { type: 'Tuple', components: [
           { name: 'action', type: 'string' },
@@ -403,29 +401,6 @@ async function loadSdk(): Promise<any> {
   await mod.default({ module_or_path: wasmUrl });
   sdkModule = mod;
   return sdkModule;
-}
-
-/**
- * Получить адрес NACKL TokenWallet для текущего кошелька.
- */
-async function getNacklWallet(conn: WalletConnection): Promise<string> {
-  const sdk = await loadSdk();
-  const wallet = new sdk.Wallet(CHAIN_ENDPOINTS, null, API_BASE, APP_ID);
-
-  try {
-    const balances = await wallet.get_multifactor_balances({
-      multifactor_address: conn.walletAddress,
-    });
-
-    // NACKL обычно на ключе '1' или первом доступном
-    if (balances.ecc) {
-      const keys = Object.keys(balances.ecc);
-      return keys[0] || '';
-    }
-    return '';
-  } finally {
-    wallet.free();
-  }
 }
 
 /**
