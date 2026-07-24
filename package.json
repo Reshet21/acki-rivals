@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "test": "echo \"No test framework configured\"",
-    "copy:wasm": "node scripts/copy-wasm.js"
+    "copy:wasm": "node scripts/copy-wasm.cjs"
   },
   "dependencies": {
     "@eversdk/core": "^1.48.0",
