@@ -255,10 +255,10 @@ export async function buyCard(
         session_state_json: conn.sessionStateJson,
         multifactor_address: conn.walletAddress,
         destination_address: MARKETPLACE_ADDRESS,
-        token_root: NACKL_TOKEN_ROOT,          amount: priceNano,
-          token_root: '1',  // ECC index 1 = NACKL (нативный токен, не TIP-3)
-          payload,
-        });
+        token_root: '1',  // ECC index 1 = NACKL (нативный токен, не TIP-3)
+        amount: priceNano,
+        payload,
+      });
 
       return { success: true };
     } finally {
