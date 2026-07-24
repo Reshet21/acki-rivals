@@ -2,12 +2,24 @@
  * Payment service for NACKL token transactions on Acki Nacki blockchain.
  *
  * Sends NACKL tokens from buyer's wallet to developer wallet for pack purchases.
+ *
+ * NACKL — нативный ECC токен Acki Nacki с индексом 1.
+ * Для отправки используется bee-sdk Wallet.send_tokens_direct() с
+ * адресом NACKL TokenRoot из переменной окружения VITE_NACKL_TOKEN_ROOT.
+ *
+ * Адрес NACKL TokenRoot можно найти:
+ *   - В AN Wallet при просмотре токена
+ *   - На explorer.ackinacki.com в контрактах
+ *   - Или спросить в сообществе Acki Nacki
  */
 
 import type { WalletConnection } from './beeEngine';
 import { ENDPOINTS, API_URL, APP_ID } from './beeEngine';
 
 const DEVELOPER_WALLET = '0:d9ed11eaef8f0ec7b475fe29e293bb721cb6a64dfba3fd069b8e2f9303ff6b36';
+
+// Адрес NACKL TokenRoot из переменной окружения
+const NACKL_TOKEN_ROOT = import.meta.env.VITE_NACKL_TOKEN_ROOT || '';
 
 export interface PaymentResult {
   success: boolean;
@@ -38,42 +50,21 @@ async function getSdk(): Promise<any> {
 }
 
 /**
- * Get the NACKL token root address from blockchain balances.
- * Returns the actual token root address from the wallet's balances.
- */
-async function getNacklTokenRoot(walletAddress: string): Promise<string | null> {
-  const sdk = await getSdk();
-  const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
-
-  try {
-    const balances = await wallet.get_multifactor_balances({
-      multifactor_address: walletAddress,
-    });
-
-    // Token roots are keys in the ecc map — return the actual address
-    if (balances.ecc) {
-      const keys = Object.keys(balances.ecc);
-      if (keys.length > 0) {
-        return keys[0];
-      }
-    }
-    return null;
-  } catch (e) {
-    console.error('Failed to get NACKL token root:', e);
-    return null;
-  } finally {
-    wallet.free();
-  }
-}
-
-/**
  * Send NACKL tokens from buyer to developer wallet.
- * Uses the SDK's Wallet.send_tokens_direct method.
+ * Использует VITE_NACKL_TOKEN_ROOT из .env для отправки.
+ * Если переменная не задана — возвращает ошибку с инструкцией.
  */
 export async function buyPack(
   conn: WalletConnection,
   nacklAmount: number,
 ): Promise<PaymentResult> {
+  if (!NACKL_TOKEN_ROOT) {
+    return {
+      success: false,
+      error: 'NACKL TokenRoot не настроен. Добавь VITE_NACKL_TOKEN_ROOT в .env или на Vercel.'
+    };
+  }
+
   try {
     const sdk = await getSdk();
     const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
@@ -82,18 +73,12 @@ export async function buyPack(
       // Convert NACKL amount to nano (multiply by 10^9)
       const nanoAmount = BigInt(Math.floor(nacklAmount * 1e9)).toString();
 
-      // Get token root for NACKL from wallet balances
-      const tokenRoot = await getNacklTokenRoot(conn.walletAddress);
-      if (!tokenRoot) {
-        return { success: false, error: 'NACKL token not found in wallet. Make sure you have NACKL tokens.' };
-      }
-
       // Send tokens using the SDK
       const result = await wallet.send_tokens_direct({
         session_state_json: conn.sessionStateJson,
         multifactor_address: conn.walletAddress,
         destination_address: DEVELOPER_WALLET,
-        token_root: tokenRoot,
+        token_root: NACKL_TOKEN_ROOT,
         amount: nanoAmount,
       });
 
