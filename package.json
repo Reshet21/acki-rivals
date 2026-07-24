@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "test": "echo \"No test framework configured\"",
-    "copy:wasm": "node -e \"const fs=require('fs');const path=require('path');const src=path.join('node_modules','@eversdk','lib-web','eversdk.wasm');const dest=path.join('public','eversdk.wasm');if(fs.existsSync(src)){fs.copyFileSync(src,dest);console.log('WASM copied to public/')}else{console.warn('WASM not found at '+src)}"
+    "copy:wasm": "node scripts/copy-wasm.js"
   },
   "dependencies": {
     "@eversdk/core": "^1.48.0",
