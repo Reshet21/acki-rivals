@@ -25,13 +25,10 @@ import {
   MULTIFACTOR_ABI,
 } from './tvmSdkService';
 import {
-  getStoredMiningKeys,
-  requestMiningKeys,
-  storeMiningKeys,
   ENDPOINTS,
-  APP_ID,
   API_URL,
 } from './beeEngine';
+import { getSignerKeys } from './helpers';
 
 // ─── Конфигурация ──────────────────────────────────────
 
@@ -116,23 +113,6 @@ export const MARKETPLACE_ABI = {
   data: [],
   events: [],
 };
-
-// ─── Получение ключей для подписи ───────────────────────
-
-async function getSignerKeys(conn: WalletConnection): Promise<{ public: string; secret: string }> {
-  const stored = getStoredMiningKeys(conn.profileAddress);
-  if (stored) {
-    return { public: stored.ownerPublic, secret: stored.ownerSecret };
-  }
-  const keys = await requestMiningKeys(conn);
-  storeMiningKeys(conn.profileAddress, {
-    ownerPublic: keys.ownerPublic,
-    ownerSecret: keys.ownerSecret,
-    minerAddress: null,
-    areKeysPropagated: false,
-  });
-  return { public: keys.ownerPublic, secret: keys.ownerSecret };
-}
 
 // ─── NFT Mint ───────────────────────────────────────────
 

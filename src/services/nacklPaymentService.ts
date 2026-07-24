@@ -16,16 +16,13 @@
 
 import type { WalletConnection } from './beeEngine';
 import {
-  getStoredMiningKeys,
-  requestMiningKeys,
-  storeMiningKeys,
-} from './beeEngine';
-import {
   initTvmSdk,
   createClient,
   MULTIFACTOR_ABI,
   DEVELOPER_WALLET,
 } from './tvmSdkService';
+import { getSignerKeys, toNano } from './helpers';
+import { storeMiningKeys } from './beeEngine';
 
 // ─── Интерфейсы ─────────────────────────────────────────
 
@@ -35,56 +32,12 @@ export interface PaymentResult {
   error?: string;
 }
 
-// ─── Вспомогательные функции ────────────────────────────
-
-/**
- * Получить или создать EPK ключи для подписи транзакции.
- * Сначала проверяет localStorage, если нет — запрашивает через bee_connect.
- */
-async function getSignerKeys(
-  conn: WalletConnection,
-): Promise<{ public: string; secret: string }> {
-  const stored = getStoredMiningKeys(conn.profileAddress);
-  if (stored) {
-    return { public: stored.ownerPublic, secret: stored.ownerSecret };
-  }
-
-  // Ключей нет — запрашиваем через BeeConnect (кошелёк попросит подтвердить)
-  const keys = await requestMiningKeys(conn);
-  storeMiningKeys(conn.profileAddress, {
-    ownerPublic: keys.ownerPublic,
-    ownerSecret: keys.ownerSecret,
-    minerAddress: null,
-    areKeysPropagated: false,
-  });
-
-  return { public: keys.ownerPublic, secret: keys.ownerSecret };
-}
-
-/**
- * Конвертировать NACKL в нано (10^9).
- */
-function toNano(amount: number): string {
-  return BigInt(Math.floor(amount * 1e9)).toString();
-}
-
 // ─── Основная функция отправки ──────────────────────────
 
 /**
- * Отправить NACKL через tvm-sdk напрямую в блокчейн Acki Nacki.
- *
- * Вызывает sendTransaction на мультифакторном кошельке пользователя:
- *   - dest: DEVELOPER_WALLET
- *   - value: 0 (газ не требуется, флаг 3 = оплата отправителем)
- *   - cc: {"1": amount} (NACKL, ECC index 1)
- *   - bounce: false
- *   - flags: 3 (сообщение оплачивает контракт отправителя)
- *   - payload: ""
- */
-/**
  * Получить баланс NACKL (ECC index 1) кошелька.
  *
- * Использует bee-sdk Wallet.get_multifactor_balances (этот метод работает 
+ * Использует bee-sdk Wallet.get_multifactor_balances (этот метод работает
  * нормально и не требует EPK-ключей, только GraphQL запрос).
  */
 export async function getBalance(walletAddress: string): Promise<string> {
@@ -100,7 +53,6 @@ export async function getBalance(walletAddress: string): Promise<string> {
         multifactor_address: walletAddress,
       });
       const token1 = balances.ecc?.['1'] ?? '0';
-      // Форматируем: NACKL имеет 9 десятичных знаков
       const amount = BigInt(token1);
       const base = 10n ** 9n;
       const whole = amount / base;
@@ -133,17 +85,12 @@ export async function buyPack(
   try {
     // 1. Инициализируем SDK (если ещё не)
     await initTvmSdk();
-
     // 2. Получаем ключи для подписи
     const signerKeys = await getSignerKeys(conn);
-
     // 3. Создаём клиент и отправляем
     const client = createClient('mainnet');
     try {
       const nanoAmount = toNano(nacklAmount);
-
-      // Формируем параметры для sendTransaction
-      // cc — ECC токены: ключ = индекс токена (1 = NACKL), значение = сумма в нано
       const cc: Record<string, string> = {
         '1': nanoAmount,
       };
@@ -151,25 +98,19 @@ export async function buyPack(
       const result = await client.processing.process_message({
         message_encode_params: {
           address: conn.walletAddress,
-          abi: {
-            type: 'Contract',
-            value: MULTIFACTOR_ABI,
-          },
+          abi: { type: 'Contract', value: MULTIFACTOR_ABI },
           call_set: {
             function_name: 'sendTransaction',
             input: {
               dest: DEVELOPER_WALLET,
-              value: '0', // 0 SHELL — газ оплачивается через флаги
+              value: '0',
               cc,
               bounce: false,
-              flags: 3, // 3 = обычная отложенная отправка с оплатой газе отправителем
-              payload: '', // пустой payload = простой перевод
+              flags: 3,
+              payload: '',
             },
           },
-          signer: {
-            type: 'Keys',
-            keys: signerKeys,
-          },
+          signer: { type: 'Keys', keys: signerKeys },
           processing_try_index: 1,
         },
         send_events: false,
