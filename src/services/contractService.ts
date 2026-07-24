@@ -170,14 +170,6 @@ export async function mintCardsBatch(
 
 // ─── Маркетплейс ────────────────────────────────────────
 
-export interface ListingInfo {
-  seller: string;
-  tokenAddress: string;
-  tokenRoot: string;
-  price: string;  // в NACKL (nano)
-  active: boolean;
-}
-
 export const MARKETPLACE_ABI = {
   'list': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
   'buy': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },

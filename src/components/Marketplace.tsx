@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { Card, Rarity } from '../types';
+import type { Card } from '../types';
 import type { WalletConnection } from '../services/beeEngine';
-import { getStoredSession } from '../services/beeEngine';
 import { useGameState } from '../hooks/useGameState';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
@@ -12,7 +11,6 @@ import {
   cancelListing,
   getOwnedNFTs,
   nacklToNano,
-  nanoToNackl,
   COLLECTION_ADDRESS,
   MARKETPLACE_ADDRESS,
 } from '../services/contractService';
@@ -29,7 +27,7 @@ export default function Marketplace({ walletConnection, nacklBalance, onBack }: 
   const { t } = useI18n();
   const { impactOccurred, selectionChanged } = useHaptic();
   const walletAddress = useMemo(() => walletConnection?.walletAddress ?? null, [walletConnection]);
-  const { collection, deck, setDeck } = useGameState(walletAddress);
+  const { collection } = useGameState(walletAddress);
 
   const [tab, setTab] = useState<Tab>('buy');
   const [myNFTs, setMyNFTs] = useState<string[]>([]);
@@ -37,13 +35,6 @@ export default function Marketplace({ walletConnection, nacklBalance, onBack }: 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [sellPrice, setSellPrice] = useState('');
   const [listingStatus, setListingStatus] = useState<string | null>(null);
-  const [listings, setListings] = useState<any[]>([]);
-  const [menuItemsRevealed, setMenuItemsRevealed] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMenuItemsRevealed(true), 100);
-    return () => clearTimeout(timer);
-  }, [tab]);
 
   // Load user's on-chain NFTs
   useEffect(() => {
@@ -110,7 +101,6 @@ export default function Marketplace({ walletConnection, nacklBalance, onBack }: 
   };
 
   const canSell = walletConnection && selectedCard && sellPrice && parseFloat(sellPrice) > 0;
-  const canBuy = walletConnection && nacklBalance && parseFloat(nacklBalance) > 0;
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
