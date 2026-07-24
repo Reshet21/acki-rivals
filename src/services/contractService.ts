@@ -3,19 +3,35 @@
  *
  * Сервис для взаимодействия со смарт-контрактами Acki Rivals.
  *
+ * ⚠️ ВАЖНО: NACKL — нативный ECC токен с индексом 1 (НЕ TIP-3).
+ *    Все платежи идут через sendTransaction на мультифакторном кошельке,
+ *    а НЕ через TIP-3 TokenRoot/onAcceptTokensTransfer.
+ *    Marketplace.sol требует переписывания под ECC механику.
+ *
+ * ⚠️ wallet.run() не существует в bee-sdk.
+ *    Все on-chain вызовы теперь используют @eversdk/core.
+ *
  * После деплоя контрактов в Shellnet, подставь их адреса в .env:
  *   VITE_COLLECTION_ADDRESS=0:...
  *   VITE_GAMEMATCH_ADDRESS=0:...
  *   VITE_PVPSTAKING_ADDRESS=0:...
  *   VITE_MARKETPLACE_ADDRESS=0:...
- *
- * ⚠️ NACKL — нативный ECC токен с индексом 1 (не TIP-3).
- *    Для send_tokens_direct используй token_root = "1".
- *    Marketplace.sol пока написан под TIP-3 — требует переписывания.
  */
 
 import type { WalletConnection } from './beeEngine';
-import { ENDPOINTS, APP_ID, API_URL } from './beeEngine';
+import {
+  initTvmSdk,
+  createClient,
+  MULTIFACTOR_ABI,
+} from './tvmSdkService';
+import {
+  getStoredMiningKeys,
+  requestMiningKeys,
+  storeMiningKeys,
+  ENDPOINTS,
+  APP_ID,
+  API_URL,
+} from './beeEngine';
 
 // ─── Конфигурация ──────────────────────────────────────
 
@@ -23,23 +39,100 @@ export const COLLECTION_ADDRESS = import.meta.env.VITE_COLLECTION_ADDRESS || '';
 export const GAMEMATCH_ADDRESS = import.meta.env.VITE_GAMEMATCH_ADDRESS || '';
 export const PVPSTAKING_ADDRESS = import.meta.env.VITE_PVPSTAKING_ADDRESS || '';
 export const MARKETPLACE_ADDRESS = import.meta.env.VITE_MARKETPLACE_ADDRESS || '';
-// ⚠️ NACKL — нативный ECC токен (index 1), не TIP-3.
-// Этот адрес нужен только для Marketplace.sol (который пока написан под TIP-3).
-// Для прямой отправки NACKL через bee-sdk используй token_root = "1".
-// TODO: Переписать Marketplace.sol под ECC нативные токены.
-export const NACKL_TOKEN_ROOT = import.meta.env.VITE_NACKL_TOKEN_ROOT || '';
 export const API_BASE = import.meta.env.VITE_API_URL || API_URL;
 export const CHAIN_ENDPOINTS = ENDPOINTS;
 
 // ─── ABI для вызовов контрактов ─────────────────────────
 // (заглушки, заполняются после компиляции через sold)
+// TODO: сгенерировать ABI из sold-компиляции контрактов
 
 export const COLLECTION_ABI = {
-  'mint': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
-  'mintBatch': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
-  'totalSupply': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
-  'tokenAddresses': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
+  'ABI version': 2,
+  version: '2.3',
+  header: ['pubkey', 'time', 'expire'],
+  functions: [
+    {
+      name: 'mint',
+      inputs: [
+        { name: 'gameCardId', type: 'uint256' },
+        { name: 'data', type: 'tuple' },
+        { name: 'to', type: 'address' },
+      ],
+      outputs: [{ name: 'tokenId', type: 'uint256' }, { name: 'tokenAddress', type: 'address' }],
+    },
+    {
+      name: 'mintBatch',
+      inputs: [
+        { name: 'gameCardIds', type: 'uint256[]' },
+        { name: 'data', type: 'tuple[]' },
+        { name: 'to', type: 'address' },
+      ],
+      outputs: [],
+    },
+    {
+      name: 'totalSupply',
+      inputs: [],
+      outputs: [{ name: 'totalSupply', type: 'uint256' }],
+    },
+    {
+      name: 'tokenAddresses',
+      inputs: [{ name: 'tokenId', type: 'uint256' }],
+      outputs: [{ name: 'addr', type: 'address' }],
+    },
+  ],
+  data: [],
+  events: [],
 };
+
+export const MARKETPLACE_ABI = {
+  'ABI version': 2,
+  version: '2.3',
+  header: ['pubkey', 'time', 'expire'],
+  functions: [
+    {
+      name: 'list',
+      inputs: [
+        { name: 'tokenAddress', type: 'address' },
+        { name: 'price', type: 'uint256' },
+      ],
+      outputs: [],
+    },
+    {
+      name: 'buy',
+      inputs: [{ name: 'tokenAddress', type: 'address' }],
+      outputs: [],
+    },
+    {
+      name: 'cancel',
+      inputs: [{ name: 'tokenAddress', type: 'address' }],
+      outputs: [],
+    },
+    {
+      name: 'listings',
+      inputs: [],
+      outputs: [{ name: 'listings', type: 'map(address,uint256)' }],
+    },
+  ],
+  data: [],
+  events: [],
+};
+
+// ─── Получение ключей для подписи ───────────────────────
+
+async function getSignerKeys(conn: WalletConnection): Promise<{ public: string; secret: string }> {
+  const stored = getStoredMiningKeys(conn.profileAddress);
+  if (stored) {
+    return { public: stored.ownerPublic, secret: stored.ownerSecret };
+  }
+  const keys = await requestMiningKeys(conn);
+  storeMiningKeys(conn.profileAddress, {
+    ownerPublic: keys.ownerPublic,
+    ownerSecret: keys.ownerSecret,
+    minerAddress: null,
+    areKeysPropagated: false,
+  });
+  return { public: keys.ownerPublic, secret: keys.ownerSecret };
+}
 
 // ─── NFT Mint ───────────────────────────────────────────
 
@@ -52,7 +145,7 @@ export interface MintResult {
 }
 
 /**
- * Заминтить карту как NFT.
+ * Заминтить карту как NFT через прямой вызов контракта Collection.
  * @param conn Подключение к кошельку
  * @param gameCardId ID карты в игре (1-44)
  * @param data Метаданные карты
@@ -70,41 +163,47 @@ export async function mintCard(
     clan: string;
     uri: string;
   },
-  to?: string
+  to?: string,
 ): Promise<MintResult> {
   if (!COLLECTION_ADDRESS) {
-    return { success: false, error: 'Collection address not configured. Set VITE_COLLECTION_ADDRESS in .env' };
+    return {
+      success: false,
+      error: 'Collection address not configured. Set VITE_COLLECTION_ADDRESS in .env',
+    };
   }
 
   try {
-    const sdk = await loadSdk();
-    const wallet = new sdk.Wallet(CHAIN_ENDPOINTS, null, API_BASE, APP_ID);
+    await initTvmSdk();
+    const signerKeys = await getSignerKeys(conn);
+    const client = createClient('mainnet');
 
     try {
-      const result = await wallet.run({
-        session_state_json: conn.sessionStateJson,
-        address: COLLECTION_ADDRESS,
-        abi: COLLECTION_ABI,
-        method: 'mint',
-        params: {
-          gameCardId,
-          data: {
-            cardId: gameCardId,
-            ...data,
+      const result = await client.processing.process_message({
+        message_encode_params: {
+          address: COLLECTION_ADDRESS,
+          abi: { type: 'Contract', value: COLLECTION_ABI },
+          call_set: {
+            function_name: 'mint',
+            input: {
+              gameCardId,
+              data: { cardId: gameCardId, ...data },
+              to: to || conn.walletAddress,
+            },
           },
-          to: to || conn.walletAddress,
+          signer: { type: 'Keys', keys: signerKeys },
+          processing_try_index: 1,
         },
-        sign: true,
+        send_events: false,
       });
 
       return {
         success: true,
-        tokenId: result?.tokenId,
-        tokenAddress: result?.tokenAddress,
-        txHash: result?.transaction?.id,
+        tokenId: result.decoded?.output?.tokenId,
+        tokenAddress: result.decoded?.output?.tokenAddress,
+        txHash: result.transaction?.id,
       };
     } finally {
-      wallet.free();
+      client.close();
     }
   } catch (e) {
     console.error('mintCard failed:', e);
@@ -132,39 +231,42 @@ export async function mintCardsBatch(
       uri: string;
     };
   }>,
-  to?: string
+  to?: string,
 ): Promise<MintResult> {
   if (!COLLECTION_ADDRESS) {
     return { success: false, error: 'Collection address not configured.' };
   }
 
   try {
-    const sdk = await loadSdk();
-    const wallet = new sdk.Wallet(CHAIN_ENDPOINTS, null, API_BASE, APP_ID);
+    await initTvmSdk();
+    const signerKeys = await getSignerKeys(conn);
+    const client = createClient('mainnet');
 
     try {
-      const result = await wallet.run({
-        session_state_json: conn.sessionStateJson,
-        address: COLLECTION_ADDRESS,
-        abi: COLLECTION_ABI,
-        method: 'mintBatch',
-        params: {
-          gameCardIds: cards.map((c) => c.gameCardId),
-          data: cards.map((c) => ({
-            cardId: c.gameCardId,
-            ...c.data,
-          })),
-          to: to || conn.walletAddress,
+      const result = await client.processing.process_message({
+        message_encode_params: {
+          address: COLLECTION_ADDRESS,
+          abi: { type: 'Contract', value: COLLECTION_ABI },
+          call_set: {
+            function_name: 'mintBatch',
+            input: {
+              gameCardIds: cards.map((c) => c.gameCardId),
+              data: cards.map((c) => ({ cardId: c.gameCardId, ...c.data })),
+              to: to || conn.walletAddress,
+            },
+          },
+          signer: { type: 'Keys', keys: signerKeys },
+          processing_try_index: 1,
         },
-        sign: true,
+        send_events: false,
       });
 
       return {
         success: true,
-        txHash: result?.transaction?.id,
+        txHash: result.transaction?.id,
       };
     } finally {
-      wallet.free();
+      client.close();
     }
   } catch (e) {
     console.error('mintCardsBatch failed:', e);
@@ -177,45 +279,43 @@ export async function mintCardsBatch(
 
 // ─── Маркетплейс ────────────────────────────────────────
 
-export const MARKETPLACE_ABI = {
-  'list': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
-  'buy': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
-  'cancel': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
-  'listings': { abiVersion: 2, version: '2.3', header: ['pubkey', 'time', 'expire'], functions: [] },
-};
-
 /**
  * Выставить карту на продажу.
  */
 export async function listCard(
   conn: WalletConnection,
   tokenAddress: string,
-  priceNano: string   // цена в nanoNACKL
+  priceNano: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!MARKETPLACE_ADDRESS) {
     return { success: false, error: 'Marketplace not configured.' };
   }
 
   try {
-    const sdk = await loadSdk();
-    const wallet = new sdk.Wallet(CHAIN_ENDPOINTS, null, API_BASE, APP_ID);
+    await initTvmSdk();
+    const signerKeys = await getSignerKeys(conn);
+    const client = createClient('mainnet');
 
     try {
-      await wallet.run({
-        session_state_json: conn.sessionStateJson,
-        address: MARKETPLACE_ADDRESS,
-        abi: MARKETPLACE_ABI,
-        method: 'list',
-        params: {
-          tokenAddress,
-          _tokenRoot: NACKL_TOKEN_ROOT,
-          price: priceNano,
+      await client.processing.process_message({
+        message_encode_params: {
+          address: MARKETPLACE_ADDRESS,
+          abi: { type: 'Contract', value: MARKETPLACE_ABI },
+          call_set: {
+            function_name: 'list',
+            input: {
+              tokenAddress,
+              price: priceNano,
+            },
+          },
+          signer: { type: 'Keys', keys: signerKeys },
+          processing_try_index: 1,
         },
-        sign: true,
+        send_events: false,
       });
       return { success: true };
     } finally {
-      wallet.free();
+      client.close();
     }
   } catch (e) {
     return {
@@ -227,42 +327,53 @@ export async function listCard(
 
 /**
  * Купить карту с маркетплейса.
+ * Отправляет NACKL (ECC index 1) через sendTransaction на мультифакторном кошельке.
+ *
+ * ⚠️ Marketplace.sol написан под TIP-3 — пока не работает с ECC NACKL.
+ *    После переписывания контракта — buy будет принимать NACKL через cc.
  */
 export async function buyCard(
   conn: WalletConnection,
   tokenAddress: string,
-  priceNano: string
+  priceNano: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!MARKETPLACE_ADDRESS) {
     return { success: false, error: 'Marketplace not configured.' };
   }
 
   try {
-    const sdk = await loadSdk();
-    const wallet = new sdk.Wallet(CHAIN_ENDPOINTS, null, API_BASE, APP_ID);
+    await initTvmSdk();
+    const signerKeys = await getSignerKeys(conn);
+    const client = createClient('mainnet');
 
     try {
-      // Отправляем NACKL через TIP-3 transfer с payload "buy"
-      const payload = sdk.abi.encode({
-        abi: { type: 'Tuple', components: [
-          { name: 'action', type: 'string' },
-          { name: 'tokenAddress', type: 'address' },
-        ]},
-        data: { action: 'buy', tokenAddress },
+      // Отправляем sendTransaction с NACKL через cc + payload для маркетплейса
+      // flag = 3 — обычная отправка, газ списывается с отправителя
+      const result = await client.processing.process_message({
+        message_encode_params: {
+          address: conn.walletAddress,
+          abi: { type: 'Contract', value: MULTIFACTOR_ABI },
+          call_set: {
+            function_name: 'sendTransaction',
+            input: {
+              dest: MARKETPLACE_ADDRESS,
+              value: '0',
+              cc: { '1': priceNano },
+              bounce: false,
+              flags: 3,
+              payload: tokenAddress, // payload = адрес NFT для покупки
+            },
+          },
+          signer: { type: 'Keys', keys: signerKeys },
+          processing_try_index: 1,
+        },
+        send_events: false,
       });
 
-      await wallet.send_tokens_direct({
-        session_state_json: conn.sessionStateJson,
-        multifactor_address: conn.walletAddress,
-        destination_address: MARKETPLACE_ADDRESS,
-        token_root: '1',  // ECC index 1 = NACKL (нативный токен, не TIP-3)
-        amount: priceNano,
-        payload,
-      });
-
+      console.log('[contractService] buyCard success:', result.transaction?.id);
       return { success: true };
     } finally {
-      wallet.free();
+      client.close();
     }
   } catch (e) {
     return {
@@ -277,28 +388,34 @@ export async function buyCard(
  */
 export async function cancelListing(
   conn: WalletConnection,
-  tokenAddress: string
+  tokenAddress: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!MARKETPLACE_ADDRESS) {
     return { success: false, error: 'Marketplace not configured.' };
   }
 
   try {
-    const sdk = await loadSdk();
-    const wallet = new sdk.Wallet(CHAIN_ENDPOINTS, null, API_BASE, APP_ID);
+    await initTvmSdk();
+    const signerKeys = await getSignerKeys(conn);
+    const client = createClient('mainnet');
 
     try {
-      await wallet.run({
-        session_state_json: conn.sessionStateJson,
-        address: MARKETPLACE_ADDRESS,
-        abi: MARKETPLACE_ABI,
-        method: 'cancel',
-        params: { tokenAddress },
-        sign: true,
+      await client.processing.process_message({
+        message_encode_params: {
+          address: MARKETPLACE_ADDRESS,
+          abi: { type: 'Contract', value: MARKETPLACE_ABI },
+          call_set: {
+            function_name: 'cancel',
+            input: { tokenAddress },
+          },
+          signer: { type: 'Keys', keys: signerKeys },
+          processing_try_index: 1,
+        },
+        send_events: false,
       });
       return { success: true };
     } finally {
-      wallet.free();
+      client.close();
     }
   } catch (e) {
     return {
@@ -321,9 +438,7 @@ export async function getOwnedNFTs(walletAddress: string): Promise<string[]> {
           account(address: "${walletAddress}") {
             nfts {
               address
-              collection {
-                address
-              }
+              collection { address }
             }
           }
         }
@@ -340,8 +455,6 @@ export async function getOwnedNFTs(walletAddress: string): Promise<string[]> {
 
     const data = await res.json();
     const nfts = data?.data?.blockchain?.account?.nfts || [];
-
-    // Фильтруем только NFT нашей коллекции
     return nfts
       .filter((n: any) => n.collection?.address === COLLECTION_ADDRESS.toLowerCase())
       .map((n: any) => n.address);
@@ -354,28 +467,15 @@ export async function getOwnedNFTs(walletAddress: string): Promise<string[]> {
 /**
  * Получить метаданные карты с её контракта.
  */
-export async function getCardMetadata(tokenAddress: string): Promise<{
-  owner: string;
-  cardId: number;
-  name: string;
-  power: number;
-  damage: number;
-  ability: string;
-  rarity: string;
-  clan: string;
-  stars: number;
-  uri: string;
-} | null> {
+export async function getCardMetadata(
+  tokenAddress: string,
+): Promise<Record<string, unknown> | null> {
   try {
-    // Через GraphQL — запрашиваем данные контракта
     const query = JSON.stringify({
       query: `{
         blockchain {
           account(address: "${tokenAddress}") {
-            info {
-              name
-              codeHash
-            }
+            info { name codeHash }
           }
         }
       }`,
@@ -388,7 +488,6 @@ export async function getCardMetadata(tokenAddress: string): Promise<{
     });
 
     if (!res.ok) return null;
-
     const data = await res.json();
     return data?.data?.blockchain?.account?.info || null;
   } catch (e) {
@@ -398,17 +497,6 @@ export async function getCardMetadata(tokenAddress: string): Promise<{
 }
 
 // ─── Utility ────────────────────────────────────────────
-
-let sdkModule: any = null;
-
-async function loadSdk(): Promise<any> {
-  if (sdkModule) return sdkModule;
-  const mod = await import('@teamgosh/bee-sdk');
-  const wasmUrl = new URL('@teamgosh/bee-sdk/bee_sdk_bg.wasm', import.meta.url);
-  await mod.default({ module_or_path: wasmUrl });
-  sdkModule = mod;
-  return sdkModule;
-}
 
 /**
  * Конвертировать NACKL в nano (умножить на 10^9).
