@@ -56,6 +56,27 @@ async function getSdk(): Promise<any> {
 }
 
 /**
+ * Получить или создать EPK ключи для подписи транзакций.
+ * Сначала проверяет сохранённые ключи, если нет — запрашивает через кошелёк.
+ */
+async function getSignerKeys(conn: WalletConnection): Promise<{ public: string; secret: string }> {
+  const stored = getStoredMiningKeys(conn.profileAddress);
+  if (stored) {
+    return { public: stored.ownerPublic, secret: stored.ownerSecret };
+  }
+
+  // Ключей нет — запрашиваем через BeeConnect (кошелёк попросит подтвердить)
+  const keys = await requestMiningKeys(conn);
+  storeMiningKeys(conn.profileAddress, {
+    ownerPublic: keys.ownerPublic,
+    ownerSecret: keys.ownerSecret,
+    minerAddress: null,
+    areKeysPropagated: false,
+  });
+  return { public: keys.ownerPublic, secret: keys.ownerSecret };
+}
+
+/**
  * Отправить NACKL с кошелька покупателя на кошелёк разработчика.
  *
  * Для отправки нужны EPK ключи (signer_keys).
@@ -70,20 +91,7 @@ export async function buyPack(
   nacklAmount: number,
 ): Promise<PaymentResult> {
   try {
-    // ── Получаем EPK ключи ──────────────────────────────────
-    let miningKeys = getStoredMiningKeys(conn.profileAddress);
-    if (!miningKeys || !miningKeys.areKeysPropagated) {
-      // Если ключей нет — запрашиваем через BeeConnect
-      // (кошелёк попросит подтвердить добавление ключей)
-      const keys = await requestMiningKeys(conn);
-      miningKeys = {
-        ownerPublic: keys.ownerPublic,
-        ownerSecret: keys.ownerSecret,
-        minerAddress: null,
-        areKeysPropagated: false,
-      };
-      storeMiningKeys(conn.profileAddress, miningKeys);
-    }
+    const signerKeys = await getSignerKeys(conn);
 
     const sdk = await getSdk();
     const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
@@ -91,17 +99,13 @@ export async function buyPack(
     try {
       const nanoAmount = BigInt(Math.floor(nacklAmount * 1e9)).toString();
 
-      // Правильный API из bee-sdk TSendTokensDirectReq
       const result = await wallet.send_tokens_direct({
         multifactor_address: conn.walletAddress,
         destination_address: DEVELOPER_WALLET,
-        token_root: NACKL_ECC_INDEX,        // ECC index 1 = NACKL
-        amount_raw: nanoAmount,              // amount_raw, не amount!
-        flags: 0,                             // 0 = обычный перевод
-        signer_keys: {                        // EPK ключи
-          public: miningKeys.ownerPublic,
-          secret: miningKeys.ownerSecret,
-        },
+        token_root: NACKL_ECC_INDEX,
+        amount_raw: nanoAmount,
+        flags: 0,
+        signer_keys: signerKeys,
         bounce: false,
       });
 
@@ -116,12 +120,9 @@ export async function buyPack(
     console.error('Payment failed:', e);
     const msg = e instanceof Error ? e.message : 'Unknown payment error';
 
-    // Если ключи не прошли — предлагаем перезапросить
-    if (msg.includes('signer_keys') || msg.includes('EPK') || msg.includes('factor')) {
-      // Сбрасываем кеш ключей — в следующий раз перезапросим
-      if (conn?.profileAddress) {
-        storeMiningKeys(conn.profileAddress, null);
-      }
+    // Если ошибка связана с ключами — сбрасываем кеш, чтобы перезапросить
+    if (msg.includes('signer_keys') || msg.includes('EPK') || msg.includes('factor') || msg.includes('expired')) {
+      storeMiningKeys(conn.profileAddress, null);
     }
 
     return {
