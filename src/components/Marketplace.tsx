@@ -7,7 +7,6 @@ import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
 import {
   listCard,
-  buyCard,
   cancelListing,
   getOwnedNFTs,
   nacklToNano,
@@ -63,21 +62,6 @@ export default function Marketplace({ walletConnection, nacklBalance, onBack }: 
       setListingStatus('listed');
       setSelectedCard(null);
       setSellPrice('');
-      setTimeout(() => setListingStatus(null), 2000);
-    } else {
-      setListingStatus(`error: ${result.error}`);
-    }
-  };
-
-  const handleBuy = async (tokenAddress: string, priceNano: string) => {
-    if (!walletConnection) return;
-    impactOccurred('medium');
-    setListingStatus('buying');
-
-    const result = await buyCard(walletConnection, tokenAddress, priceNano);
-
-    if (result.success) {
-      setListingStatus('bought');
       setTimeout(() => setListingStatus(null), 2000);
     } else {
       setListingStatus(`error: ${result.error}`);
