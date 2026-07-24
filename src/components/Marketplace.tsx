@@ -11,7 +11,6 @@ import {
   cancelListing,
   getOwnedNFTs,
   nacklToNano,
-  COLLECTION_ADDRESS,
   MARKETPLACE_ADDRESS,
 } from '../services/contractService';
 
