@@ -8,7 +8,10 @@
  *   VITE_GAMEMATCH_ADDRESS=0:...
  *   VITE_PVPSTAKING_ADDRESS=0:...
  *   VITE_MARKETPLACE_ADDRESS=0:...
- *   VITE_NACKL_TOKEN_ROOT=0:...  (адрес NACKL TIP-3 токена в сети)
+ *
+ * ⚠️ NACKL — нативный ECC токен с индексом 1 (не TIP-3).
+ *    Для send_tokens_direct используй token_root = "1".
+ *    Marketplace.sol пока написан под TIP-3 — требует переписывания.
  */
 
 import type { WalletConnection } from './beeEngine';
@@ -20,6 +23,10 @@ export const COLLECTION_ADDRESS = import.meta.env.VITE_COLLECTION_ADDRESS || '';
 export const GAMEMATCH_ADDRESS = import.meta.env.VITE_GAMEMATCH_ADDRESS || '';
 export const PVPSTAKING_ADDRESS = import.meta.env.VITE_PVPSTAKING_ADDRESS || '';
 export const MARKETPLACE_ADDRESS = import.meta.env.VITE_MARKETPLACE_ADDRESS || '';
+// ⚠️ NACKL — нативный ECC токен (index 1), не TIP-3.
+// Этот адрес нужен только для Marketplace.sol (который пока написан под TIP-3).
+// Для прямой отправки NACKL через bee-sdk используй token_root = "1".
+// TODO: Переписать Marketplace.sol под ECC нативные токены.
 export const NACKL_TOKEN_ROOT = import.meta.env.VITE_NACKL_TOKEN_ROOT || '';
 export const API_BASE = import.meta.env.VITE_API_URL || API_URL;
 export const CHAIN_ENDPOINTS = ENDPOINTS;
@@ -248,10 +255,10 @@ export async function buyCard(
         session_state_json: conn.sessionStateJson,
         multifactor_address: conn.walletAddress,
         destination_address: MARKETPLACE_ADDRESS,
-        token_root: NACKL_TOKEN_ROOT,
-        amount: priceNano,
-        payload,
-      });
+        token_root: NACKL_TOKEN_ROOT,          amount: priceNano,
+          token_root: '1',  // ECC index 1 = NACKL (нативный токен, не TIP-3)
+          payload,
+        });
 
       return { success: true };
     } finally {

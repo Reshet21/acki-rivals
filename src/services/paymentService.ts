@@ -4,13 +4,16 @@
  * Sends NACKL tokens from buyer's wallet to developer wallet for pack purchases.
  *
  * NACKL — нативный ECC токен Acki Nacki с индексом 1.
- * Для отправки используется bee-sdk Wallet.send_tokens_direct() с
- * адресом NACKL TokenRoot из переменной окружения VITE_NACKL_TOKEN_ROOT.
+ * У него НЕТ TIP-3 TokenRoot контракта — это встроенный токен сети.
+ * Для отправки через bee-sdk Wallet.send_tokens_direct() нужно передать
+ * token_root = "1" (ECC индекс NACKL).
  *
- * Адрес NACKL TokenRoot можно найти:
- *   - В AN Wallet при просмотре токена
- *   - На explorer.ackinacki.com в контрактах
- *   - Или спросить в сообществе Acki Nacki
+ * Спецификация ECC:
+ *   NACKL → index 1
+ *   SHELL  → index 2
+ *   USDC   → index 3
+ *
+ * @see https://docs.ackinacki.com/glossary#extra-currency-collection
  */
 
 import type { WalletConnection } from './beeEngine';
@@ -18,8 +21,11 @@ import { ENDPOINTS, API_URL, APP_ID } from './beeEngine';
 
 const DEVELOPER_WALLET = '0:d9ed11eaef8f0ec7b475fe29e293bb721cb6a64dfba3fd069b8e2f9303ff6b36';
 
-// Адрес NACKL TokenRoot из переменной окружения
-const NACKL_TOKEN_ROOT = import.meta.env.VITE_NACKL_TOKEN_ROOT || '';
+/**
+ * NACKL — это ECC (Extra Currency Collection) токен с индексом 1.
+ * Для send_tokens_direct token_root = "1" (строка с индексом, не адрес контракта).
+ */
+const NACKL_ECC_INDEX = '1';
 
 export interface PaymentResult {
   success: boolean;
@@ -50,21 +56,20 @@ async function getSdk(): Promise<any> {
 }
 
 /**
- * Send NACKL tokens from buyer to developer wallet.
- * Использует VITE_NACKL_TOKEN_ROOT из .env для отправки.
- * Если переменная не задана — возвращает ошибку с инструкцией.
+ * Отправить NACKL с кошелька покупателя на кошелёк разработчика.
+ *
+ * NACKL — нативный ECC токен (index 1), не TIP-3.
+ * token_root = "1" означает "использовать ECC токен с индексом 1".
+ *
+ * @see bee_wallet_modules/tokens.rs is_native_ecc(token_root):
+ *   fn is_native_ecc(token_root: &str) -> bool {
+ *       token_root.parse::<u32>().is_ok()
+ *   }
  */
 export async function buyPack(
   conn: WalletConnection,
   nacklAmount: number,
 ): Promise<PaymentResult> {
-  if (!NACKL_TOKEN_ROOT) {
-    return {
-      success: false,
-      error: 'NACKL TokenRoot не настроен. Добавь VITE_NACKL_TOKEN_ROOT в .env или на Vercel.'
-    };
-  }
-
   try {
     const sdk = await getSdk();
     const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
@@ -73,12 +78,12 @@ export async function buyPack(
       // Convert NACKL amount to nano (multiply by 10^9)
       const nanoAmount = BigInt(Math.floor(nacklAmount * 1e9)).toString();
 
-      // Send tokens using the SDK
+      // Send native ECC token (index 1 = NACKL) via send_tokens_direct
       const result = await wallet.send_tokens_direct({
         session_state_json: conn.sessionStateJson,
         multifactor_address: conn.walletAddress,
         destination_address: DEVELOPER_WALLET,
-        token_root: NACKL_TOKEN_ROOT,
+        token_root: NACKL_ECC_INDEX,
         amount: nanoAmount,
       });
 
@@ -105,7 +110,7 @@ export async function buyPack(
 }
 
 /**
- * Get current NACKL balance from wallet.
+ * Получить текущий баланс NACKL (ECC index 1) кошелька.
  */
 export async function getBalance(walletAddress: string): Promise<string> {
   const sdk = await getSdk();
