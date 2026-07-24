@@ -19,9 +19,10 @@ import PvpBattleScreen from './components/PvpBattleScreen';
 import InfoScreen from './components/InfoScreen';
 import Leaderboard from './components/Leaderboard';
 import SettingsScreen from './components/SettingsScreen';
+import Marketplace from './components/Marketplace';
 import type { Game } from './services/pvpService';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
+type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
 function AppInner() {
   const { haptic } = useTelegram();
@@ -298,7 +299,7 @@ function AppInner() {
             </div>
 
             {/* Secondary Actions - Premium Cards */}
-            <div className="w-full max-w-xs grid grid-cols-2 gap-2.5 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <button onClick={() => { selectionChanged(); setScreen('deck'); }}
                 className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                 style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,140,0,0.06) 100%)', border: '1px solid rgba(255,215,0,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
@@ -310,6 +311,12 @@ function AppInner() {
                 style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(139,92,246,0.06) 100%)', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                 <span className="text-xl">🛒</span>
                 <span style={{ color: '#A855F7' }}>{t('menu.shop')}</span>
+              </button>
+              <button onClick={() => { selectionChanged(); setScreen('marketplace'); }}
+                className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,140,0,0.06) 100%)', border: '1px solid rgba(255,215,0,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                <span className="text-xl">🏪</span>
+                <span style={{ color: '#FFD700' }}>{t('menu.marketplace') || 'Рынок'}</span>
               </button>
             </div>
 
@@ -371,6 +378,16 @@ function AppInner() {
             onBack={() => setScreen('menu')}
             starterPackClaimed={starterPackClaimed}
             onClaimStarterPack={handleClaimStarterPack}
+          />
+        </div>
+      )}
+
+      {screen === 'marketplace' && (
+        <div className="flex-1 flex items-center justify-center">
+          <Marketplace
+            walletConnection={walletConnection}
+            nacklBalance={nacklBalance}
+            onBack={() => setScreen('menu')}
           />
         </div>
       )}

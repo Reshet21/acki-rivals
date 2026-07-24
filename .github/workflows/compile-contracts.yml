@@ -1,0 +1,188 @@
+name: Compile Smart Contracts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'contracts/*.sol'
+      - '.github/workflows/compile-contracts.yml'
+  workflow_dispatch:
+    inputs:
+      deploy_to_shellnet:
+        description: 'Deploy to Shellnet after compile?'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libboost-all-dev \
+            libfmt-dev \
+            libjsoncpp-dev \
+            librange-v3-dev \
+            ninja-build \
+            xxd \
+            file
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Build sold (TVM Solidity compiler driver)
+        run: |
+          git clone --depth 1 --recurse-submodules \
+            https://github.com/everx-labs/TVM-Solidity-Compiler.git
+
+          cd TVM-Solidity-Compiler/sold
+          cargo build --release
+          echo "✅ sold build complete"
+
+      - name: Compile all contracts
+        run: |
+          set -euo pipefail
+          mkdir -p build
+
+          SOLD=$(ls TVM-Solidity-Compiler/target/release/sold \
+            2>/dev/null || \
+            ls TVM-Solidity-Compiler/sold/target/release/sold \
+            2>/dev/null || echo "")
+          if [ -z "$SOLD" ]; then
+            echo "❌ sold binary not found!"
+            find TVM-Solidity-Compiler -name "sold" -type f 2>/dev/null | head -5
+            exit 1
+          fi
+          echo "Using sold: $SOLD"
+          $SOLD --version
+
+          CONTRACTS=(
+            interfaces.sol
+            GameCardNFTToken.sol
+            GameCardNFTCollection.sol
+            GameMatch.sol
+            PvPStaking.sol
+            Marketplace.sol
+          )
+
+          for CONTRACT in "${CONTRACTS[@]}"; do
+            if [ ! -f "contracts/${CONTRACT}" ]; then
+              echo "⚠️  Skipping ${CONTRACT} — not found"
+              continue
+            fi
+            echo "📦 Compiling ${CONTRACT}..."
+            $SOLD \
+              --tvm-version gosh \
+              --output-dir build/ \
+              --contract interfaces.sol \
+              "contracts/${CONTRACT}" || {
+              echo "❌ Failed to compile ${CONTRACT}"
+              exit 1
+            }
+          done
+
+      - name: Collect artifacts
+        run: |
+          set -euo pipefail
+          echo "=== build/ contents ==="
+          ls -la build/ 2>/dev/null || echo "(empty)"
+
+          echo "=== Search for .code files ==="
+          find . -name "*.code" -type f 2>/dev/null | head -20 || echo "none"
+
+          echo "=== Search for .tvc files ==="
+          find . -name "*.tvc" -type f 2>/dev/null | head -20 || echo "none"
+
+          # Copy any .tvc / .code / .abi.json to build/
+          find . \( -name "*.tvc" -o -name "*.code" -o -name "*.abi.json" -o -name "*.debug.json" \) \
+            -type f -not -path "./build/*" \
+            -exec cp -v {} build/ \; 2>/dev/null || true
+
+          echo "=== Final build/ contents ==="
+          ls -la build/
+
+      - name: Smoke test — verify .tvc files
+        run: |
+          set -euo pipefail
+          echo "=== Smoke tests ==="
+          ERROR=0
+          for F in build/*.tvc; do
+            if [ -f "$F" ]; then
+              SIZE=$(stat --format="%s" "$F")
+              if [ "$SIZE" -gt 500 ]; then
+                FT=$(file -b "$F")
+                echo "✅ $(basename $F): ${SIZE} bytes (${FT%% *})"
+              else
+                echo "❌ $(basename $F): too small (${SIZE} bytes), possible corrupt"
+                ERROR=1
+              fi
+            fi
+          done
+          for F in build/*.code; do
+            if [ -f "$F" ]; then
+              SIZE=$(stat --format="%s" "$F")
+              echo "📄 $(basename $F): ${SIZE} bytes"
+            fi
+          done
+          [ "$ERROR" -eq 0 ] || exit 1
+
+      - name: Generate SHA256 checksums
+        run: |
+          cd build
+          sha256sum * > checksums.sha256
+          cat checksums.sha256
+
+      - name: Upload compiled artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-contracts
+          path: build/
+          retention-days: 90
+
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_to_shellnet }}
+    needs: compile
+    runs-on: ubuntu-latest
+    environment: shellnet
+    steps:
+      - name: Download compiled artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-contracts
+          path: build/
+
+      - name: Setup tvm-cli
+        run: |
+          curl -sL \
+            https://github.com/everx-labs/ever-cli/releases/latest/download/ever-cli-linux.gz \
+            | gunzip > tvm-cli
+          chmod +x tvm-cli
+          sudo mv tvm-cli /usr/local/bin/
+          tvm-cli --version
+
+      - name: Configure Shellnet
+        run: |
+          tvm-cli config -g --url shellnet.ackinacki.org
+
+      - name: Deploy Collection
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          OWNER_PUBKEY: ${{ secrets.OWNER_PUBKEY }}
+        run: |
+          echo "$DEPLOY_KEY" > deploy.keys.json
+          tvm-cli deploy \
+            --abi build/GameCardNFTCollection.abi.json \
+            --sign deploy.keys.json \
+            build/GameCardNFTCollection.tvc \
+            "{\"_ownerPubkey\": \"0x${OWNER_PUBKEY}\", \"_admin\": \"${{ secrets.ADMIN_ADDRESS }}\"}"
