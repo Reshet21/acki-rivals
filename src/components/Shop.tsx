@@ -78,6 +78,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       }
     }
 
+    // ═══ DEV MODE: если блокчейн-платёж недоступен (ошибка 502),
+    // паки выдаются бесплатно с предупреждением.
+    // Это временное решение, пока AN Wallet не добавят нормальный
+    // платёжный API (token_transfer_request в bee-connect).
+    // Режим можно отключить, когда VITE_PAYMENT_MODE=live
+    const isDevPayment = !import.meta.env.VITE_PAYMENT_MODE || import.meta.env.VITE_PAYMENT_MODE === 'dev';
+
     impactOccurred('medium');
     setBuyingPackId(packId);
     setPaymentError(null);
@@ -94,22 +101,43 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       return;
     }
 
-    try {
-      const result = await buyPackWithNackl(walletConnection!, pack.nacklPrice);
+    if (!isDevPayment) {
+      // ─── PRODUCTION: реальная блокчейн-транзакция ───
+      try {
+        const result = await buyPackWithNackl(walletConnection!, pack.nacklPrice);
 
-      if (result.success) {
-        const cards = onBuyPack(packId);
-        if (!cards || cards.length === 0) return;
-        setOpenedCards(cards);
-        setRevealIndex(-1);
-        setPhase('opening');
-      } else {
-        setPaymentError(result.error || t('shop.paymentError'));
+        if (result.success) {
+          const cards = onBuyPack(packId);
+          if (!cards || cards.length === 0) return;
+          setOpenedCards(cards);
+          setRevealIndex(-1);
+          setPhase('opening');
+          setBuyingPackId(null);
+          return;
+        } else {
+          setPaymentError(result.error || t('shop.paymentError'));
+          setBuyingPackId(null);
+          return;
+        }
+      } catch (e) {
+        setPaymentError(t('shop.networkError'));
+        setBuyingPackId(null);
+        return;
       }
-    } catch (e) {
-      setPaymentError(t('shop.networkError'));
-    } finally {
-      setBuyingPackId(null);
+    }
+
+    // ─── DEV MODE: бесплатная выдача (блокчейн отключён) ───
+    const cards = onBuyPack(packId);
+    if (!cards || cards.length === 0) return;
+    setOpenedCards(cards);
+    setRevealIndex(-1);
+    setPhase('opening');
+    setBuyingPackId(null);
+
+    // Показываем предупреждение, что платёж не прошёл, но паки выданы
+    const isPaymentAttempted = walletConnection !== null;
+    if (isPaymentAttempted) {
+      setPaymentError('⚡ DEV MODE: Блокчейн-платёж недоступен. Паки выданы бесплатно. Когда появится поддержка AN Wallet — отключи VITE_PAYMENT_MODE=dev в .env');
     }
   };
 
