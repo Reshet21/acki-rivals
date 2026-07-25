@@ -94,6 +94,7 @@ export async function mintCardsBatch(): Promise<MintResult> {
  * ⚠️ Требует деплоя Marketplace.sol.
  */
 export async function listCard(
+  _walletConnection: unknown,
   _tokenAddress: string,
   _priceNano: string,
 ): Promise<{ success: boolean; error?: string }> {
@@ -110,6 +111,7 @@ export async function listCard(
  * Купить карту с маркетплейса.
  */
 export async function buyCard(
+  _walletConnection: unknown,
   _tokenAddress: string,
   _priceNano: string,
 ): Promise<{ success: boolean; error?: string }> {
@@ -126,6 +128,7 @@ export async function buyCard(
  * Отменить листинг.
  */
 export async function cancelListing(
+  _walletConnection: unknown,
   _tokenAddress: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!MARKETPLACE_ADDRESS) {
