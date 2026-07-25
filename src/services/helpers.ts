@@ -17,31 +17,49 @@ import {
 /**
  * Получить или создать EPK ключи для подписи транзакций.
  *
- * Сначала проверяет сохранённые ключи в localStorage.
- * Если нет — запрашивает через bee_connect (request_set_mining_keys).
- * Кошелёк попросит подтвердить добавление EPK-ключа.
+ * ⚠️ EPK-ключи (эфемерные) имеют ограниченный срок жизни (макс 180 дней).
+ * Если ключ просрочен — мультифакторный контракт вернёт exit code 502
+ * (ERR_FACTOR_EXPIRED).
+ *
+ * Стратегия:
+ * - Если `forceRefresh = true` — всегда запрашиваем свежие ключи через BeeConnect.
+ * - Если `forceRefresh = false` — сначала проверяем localStorage.
+ *   Если ключи есть и им меньше 7 дней — используем их.
+ *   Иначе — запрашиваем свежие.
  *
  * @param conn — подключение к кошельку (через bee_connect)
+ * @param forceRefresh — если true, игнорировать кэш и запросить новые ключи
  * @returns объект { public, secret } с EPK ключами
  */
 export async function getSignerKeys(
   conn: WalletConnection,
+  forceRefresh = false,
 ): Promise<{ public: string; secret: string }> {
   const stored = getStoredMiningKeys(conn.profileAddress);
-  if (stored) {
+
+  if (!forceRefresh && stored && !isKeyExpired(stored._timestamp)) {
     return { public: stored.ownerPublic, secret: stored.ownerSecret };
   }
 
-  // Ключей нет — запрашиваем через BeeConnect
+  // Ключей нет / просрочены / принудительно — запрашиваем через BeeConnect
   const keys = await requestMiningKeys(conn);
   storeMiningKeys(conn.profileAddress, {
     ownerPublic: keys.ownerPublic,
     ownerSecret: keys.ownerSecret,
     minerAddress: null,
     areKeysPropagated: false,
+    _timestamp: Date.now(),
   });
 
   return { public: keys.ownerPublic, secret: keys.ownerSecret };
+}
+
+/**
+ * Проверить, не просрочен ли ключ (по умолчанию 7 дней).
+ */
+function isKeyExpired(timestamp?: number, maxAgeMs = 7 * 24 * 60 * 60 * 1000): boolean {
+  if (!timestamp) return true;
+  return Date.now() - timestamp > maxAgeMs;
 }
 
 /**

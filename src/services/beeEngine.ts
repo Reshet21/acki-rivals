@@ -26,6 +26,7 @@ export interface MiningKeys {
   ownerSecret: string;
   minerAddress: string | null;
   areKeysPropagated: boolean;
+  _timestamp?: number;
 }
 
 export interface MinerDebugInfo {

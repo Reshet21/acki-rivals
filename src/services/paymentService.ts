@@ -63,7 +63,9 @@ export async function buyPack(
   _packType?: string,
 ): Promise<PaymentResult> {
   try {
-    const signerKeys = await getSignerKeys(conn);
+    // ⚠️ forceRefresh = true — каждый раз запрашиваем свежий EPK ключ,
+    // чтобы не нарваться на ERR_FACTOR_EXPIRED (502)
+    const signerKeys = await getSignerKeys(conn, true);
     const sdk = await getSdk();
     const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
 
