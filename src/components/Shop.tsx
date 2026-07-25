@@ -17,6 +17,11 @@ interface Props {
   onClaimStarterPack: () => void;
 }
 
+// ═══ DEV MODE: если VITE_PAYMENT_MODE не задан или = 'dev',
+// блокчейн-платежи пропускаются, паки выдаются бесплатно.
+// Временное решение, пока AN Wallet не добавят token_transfer_request.
+const IS_DEV_PAYMENT = !import.meta.env.VITE_PAYMENT_MODE || import.meta.env.VITE_PAYMENT_MODE === 'dev';
+
 const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; text: string; gradient: string }> = {
   common: { border: 'border-gray-400', bg: 'bg-gray-500/10', glow: '', text: 'text-gray-300', gradient: 'from-gray-600 to-gray-800' },
   uncommon: { border: 'border-green-400', bg: 'bg-green-500/10', glow: 'shadow-[0_0_12px_rgba(74,222,128,0.3)]', text: 'text-green-300', gradient: 'from-green-600 to-emerald-800' },
@@ -70,7 +75,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     }
 
     // Starter pack is free — skip NACKL check
-    if (packId !== 'starter') {
+    // Dev mode — тоже пропускаем balance check (бесплатно)
+    if (packId !== 'starter' && !IS_DEV_PAYMENT) {
       const balance = parseFloat(nacklBalance || '0');
       if (balance < pack.nacklPrice) {
         setPaymentError(t('shop.notEnoughNackl'));
@@ -78,12 +84,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       }
     }
 
-    // ═══ DEV MODE: если блокчейн-платёж недоступен (ошибка 502),
-    // паки выдаются бесплатно с предупреждением.
-    // Это временное решение, пока AN Wallet не добавят нормальный
-    // платёжный API (token_transfer_request в bee-connect).
-    // Режим можно отключить, когда VITE_PAYMENT_MODE=live
-    const isDevPayment = !import.meta.env.VITE_PAYMENT_MODE || import.meta.env.VITE_PAYMENT_MODE === 'dev';
+
 
     impactOccurred('medium');
     setBuyingPackId(packId);
@@ -101,7 +102,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       return;
     }
 
-    if (!isDevPayment) {
+    if (!IS_DEV_PAYMENT) {
       // ─── PRODUCTION: реальная блокчейн-транзакция ───
       try {
         const result = await buyPackWithNackl(walletConnection!, pack.nacklPrice);
@@ -155,6 +156,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     if (packId === 'starter') {
       return !starterPackClaimed;
     }
+    // Dev mode — кнопка всегда активна (бесплатно)
+    if (IS_DEV_PAYMENT) return true;
     if (!walletConnection) return false;
     const balance = parseFloat(nacklBalance || '0');
     return balance >= pack.nacklPrice;
