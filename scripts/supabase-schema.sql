@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.games (
   guest_id TEXT,
   host_deck JSONB NOT NULL DEFAULT '[]',
   guest_deck JSONB,
-  state JSONB,
+  state JSONB NOT NULL DEFAULT '{"phase":"waiting","round":0,"hostHP":100,"guestHP":100,"hostPillz":0,"guestPillz":0}'::jsonb,
   status TEXT NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'active', 'finished')),
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
