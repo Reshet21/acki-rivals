@@ -17,7 +17,7 @@ import "./interfaces.sol";
  *      второй игрок вызывает triggerTimeout() и выигрывает автоматом
  *
  * Безопасность:
- *   - hash = sha256(abi.encodePacked(secret, roomId, playerAddress))
+ *   - hash = sha256(secret + roomId + playerAddress)
  *   - secret — 32 байта случайности, сгенерированной на клиенте
  *   - После коммита нельзя изменить секрет
  *   - После ревела результат детерминирован
@@ -70,6 +70,24 @@ contract GameMatch is IGameMatch {
         tvm.accept();
         ownerPubkey = _ownerPubkey;
         roomCount = 0;
+    }
+
+    /* ─── Хелперы для хеширования ─────────────────────────── */
+
+    /// sha256 от bytes32 (один секрет)
+    function _hashSecret(bytes32 secret) private pure returns (uint256) {
+        TvmBuilder _b;
+        _b.store(secret);
+        return sha256(_b.toCell());
+    }
+
+    /// sha256 от двух секретов + roomId (для финализации)
+    function _hashCombined(bytes32 secretA, bytes32 secretB, uint256 roomId) private pure returns (uint256) {
+        TvmBuilder _b;
+        _b.store(secretA);
+        _b.store(secretB);
+        _b.store(roomId);
+        return sha256(_b.toCell());
     }
 
     /* ─── Start Match ─────────────────────────────────────── */
@@ -165,7 +183,7 @@ contract GameMatch is IGameMatch {
         tvm.accept();
 
         // Проверяем, что секрет соответствует закоммиченному хешу
-        uint256 computedHash = sha256(abi.encodePacked(secret));
+        uint256 computedHash = _hashSecret(secret);
         address otherPlayer;
 
         if (msg.sender == room.playerA) {
@@ -228,7 +246,7 @@ contract GameMatch is IGameMatch {
     /**
      * @notice Определить победителя на основе двух секретов.
      * @dev winner = (hash(secretA + secretB + roomId) % 2 == 0) ? playerA : playerB
-     *      Ничья = 0 (address(0)). В текущей реализации ничья невозможна,
+     *      Ничья = 0 (address(0)). В текущей реализации ничья возможна (result=2),
      *      но PvPStaking должен обработать случай address(0).
      */
     function _finalize(uint256 roomId) internal {
@@ -236,9 +254,7 @@ contract GameMatch is IGameMatch {
         require(room.status == 1, 312);
         require(room.secretA != bytes32(0) && room.secretB != bytes32(0), 313);
 
-        uint256 combinedHash = sha256(
-            abi.encodePacked(room.secretA, room.secretB, uint256(roomId))
-        );
+        uint256 combinedHash = _hashCombined(room.secretA, room.secretB, roomId);
 
         // Безопасное приведение: берём первый байт хеша mod 3
         // 0 = playerA, 1 = playerB, 2 = draw
@@ -279,6 +295,4 @@ contract GameMatch is IGameMatch {
         tvm.accept();
         ownerPubkey = _newPubkey;
     }
-
-    fallback() external payable {}
 }
