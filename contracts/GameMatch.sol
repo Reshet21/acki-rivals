@@ -75,15 +75,15 @@ contract GameMatch is IGameMatch {
     /* ─── Хелперы для хеширования ─────────────────────────── */
 
     /// sha256 от bytes32 (один секрет)
-    /// Использует abi.encode (не encodePacked) — для bytes32 результат идентичный
     function _hashSecret(bytes32 secret) private pure returns (uint256) {
-        return sha256(abi.encode(secret));
+        return sha256(bytes(secret));
     }
 
     /// sha256 от двух секретов + roomId (для финализации)
-    /// abi.encode безопасен: bytes32 и uint256 уже 32-байтовые, паддинг не добавляется
+    /// Используем XOR отдельных хешей — abi.encode/encodePacked не поддерживаются в sold 0.77.
+    /// Клиент считает так же: sha256(bytes(secretA)) ^ sha256(bytes(secretB)) ^ sha256(bytes(roomId))
     function _hashCombined(bytes32 secretA, bytes32 secretB, uint256 roomId) private pure returns (uint256) {
-        return sha256(abi.encode(secretA, secretB, roomId));
+        return _hashSecret(secretA) ^ _hashSecret(secretB) ^ sha256(bytes(roomId));
     }
 
     /* ─── Start Match ─────────────────────────────────────── */
