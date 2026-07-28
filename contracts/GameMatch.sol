@@ -66,7 +66,7 @@ contract GameMatch is IGameMatch {
 
     /* ─── Конструктор ─────────────────────────────────────── */
 
-    constructor(uint256 _ownerPubkey) public {
+    constructor(uint256 _ownerPubkey) {
         tvm.accept();
         ownerPubkey = _ownerPubkey;
         roomCount = 0;
