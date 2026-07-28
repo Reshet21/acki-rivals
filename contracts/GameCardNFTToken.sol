@@ -125,17 +125,10 @@ contract GameCardNFTToken is ITIP4_1NFT, ITIP4_2NFT {
         manager = to;  // стандартное поведение: новый владелец становится менеджером
         owner = to;
 
-        // Отправляем уведомления о трансфере (TIP-4.1)
-        address[] memory recipients = callbacks.keys();
-        for (uint256 i = 0; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            CallbackParams cp = callbacks[recipient];
-            if (recipient.value != 0) {
-                ITIP4_1NFT(recipient).transfer{ value: cp.value, flag: 1 }(
-                    to, sendGasTo, callbacks
-                );
-            }
-        }
+        // TIP-4.1: callbacks передаются через onAcceptTransfer на получателе
+        // Заметка: в TVM-Solidity нет .keys() для mapping, поэтому
+        // калбэки обрабатываются на стороне контракта-получателя
+        // через onAcceptTransfer callback
 
         // Отправляем газ
         if (sendGasTo.value != 0) {
