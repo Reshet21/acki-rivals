@@ -47,9 +47,8 @@ jobs:
           echo "⬇️ Downloading stdlib_sol.tvm..."
           curl -sL \
             "https://github.com/everx-labs/TVM-Solidity-Compiler/releases/download/${SOLD_TAG}/stdlib_sol_${SOLD_FILES}.tvm.gz" \
-            -o /tmp/stdlib.gz
-          gunzip /tmp/stdlib.gz
-          mv /tmp/stdlib_sol_${SOLD_FILES}.tvm tools/stdlib_sol.tvm
+            -o /tmp/stdlib_sol.tvm.gz
+          gunzip -c /tmp/stdlib_sol.tvm.gz > tools/stdlib_sol.tvm
           echo "✅ stdlib_sol.tvm: $(wc -c < tools/stdlib_sol.tvm) bytes"
 
           echo "tools/" >> $GITHUB_PATH
