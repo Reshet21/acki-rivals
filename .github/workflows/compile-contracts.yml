@@ -9,7 +9,8 @@ on:
   workflow_dispatch:
 
 env:
-  SOLD_VERSION: "0_77_0"
+  SOLD_TAG: "0.77.0"         # тег релиза (с точками)
+  SOLD_FILES: "0_77_0"       # имена ассетов (с подчёркиваниями)
   TVM_LINKER_REPO: "everx-labs/TVM-linker"
 
 jobs:
@@ -33,9 +34,9 @@ jobs:
           mkdir -p tools
 
           # Download sold binary
-          echo "⬇️ Downloading sold $SOLD_VERSION..."
+          echo "⬇️ Downloading sold $SOLD_TAG..."
           curl -sL \
-            "https://github.com/everx-labs/TVM-Solidity-Compiler/releases/download/${SOLD_VERSION}/sold_${SOLD_VERSION}_linux.gz" \
+            "https://github.com/everx-labs/TVM-Solidity-Compiler/releases/download/${SOLD_TAG}/sold_${SOLD_FILES}_linux.gz" \
             -o /tmp/sold.gz
           gunzip /tmp/sold.gz
           chmod +x /tmp/sold
@@ -45,10 +46,10 @@ jobs:
           # Download stdlib_sol.tvm
           echo "⬇️ Downloading stdlib_sol.tvm..."
           curl -sL \
-            "https://github.com/everx-labs/TVM-Solidity-Compiler/releases/download/${SOLD_VERSION}/stdlib_sol_${SOLD_VERSION}.tvm.gz" \
+            "https://github.com/everx-labs/TVM-Solidity-Compiler/releases/download/${SOLD_TAG}/stdlib_sol_${SOLD_FILES}.tvm.gz" \
             -o /tmp/stdlib.gz
           gunzip /tmp/stdlib.gz
-          mv /tmp/stdlib_sol_${SOLD_VERSION}.tvm tools/stdlib_sol.tvm
+          mv /tmp/stdlib_sol_${SOLD_FILES}.tvm tools/stdlib_sol.tvm
           echo "✅ stdlib_sol.tvm: $(wc -c < tools/stdlib_sol.tvm) bytes"
 
           echo "tools/" >> $GITHUB_PATH
