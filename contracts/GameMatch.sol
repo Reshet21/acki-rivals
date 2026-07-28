@@ -242,7 +242,7 @@ contract GameMatch is IGameMatch {
 
         // Безопасное приведение: берём первый байт хеша mod 3
         // 0 = playerA, 1 = playerB, 2 = draw
-        uint8 result = uint8(bytes32(combinedHash)[0]) % 3;
+        uint8 result = uint8(combinedHash >> 248) % 3; // первый байт через битовый сдвиг
 
         if (result == 0) {
             room.winner = room.playerA;
