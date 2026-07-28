@@ -222,6 +222,6 @@ contract GameCardNFTToken is ITIP4_1NFT, ITIP4_2NFT {
     }
 
     /* ─── Приём SHELL ─────────────────────────────────────── */
-
-    fallback() external payable {}
+    // fallback убран — TVM-Solidity 0.77 не поддерживает payable fallback
 }
+
