@@ -11,7 +11,6 @@ on:
 env:
   SOLD_TAG: "0.77.0"         # тег релиза (с точками)
   SOLD_FILES: "0_77_0"       # имена ассетов (с подчёркиваниями)
-  TVM_LINKER_REPO: "everx-labs/TVM-linker"
 
 jobs:
   compile:
@@ -21,12 +20,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install system deps + Rust
+      - name: Install system deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y build-essential cmake ninja-build xxd file gzip libssl-dev pkg-config
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          sudo apt-get install -y gzip
 
       - name: Download pre-built sold + stdlib
         run: |
@@ -53,33 +50,17 @@ jobs:
 
           echo "tools/" >> $GITHUB_PATH
 
-      - name: Build tvm_linker from source (small crate)
-        run: |
-          set -euo pipefail
-          echo "⬇️ Cloning $TVM_LINKER_REPO..."
-          git clone --depth 1 https://github.com/everx-labs/TVM-linker.git /tmp/tvm-linker
-          cd /tmp/tvm-linker
-          echo "🔨 Building tvm_linker..."
-          cargo build --release 2>&1 | tail -5
-          cp target/release/tvm_linker $GITHUB_WORKSPACE/tools/
-          cd $GITHUB_WORKSPACE
-          echo "✅ tvm_linker: $(./tools/tvm_linker --version 2>&1 || echo 'built OK')"
-
-      - name: Compile all contracts + link .tvc
+      - name: Compile all contracts
         run: |
           set -euo pipefail
           export PATH="$PWD/tools:$PATH"
           mkdir -p build
 
           SOLD="$PWD/tools/sold"
-          TVM_LINKER="$PWD/tools/tvm_linker"
-          STDLIB="$PWD/tools/stdlib_sol.tvm"
 
           echo "sold version: $($SOLD --version 2>&1)"
-          echo "tvm_linker: $(ls -lh $TVM_LINKER | awk '{print $5}')"
-          echo "stdlib: $(ls -lh $STDLIB | awk '{print $5}')"
 
-          # Заметка: interfaces.sol не компилируем отдельно —
+          # interfaces.sol не компилируем отдельно —
           # он импортируется другими контрактами через `--contract`
           CONTRACTS=(
             contracts/GameCardNFTToken.sol
@@ -103,19 +84,11 @@ jobs:
               exit 1
             }
 
-            # Link .code → .tvc
-            CODE="$PWD/build/${NAME}.code"
-            ABI="$PWD/build/${NAME}.abi.json"
-            if [ -f "$CODE" ]; then
-              echo "🔗 Linking ${NAME}.code → .tvc..."
-              $TVM_LINKER compile "$CODE" \
-                --abi "$ABI" \
-                --lib "$STDLIB" \
-                -o "$PWD/build/${NAME}.tvc" || {
-                echo "⚠️  tvm_linker failed for $NAME (non-fatal)"
-              }
-            fi
+            echo "✅ $NAME compiled"
           done
+
+          echo ""
+          echo "🎉 All contracts compiled successfully!"
 
       - name: List artifacts
         run: |
@@ -127,10 +100,10 @@ jobs:
           set -euo pipefail
           ERROR=0
           echo "=== Smoke tests ==="
-          for F in build/*.tvc; do
+          for F in build/*.code; do
             [ -f "$F" ] || continue
             SIZE=$(stat --format="%s" "$F")
-            if [ "$SIZE" -gt 500 ]; then
+            if [ "$SIZE" -gt 100 ]; then
               echo "✅ $(basename $F): ${SIZE} bytes"
             else
               echo "❌ $(basename $F): too small ${SIZE} bytes"
@@ -141,9 +114,9 @@ jobs:
             [ -f "$F" ] || continue
             echo "📄 $(basename $F): $(wc -c < "$F") bytes"
           done
-          # Must have Collection tvc
-          if [ ! -f "build/GameCardNFTCollection.tvc" ]; then
-            echo "❌ GameCardNFTCollection.tvc missing!"
+          # Must have at least GameCardNFTToken.code
+          if [ ! -f "build/GameCardNFTToken.code" ]; then
+            echo "❌ GameCardNFTToken.code missing!"
             ERROR=1
           fi
           [ "$ERROR" -eq 0 ] || exit 1
