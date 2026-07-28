@@ -81,9 +81,9 @@ contract GameMatch is IGameMatch {
 
     /// sha256 от двух секретов + roomId (для финализации)
     /// Используем XOR отдельных хешей — abi.encode/encodePacked не поддерживаются в sold 0.77.
-    /// Клиент считает так же: sha256(bytes(secretA)) ^ sha256(bytes(secretB)) ^ sha256(bytes(roomId))
+    /// Клиент считает так же: sha256(bytes(secretA)) ^ sha256(bytes(secretB)) ^ sha256(bytes(bytes32(roomId)))
     function _hashCombined(bytes32 secretA, bytes32 secretB, uint256 roomId) private pure returns (uint256) {
-        return _hashSecret(secretA) ^ _hashSecret(secretB) ^ sha256(bytes(roomId));
+        return _hashSecret(secretA) ^ _hashSecret(secretB) ^ sha256(bytes(bytes32(roomId)));
     }
 
     /* ─── Start Match ─────────────────────────────────────── */
