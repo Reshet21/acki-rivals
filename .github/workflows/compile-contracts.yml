@@ -97,7 +97,7 @@ jobs:
             $SOLD \
               --tvm-version gosh \
               --output-dir "$PWD/build" \
-              --contract "$SRC" \
+              --contract "$NAME" \
               "$SRC" || {
               echo "❌ $NAME.sol compilation failed"
               exit 1
