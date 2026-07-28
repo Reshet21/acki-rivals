@@ -165,16 +165,16 @@ contract GameMatch is IGameMatch {
         tvm.accept();
 
         // Проверяем, что секрет соответствует закоммиченному хешу
-        bytes32 computedHash = sha256(abi.encodePacked(secret));
+        uint256 computedHash = sha256(abi.encodePacked(secret));
         address otherPlayer;
 
         if (msg.sender == room.playerA) {
-            require(computedHash == room.secretHashA, 309);
+            require(computedHash == uint256(room.secretHashA), 309);
             require(room.secretA == bytes32(0), 310);
             room.secretA = secret;
             otherPlayer = room.playerB;
         } else {
-            require(computedHash == room.secretHashB, 309);
+            require(computedHash == uint256(room.secretHashB), 309);
             require(room.secretB == bytes32(0), 310);
             room.secretB = secret;
             otherPlayer = room.playerA;
@@ -194,7 +194,7 @@ contract GameMatch is IGameMatch {
     /* ─── Timeout ─────────────────────────────────────────── */
 
     /**
-     * @note Если противник не ревейлит в течение REVEAL_TIMEOUT —
+     * @notice Если противник не ревейлит в течение REVEAL_TIMEOUT —
      * вызывающий выигрывает.
      */
     function triggerTimeout(uint256 roomId)
@@ -236,13 +236,13 @@ contract GameMatch is IGameMatch {
         require(room.status == 1, 312);
         require(room.secretA != bytes32(0) && room.secretB != bytes32(0), 313);
 
-        bytes32 combinedHash = sha256(
+        uint256 combinedHash = sha256(
             abi.encodePacked(room.secretA, room.secretB, uint256(roomId))
         );
 
         // Безопасное приведение: берём первый байт хеша mod 3
         // 0 = playerA, 1 = playerB, 2 = draw
-        uint8 result = uint8(combinedHash[0]) % 3;
+        uint8 result = uint8(bytes32(combinedHash)[0]) % 3;
 
         if (result == 0) {
             room.winner = room.playerA;
