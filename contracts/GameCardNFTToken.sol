@@ -47,7 +47,7 @@ contract GameCardNFTToken is ITIP4_1NFT, ITIP4_2NFT {
     /* ─── События ─────────────────────────────────────────── */
 
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
-    event TokenMetadataUpdated(uint256 indexed tokenId, string tokenURI);
+    // TokenMetadataUpdated — наследуется из ITIP4_2NFT
     event TokenUpgraded(uint256 indexed tokenId, uint8 newStars, uint8 powerBonus, uint8 damageBonus);
 
     /* ─── Модификаторы ────────────────────────────────────── */

@@ -52,9 +52,9 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
 
     /* ─── События ─────────────────────────────────────────── */
 
-    event Listed(address indexed seller, address indexed tokenAddress, uint128 price);
+    // Listed, Bought, Cancelled — наследуются из IMarketplace
+    // Bought с fee перегружен: отличается от IMarketplace.Bought наличием fee
     event Bought(address indexed buyer, address indexed tokenAddress, uint128 price, uint128 fee);
-    event Cancelled(address indexed seller, address indexed tokenAddress);
     event FeeUpdated(uint16 feeBps);
     event TokenWalletDeployed(address indexed tokenWallet);
 
