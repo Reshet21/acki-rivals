@@ -7,15 +7,10 @@ on:
       - 'contracts/*.sol'
       - '.github/workflows/compile-contracts.yml'
   workflow_dispatch:
-    inputs:
-      deploy_to_shellnet:
-        description: 'Deploy to Shellnet after compile?'
-        required: false
-        default: false
-        type: boolean
 
 env:
-  CARGO_TERM_COLOR: always
+  SOLD_VERSION: "0.77.0"
+  TVM_LINKER_REPO: "everx-labs/TVM-linker"
 
 jobs:
   compile:
@@ -25,261 +20,137 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install system deps + Rust
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            libboost-all-dev \
-            libfmt-dev \
-            libjsoncpp-dev \
-            librange-v3-dev \
-            ninja-build \
-            xxd \
-            file \
-            gzip
+          sudo apt-get install -y build-essential cmake ninja-build xxd file gzip libssl-dev pkg-config
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: true
-
-      - name: Build sold + tvm_linker
+      - name: Download pre-built sold + stdlib
         run: |
           set -euo pipefail
+          mkdir -p tools
 
-          git clone --depth 1 --recurse-submodules \
-            https://github.com/everx-labs/TVM-Solidity-Compiler.git
+          # Download sold binary
+          echo "⬇️ Downloading sold $SOLD_VERSION..."
+          curl -sL \
+            "https://github.com/everx-labs/TVM-Solidity-Compiler/releases/download/${SOLD_VERSION}/sold_${SOLD_VERSION}_linux.gz" \
+            -o /tmp/sold.gz
+          gunzip /tmp/sold.gz
+          chmod +x /tmp/sold
+          mv /tmp/sold tools/sold
+          echo "✅ sold: $(./tools/sold --version 2>&1)"
 
-          echo "=== Building sold ==="
-          cd TVM-Solidity-Compiler/sold
-          cargo build --release
-          echo "✅ sold build complete"
+          # Download stdlib_sol.tvm
+          echo "⬇️ Downloading stdlib_sol.tvm..."
+          curl -sL \
+            "https://github.com/everx-labs/TVM-Solidity-Compiler/releases/download/${SOLD_VERSION}/stdlib_sol_${SOLD_VERSION}.tvm.gz" \
+            -o /tmp/stdlib.gz
+          gunzip /tmp/stdlib.gz
+          mv /tmp/stdlib_sol_${SOLD_VERSION}.tvm tools/stdlib_sol.tvm
+          echo "✅ stdlib_sol.tvm: $(wc -c < tools/stdlib_sol.tvm) bytes"
 
-          echo "=== Building tvm_linker ==="
-          cd ../tvm_linker
-          cargo build --release
-          echo "✅ tvm_linker build complete"
+          echo "tools/" >> $GITHUB_PATH
 
-          cd ../../
-
-      - name: Compile all contracts with sold
+      - name: Build tvm_linker from source (small crate)
         run: |
           set -euo pipefail
+          echo "⬇️ Cloning $TVM_LINKER_REPO..."
+          git clone --depth 1 https://github.com/everx-labs/TVM-linker.git /tmp/tvm-linker
+          cd /tmp/tvm-linker
+          echo "🔨 Building tvm_linker..."
+          cargo build --release 2>&1 | tail -5
+          cp target/release/tvm_linker $GITHUB_WORKSPACE/tools/
+          cd $GITHUB_WORKSPACE
+          echo "✅ tvm_linker: $(./tools/tvm_linker --version 2>&1 || echo 'built OK')"
+
+      - name: Compile all contracts + link .tvc
+        run: |
+          set -euo pipefail
+          export PATH="$PWD/tools:$PATH"
           mkdir -p build
 
-          # Find sold binary
-          SOLD=$(find . -name "sold" -path "*/release/*" -type f 2>/dev/null | head -1)
-          if [ -z "$SOLD" ]; then
-            echo "❌ sold binary not found!"
-            find . -name "sold" -type f 2>/dev/null | head -5
-            exit 1
-          fi
-          echo "Using sold: $SOLD"
-          $SOLD --version
+          SOLD="$PWD/tools/sold"
+          TVM_LINKER="$PWD/tools/tvm_linker"
+          STDLIB="$PWD/tools/stdlib_sol.tvm"
 
-          # Find tvm_linker binary
-          TVM_LINKER=$(find . -name "tvm_linker" -path "*/release/*" -type f 2>/dev/null | head -1)
-          if [ -z "$TVM_LINKER" ]; then
-            echo "❌ tvm_linker binary not found!"
-            find . -name "tvm_linker" -type f 2>/dev/null | head -5
-            exit 1
-          fi
-          echo "Using tvm_linker: $TVM_LINKER"
+          echo "sold version: $($SOLD --version 2>&1)"
+          echo "tvm_linker: $(ls -lh $TVM_LINKER | awk '{print $5}')"
+          echo "stdlib: $(ls -lh $STDLIB | awk '{print $5}')"
 
-          # Find stdlib_sol.tvm (from the tvm_linker or sold sources)
-          STDLIB=$(find . -name "stdlib_sol.tvm" -type f 2>/dev/null | head -1)
-          if [ -z "$STDLIB" ]; then
-            echo "⚠️  stdlib_sol.tvm not found, trying to locate in build dirs..."
-            # It could be embedded in tvm_linker binary or elsewhere
-            find . -name "*.tvm" -type f 2>/dev/null | head -10
-          fi
-          echo "Using stdlib: ${STDLIB:-<embedded or not found>}"
-
-          # Compile interfaces first (imported by everything)
-          echo "📦 Compiling interfaces.sol..."
-          $SOLD \
-            --tvm-version gosh \
-            --output-dir build/ \
-            --contract contracts/interfaces.sol \
-            contracts/interfaces.sol || {
-            echo '❌ interfaces.sol failed'
-            exit 1
-          }
-
-          # Compile each contract
           CONTRACTS=(
-            GameCardNFTToken
-            GameCardNFTCollection
-            GameMatch
-            PvPStaking
-            Marketplace
+            contracts/interfaces.sol
+            contracts/GameCardNFTToken.sol
+            contracts/GameCardNFTCollection.sol
+            contracts/GameMatch.sol
+            contracts/PvPStaking.sol
+            contracts/Marketplace.sol
           )
 
-          for CONTRACT in "${CONTRACTS[@]}"; do
-            SRC="contracts/${CONTRACT}.sol"
-            if [ ! -f "$SRC" ]; then
-              echo "⚠️  Skipping ${SRC} — not found"
-              continue
-            fi
+          for SRC in "${CONTRACTS[@]}"; do
+            NAME="$(basename "$SRC" .sol)"
+            echo ""
+            echo "📦 Compiling $NAME..."
 
-            echo "📦 Compiling ${CONTRACT}..."
             $SOLD \
               --tvm-version gosh \
-              --output-dir build/ \
-              --contract contracts/interfaces.sol \
-              "${SRC}" || {
-              echo "❌ Failed to compile ${CONTRACT}"
+              --output-dir "$PWD/build" \
+              --contract "$SRC" \
+              "$SRC" || {
+              echo "❌ $NAME.sol compilation failed"
               exit 1
             }
 
-            # Link .code → .tvc if stdlib found
-            CODE="build/${CONTRACT}.code"
-            ABI="build/${CONTRACT}.abi.json"
-            if [ -f "$CODE" ] && [ -n "$STDLIB" ]; then
-              echo "🔗 Linking ${CONTRACT}.code → .tvc..."
+            # Link .code → .tvc
+            CODE="$PWD/build/${NAME}.code"
+            ABI="$PWD/build/${NAME}.abi.json"
+            if [ -f "$CODE" ]; then
+              echo "🔗 Linking ${NAME}.code → .tvc..."
               $TVM_LINKER compile "$CODE" \
                 --abi "$ABI" \
                 --lib "$STDLIB" \
-                -o "build/${CONTRACT}.tvc" || {
-                echo "⚠️  tvm_linker failed for ${CONTRACT}, trying without --lib..."
-                $TVM_LINKER compile "$CODE" \
-                  --abi "$ABI" \
-                  -o "build/${CONTRACT}.tvc" || {
-                  echo "❌ tvm_linker also failed without --lib for ${CONTRACT}"
-                  # Non-fatal — .code still usable
-                }
-              }
-            elif [ -f "$CODE" ]; then
-              echo "🔗 Linking ${CONTRACT} without stdlib..."
-              $TVM_LINKER compile "$CODE" \
-                --abi "$ABI" \
-                -o "build/${CONTRACT}.tvc" || {
-                echo "⚠️  tvm_linker failed for ${CONTRACT} (non-fatal)"
+                -o "$PWD/build/${NAME}.tvc" || {
+                echo "⚠️  tvm_linker failed for $NAME (non-fatal)"
               }
             fi
           done
 
-          echo "=== Compilation step complete ==="
+      - name: List artifacts
+        run: |
+          echo "=== build/ artifacts ==="
+          ls -lh build/
 
-      - name: Collect artifacts
+      - name: Smoke test
         run: |
           set -euo pipefail
-          echo "=== build/ contents ==="
-          ls -la build/ 2>/dev/null || echo "(empty)"
-
-          echo "=== Copy any missed artifacts to build/ ==="
-          find . \( -name "*.tvc" -o -name "*.code" -o -name "*.abi.json" -o -name "*.debug.json" \) \
-            -type f -not -path "./build/*" -not -path "./TVM-Solidity-Compiler/*" \
-            -exec cp -v {} build/ \; 2>/dev/null || true
-
-          echo "=== Final build/ contents ==="
-          ls -la build/
-
-      - name: Smoke test — verify .tvc and .abi
-        run: |
-          set -euo pipefail
-          echo "=== Smoke tests ==="
           ERROR=0
-
-          # Check .tvc files
-          TVC_COUNT=0
+          echo "=== Smoke tests ==="
           for F in build/*.tvc; do
-            if [ -f "$F" ]; then
-              SIZE=$(stat --format="%s" "$F")
-              if [ "$SIZE" -gt 500 ]; then
-                FT=$(file -b "$F")
-                echo "✅ $(basename $F): ${SIZE} bytes (${FT%% *})"
-                TVC_COUNT=$((TVC_COUNT + 1))
-              else
-                echo "❌ $(basename $F): too small (${SIZE} bytes), possible corrupt"
-                ERROR=1
-              fi
+            [ -f "$F" ] || continue
+            SIZE=$(stat --format="%s" "$F")
+            if [ "$SIZE" -gt 500 ]; then
+              echo "✅ $(basename $F): ${SIZE} bytes"
+            else
+              echo "❌ $(basename $F): too small ${SIZE} bytes"
+              ERROR=1
             fi
           done
-
-          # Check .abi.json files
-          ABI_COUNT=0
           for F in build/*.abi.json; do
-            if [ -f "$F" ]; then
-              SIZE=$(stat --format="%s" "$F")
-              echo "📄 $(basename $F): ${SIZE} bytes"
-              ABI_COUNT=$((ABI_COUNT + 1))
-            fi
+            [ -f "$F" ] || continue
+            echo "📄 $(basename $F): $(wc -c < "$F") bytes"
           done
-
-          echo ""
-          echo "=== Summary ==="
-          echo "TVC files: ${TVC_COUNT}"
-          echo "ABI files: ${ABI_COUNT}"
-          echo ""
-
-          # Critical: GameCardNFTCollection must have .tvc for deploy
+          # Must have Collection tvc
           if [ ! -f "build/GameCardNFTCollection.tvc" ]; then
-            echo "⚠️  GameCardNFTCollection.tvc missing! Checking .code..."
-          fi
-          if [ ! -f "build/GameCardNFTCollection.abi.json" ]; then
-            echo "❌ GameCardNFTCollection.abi.json missing!"
+            echo "❌ GameCardNFTCollection.tvc missing!"
             ERROR=1
           fi
-
           [ "$ERROR" -eq 0 ] || exit 1
+          echo "🎉 All checks passed!"
 
-      - name: Generate SHA256 checksums
-        run: |
-          cd build
-          sha256sum * > checksums.sha256 2>/dev/null || true
-          cat checksums.sha256 2>/dev/null || echo "(no files)"
-
-      - name: Upload compiled artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: compiled-contracts
           path: build/
           retention-days: 90
-
-  deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_to_shellnet }}
-    needs: compile
-    runs-on: ubuntu-latest
-    environment: shellnet
-    steps:
-      - name: Download compiled artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: compiled-contracts
-          path: build/
-
-      - name: Setup tvm-cli
-        run: |
-          curl -sL \
-            https://github.com/everx-labs/ever-cli/releases/latest/download/ever-cli-linux.gz \
-            | gunzip > tvm-cli
-          chmod +x tvm-cli
-          sudo mv tvm-cli /usr/local/bin/
-          tvm-cli --version
-
-      - name: Configure Shellnet
-        run: |
-          tvm-cli config -g --url shellnet.ackinacki.org
-
-      - name: Get test tokens from Giver
-        run: |
-          echo "Получаем тестовые токены для адреса деплоя..."
-          echo "После деплоя можно запросить SHELL:"
-          echo "  tvm-cli call --abi <giver-abi> <giver-address> sendGrams '{\"dest\":\"<ADDR>\",\"amount\":10}'"
-          echo "Ссылка: https://dev.ackinacki.com/readme/get-test-tokens-in-shellnet"
-
-      - name: Deploy Collection
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          OWNER_PUBKEY: ${{ secrets.OWNER_PUBKEY }}
-        run: |
-          echo "$DEPLOY_KEY" > deploy.keys.json
-          tvm-cli deploy \
-            --abi build/GameCardNFTCollection.abi.json \
-            --sign deploy.keys.json \
-            build/GameCardNFTCollection.tvc \
-            "{\"_ownerPubkey\": \"0x${OWNER_PUBKEY}\", \"_admin\": \"${{ secrets.ADMIN_ADDRESS }}\"}" \
-            --value 1.0
