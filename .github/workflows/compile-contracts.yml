@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  SOLD_VERSION: "0.77.0"
+  SOLD_VERSION: "0_77_0"
   TVM_LINKER_REPO: "everx-labs/TVM-linker"
 
 jobs:
@@ -79,8 +79,9 @@ jobs:
           echo "tvm_linker: $(ls -lh $TVM_LINKER | awk '{print $5}')"
           echo "stdlib: $(ls -lh $STDLIB | awk '{print $5}')"
 
+          # Заметка: interfaces.sol не компилируем отдельно —
+          # он импортируется другими контрактами через `--contract`
           CONTRACTS=(
-            contracts/interfaces.sol
             contracts/GameCardNFTToken.sol
             contracts/GameCardNFTCollection.sol
             contracts/GameMatch.sol
