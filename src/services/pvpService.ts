@@ -231,6 +231,20 @@ export async function abandonGame(gameId: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function cancelGame(gameId: string): Promise<void> {
+  const client = getClient();
+  if (!client) throw new Error('Supabase not configured');
+
+  // Physically delete a waiting room so it does not stay in the open rooms list
+  const { error } = await client
+    .from('games')
+    .delete()
+    .eq('id', gameId)
+    .eq('status', 'waiting');
+
+  if (error) throw error;
+}
+
 // ─── Real-time subscriptions ─────────────────────────────
 
 export function subscribeToGame(

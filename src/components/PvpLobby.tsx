@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Card } from '../types';
-import { createGame, joinGame, getWaitingGames, abandonGame, getGame, type Game } from '../services/pvpService';
+import { createGame, joinGame, getWaitingGames, abandonGame, cancelGame, getGame, type Game } from '../services/pvpService';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 
@@ -9,11 +9,12 @@ interface Props {
   deck: Card[];
   onStartBattle: (game: Game, isHost: boolean) => void;
   onBack: () => void;
+  onMinimize?: () => void;
 }
 
 type Tab = 'menu' | 'open' | 'join';
 
-export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Props) {
+export default function PvpLobby({ playerId, deck, onStartBattle, onBack, onMinimize }: Props) {
   const { impactOccurred, selectionChanged } = useHaptic();
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('menu');
@@ -27,12 +28,31 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
   const [randomQueue, setRandomQueue] = useState(false);
   const [searchTimer, setSearchTimer] = useState(0);
   const [menuItemsRevealed, setMenuItemsRevealed] = useState(false);
+  const [waitTime, setWaitTime] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const waitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setMenuItemsRevealed(true), 100);
     return () => clearTimeout(timer);
   }, [tab]);
+
+  // Restore a pending waiting room if user minimized the lobby earlier
+  useEffect(() => {
+    if (room) return;
+    const pendingId = localStorage.getItem('pvp_pending_room_id');
+    if (!pendingId) return;
+    let cancelled = false;
+    getGame(pendingId).then((g) => {
+      if (cancelled) return;
+      if (g && g.status === 'waiting' && !g.guest_id) {
+        setRoom(g);
+      } else {
+        localStorage.removeItem('pvp_pending_room_id');
+      }
+    }).catch(() => localStorage.removeItem('pvp_pending_room_id'));
+    return () => { cancelled = true; };
+  }, []);
 
   // Poll room for updates (fallback for realtime)
   useEffect(() => {
@@ -43,7 +63,9 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
         const fresh = await getGame(room.id);
         if (fresh && fresh.guest_id && fresh.status === 'active') {
           if (pollRef.current) clearInterval(pollRef.current);
-          setRoom(fresh);
+          if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+          setRoom(null);
+          localStorage.removeItem('pvp_pending_room_id');
           onStartBattle(fresh, fresh.host_id === playerId);
         }
       } catch {}
@@ -53,6 +75,18 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     pollRef.current = setInterval(poll, 2000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [room?.id, playerId, onStartBattle]);
+
+  // Waiting room timer
+  useEffect(() => {
+    if (room && !room.guest_id) {
+      setWaitTime(0);
+      waitTimerRef.current = setInterval(() => setWaitTime((t) => t + 1), 1000);
+      return () => { if (waitTimerRef.current) clearInterval(waitTimerRef.current); };
+    } else {
+      setWaitTime(0);
+      if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+    }
+  }, [room?.id, room?.guest_id]);
 
   // Poll open rooms
   const loadRooms = async () => {
@@ -100,7 +134,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     try {
       setWaiting(true); setError(null);
       const g = await createGame(playerId, deck);
-      if (g) { setRoom(g); setTab('menu'); }
+      if (g) { setRoom(g); localStorage.setItem('pvp_pending_room_id', g.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
 
@@ -111,7 +145,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
     try {
       setWaiting(true); setError(null);
       const updated = await joinGame(game.id, playerId, deck);
-      if (updated) { setRoom(updated); setTab('menu'); }
+      if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
 
@@ -124,15 +158,27 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
       if (!game) { setError(t('pvp.errorRoomNotFound')); setWaiting(false); return; }
       if (game.host_id === playerId) { setError(t('pvp.errorSelfJoin')); setWaiting(false); return; }
       const updated = await joinGame(joinCode.trim(), playerId, deck);
-      if (updated) { setRoom(updated); setTab('menu'); }
+      if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
 
   const handleCopy = () => { navigator.clipboard.writeText(room?.id || '').then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
-  const handleEnter = () => { if (room) onStartBattle(room, room.host_id === playerId); };
   const handleAbandon = async () => {
-    if (room) { try { await abandonGame(room.id); } catch {} setRoom(null); }
+    if (room) {
+      try {
+        await cancelGame(room.id);
+      } catch {
+        // If deletion fails, mark as finished as a fallback
+        try { await abandonGame(room.id); } catch {}
+      }
+      localStorage.removeItem('pvp_pending_room_id');
+      setRoom(null);
+    }
     setTab('menu');
+  };
+
+  const handleMinimize = () => {
+    if (onMinimize) onMinimize();
   };
 
   // ═══ DECK CHECK ═══
@@ -151,34 +197,63 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
         <div className="absolute w-32 h-32 rounded-full bg-an-orange/5 animate-float" style={{ top: '60%', left: '20%' }} />
         <div className="absolute w-24 h-24 rounded-full bg-an-red/5 animate-float-alt" style={{ top: '70%', right: '20%' }} />
       </div>
-      <div className="relative z-10 flex flex-col items-center gap-4 w-full">
+      <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-xs">
         <div className="text-5xl animate-title-glow">⚔️</div>
-        <div className="text-lg font-black text-an-gold animate-pulse-ring">{t('pvp.waitingForOpponent')}</div>
-        <div className="text-sm text-white/30 text-center">{t('pvp.shareCodeHint')}</div>
-        
+        <div className="text-center">
+          <div className="text-lg font-black text-an-gold animate-pulse-ring">{t('pvp.player1Waiting')}</div>
+          <div className="text-sm text-white/50 text-center mt-1">{t('pvp.waitingForSecondPlayer')}</div>
+        </div>
+
+        {/* Player 1 card */}
+        <div className="w-full p-3 rounded-xl bg-an-card/60 border border-an-gold/20 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-an-gold/30 to-an-orange/30 flex items-center justify-center text-lg border border-an-gold/30">
+            👤
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-white/40 uppercase tracking-wider">{t('pvp.youShort')}</div>
+            <div className="text-sm font-bold text-white truncate">{playerId}</div>
+          </div>
+          <div className="text-xs text-an-gold font-bold">{t('pvp.host')}</div>
+        </div>
+
+        {/* Waiting timer */}
+        <div className="w-full p-4 rounded-xl bg-an-card/40 border border-white/10 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-an-gold rounded-full animate-pulse" />
+            <span className="text-sm text-white/60">{t('pvp.waitingForOpponent')}</span>
+          </div>
+          <div className="text-3xl font-black text-white tabular-nums">
+            {Math.floor(waitTime / 60).toString().padStart(2, '0')}:{(waitTime % 60).toString().padStart(2, '0')}
+          </div>
+          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-an-gold to-an-orange rounded-full animate-pulse" style={{ width: `${Math.min(100, (waitTime / 60) * 100)}%` }} />
+          </div>
+        </div>
+
         <div className="w-full max-w-xs mt-2">
           <div className="text-[10px] text-white/40 text-center mb-1 uppercase tracking-widest">{t('pvp.roomCode')}</div>
           <div className="w-full px-4 py-3 rounded-xl bg-an-card/80 border border-an-gold/30 text-center font-mono text-sm text-an-gold break-all select-all backdrop-blur-sm shadow-[0_0_20px_rgba(255,215,0,0.15)]">{room.id}</div>
         </div>
-        
-        <button onClick={() => { selectionChanged(); handleCopy(); }} 
+
+        <button onClick={() => { selectionChanged(); handleCopy(); }}
           className={`w-full max-w-xs py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
-            copied 
-              ? 'bg-an-green/20 text-an-green border-2 border-an-green/40 shadow-[0_0_20px_rgba(0,230,118,0.2)]' 
+            copied
+              ? 'bg-an-green/20 text-an-green border-2 border-an-green/40 shadow-[0_0_20px_rgba(0,230,118,0.2)]'
               : 'bg-an-card/60 border-2 border-an-gold/20 text-an-gold hover:border-an-gold/40 active:bg-an-surface'
           }`}>
           {copied ? '✓ ' + t('pvp.copied') : '📋 ' + t('pvp.copyCode')}
         </button>
-        
-        <button onClick={handleEnter} 
-          className="w-full max-w-xs py-3.5 rounded-xl text-sm font-bold bg-gradient-to-r from-an-gold via-yellow-400 to-an-orange text-an-dark active:scale-95 transition-all duration-200 shadow-[0_0_25px_rgba(255,215,0,0.3)]">
-          ⚔️ {t('pvp.joinRoom')}
-        </button>
-        
-        <button onClick={handleAbandon} 
-          className="w-full max-w-xs py-3 rounded-xl text-sm font-bold bg-an-red/10 border-2 border-an-red/30 text-an-red hover:border-an-red/50 active:bg-an-red/20 transition-all duration-200">
-          🚪 {t('pvp.leaveRoom')}
-        </button>
+
+        <div className="flex gap-2 w-full max-w-xs">
+          <button onClick={handleMinimize}
+            className="flex-1 py-3 rounded-xl text-sm font-bold bg-an-card/60 border-2 border-white/10 text-white/70 hover:border-white/30 active:bg-white/5 transition-all duration-200">
+            🔽 {t('pvp.minimize')}
+          </button>
+          <button onClick={handleAbandon}
+            className="flex-1 py-3 rounded-xl text-sm font-bold bg-an-red/10 border-2 border-an-red/30 text-an-red hover:border-an-red/50 active:bg-an-red/20 transition-all duration-200">
+            🚪 {t('pvp.exitRoom')}
+          </button>
+        </div>
       </div>
     </div>
   );

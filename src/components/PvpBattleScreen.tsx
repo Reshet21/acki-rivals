@@ -88,6 +88,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | 'draw'>('draw');
   const [roundLog, setRoundLog] = useState<any[]>([]);
   const [, setOpponentDisconnected] = useState(false);
+  const [opponentMoveTimer, setOpponentMoveTimer] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -403,6 +404,44 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     }
   }, [battlePhase, round]);
 
+  const handleOpponentAbandon = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (vsTimerRef.current) clearTimeout(vsTimerRef.current);
+    if (damageTimerRef.current) clearTimeout(damageTimerRef.current);
+
+    const myHP = playerHPRef.current;
+    const newState: GameState = {
+      phase: 'ended',
+      round,
+      hostHP: isHost ? myHP : 0,
+      guestHP: isHost ? 0 : myHP,
+      hostPillz: isHost ? playerPillzRef.current : 0,
+      guestPillz: isHost ? 0 : playerPillzRef.current,
+    };
+    updateGameState(game.id, newState).catch(console.error);
+    abandonGame(game.id).catch(console.error);
+
+    setBattleResult('win');
+    setBattlePhase('ended');
+  };
+
+  // Opponent move timeout (40s) — if no move received, treat as abandonment
+  useEffect(() => {
+    if (battlePhase !== 'waiting_opponent') {
+      setOpponentMoveTimer(0);
+      return;
+    }
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      setOpponentMoveTimer(elapsed);
+      if (elapsed >= 40) {
+        handleOpponentAbandon();
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [battlePhase]);
+
   const handleSelect = useCallback(async (card: Card, pillz: number) => {
     if (battlePhase !== 'select') return;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -583,7 +622,13 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
 
         {battlePhase === 'waiting_opponent' && (
           <div className="flex flex-col items-center gap-3 px-4">
-            <div className="text-sm text-yellow-400 animate-pulse">{t('pvp.waitingMove')}</div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-sm text-yellow-400 animate-pulse">{t('pvp.waitingMove')}</div>
+              <div className="flex items-center gap-1 text-xs text-white/40">
+                <span>{t('pvp.opponentMoveTimer')}</span>
+                <span className={`font-bold tabular-nums ${opponentMoveTimer > 30 ? 'text-neon-red' : 'text-white/60'}`}>{opponentMoveTimer}s / 40s</span>
+              </div>
+            </div>
             {currentPlayerCard && (
               <div className="flex flex-col items-center">
                 <div className="text-[9px] text-neon-green mb-0.5">{t('pvp.yourTurn')}</div>

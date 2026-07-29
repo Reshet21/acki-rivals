@@ -470,6 +470,7 @@ function AppInner() {
               setScreen('pvp_battle');
             }}
             onBack={() => setScreen('menu')}
+            onMinimize={() => setScreen('menu')}
           />
         </div>
       )}
