@@ -47,9 +47,13 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Refresh listings when tab changes or after actions
-  const refreshListings = useCallback(() => {
-    setAllListings(getListings());
-    setMyActiveListings(getMyListings(walletAddress));
+  const refreshListings = useCallback(async () => {
+    const [all, mine] = await Promise.all([
+      getListings(),
+      getMyListings(walletAddress),
+    ]);
+    setAllListings(all);
+    setMyActiveListings(mine);
   }, [walletAddress]);
 
   useEffect(() => {
@@ -69,7 +73,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     return collection.filter((c) => c.uid && !listedUids.has(c.uid));
   }, [collection, myActiveListings]);
 
-  const handleList = useCallback(() => {
+  const handleList = useCallback(async () => {
     if (!selectedCard || !selectedCard.uid) return;
     const price = parseFloat(sellPrice);
     if (isNaN(price) || price <= 0) return;
@@ -77,7 +81,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     impactOccurred('medium');
     setStatus({ kind: 'listing', text: '⏳ Выставляем на продажу...' });
 
-    const listing = createListing(selectedCard, price, walletAddress, walletName);
+    const listing = await createListing(selectedCard, price, walletAddress, walletName);
 
     if (listing) {
       // Remove card from seller's collection (and deck if present)
@@ -93,8 +97,8 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     }
   }, [selectedCard, sellPrice, walletAddress, walletName, impactOccurred, notificationOccurred, onRemoveCard]);
 
-  const handleBuy = useCallback((listing: Listing) => {
-    if (listing.sellerId === walletAddress) {
+  const handleBuy = useCallback(async (listing: Listing) => {
+    if (listing.seller_id === walletAddress) {
       setStatus({ kind: 'error', text: '❌ Нельзя купить свою карту' });
       notificationOccurred('error');
       return;
@@ -103,8 +107,8 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     // Balance check (skip in dev mode)
     if (!IS_DEV_PAYMENT) {
       const balance = parseFloat(nacklBalance || '0');
-      if (balance < listing.priceNackl) {
-        setStatus({ kind: 'error', text: `❌ Недостаточно NACKL (нужно ${listing.priceNackl})` });
+      if (balance < listing.price_nackl) {
+        setStatus({ kind: 'error', text: `❌ Недостаточно NACKL (нужно ${listing.price_nackl})` });
         notificationOccurred('error');
         return;
       }
@@ -113,7 +117,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     impactOccurred('medium');
     setStatus({ kind: 'buying', text: `⏳ Покупаем ${listing.card.name}...` });
 
-    const result = buyListing(listing.id, walletAddress);
+    const result = await buyListing(listing.id, walletAddress);
 
     if (result.success && result.card) {
       onAddCard(result.card);
@@ -126,11 +130,11 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     }
   }, [walletAddress, nacklBalance, impactOccurred, notificationOccurred, onAddCard]);
 
-  const handleCancel = useCallback((listingId: string) => {
+  const handleCancel = useCallback(async (listingId: string) => {
     impactOccurred('light');
     setStatus({ kind: 'cancelling', text: '⏳ Отменяем листинг...' });
 
-    const result = cancelListing(listingId);
+    const result = await cancelListing(listingId);
 
     if (result.success && result.card) {
       onAddCard(result.card);
@@ -230,11 +234,11 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                   {allListings.length} {allListings.length === 1 ? 'листинг' : 'листингов'} доступно
                 </div>
                 {allListings
-                  .filter((l) => l.sellerId !== walletAddress)
+                  .filter((l) => l.seller_id !== walletAddress)
                   .sort((a, b) => {
                     const rarityDiff = (rarityOrder[b.card.rarity] ?? 0) - (rarityOrder[a.card.rarity] ?? 0);
                     if (rarityDiff !== 0) return rarityDiff;
-                    return a.priceNackl - b.priceNackl;
+                    return a.price_nackl - b.price_nackl;
                   })
                   .map((listing) => (
                   <div key={listing.id}
@@ -256,12 +260,12 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                           )}
                         </div>
                         <div className="text-[9px] text-white/20 mt-0.5">
-                          Продавец: {listing.sellerName}
+                          Продавец: {listing.seller_name}
                         </div>
                       </div>
                       {/* Price + buy button */}
                       <div className="shrink-0 text-right">
-                        <div className="text-lg font-black text-an-gold">{listing.priceNackl}</div>
+                        <div className="text-lg font-black text-an-gold">{listing.price_nackl}</div>
                         <div className="text-[9px] text-white/30 uppercase">NACKL</div>
                         <button
                           onClick={() => handleBuy(listing)}
@@ -297,7 +301,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-bold text-white truncate">{listing.card.name}</div>
                       <div className="text-[10px] text-white/40 mt-0.5">{listing.card.clan} · {listing.card.rarity}</div>
-                      <div className="text-lg font-black text-an-gold mt-1">{listing.priceNackl} NACKL</div>
+                      <div className="text-lg font-black text-an-gold mt-1">{listing.price_nackl} NACKL</div>
                     </div>
                     <button
                       onClick={() => handleCancel(listing.id)}

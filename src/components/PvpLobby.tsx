@@ -117,24 +117,29 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     }
     const startTime = Date.now();
     const check = async () => {
-      if (joiningRef.current || creatingRef.current) return;
+      // Lock immediately to prevent duplicate create/join
+      const acquired = joiningRef.current || creatingRef.current;
+      if (acquired) return;
+      creatingRef.current = true; // lock BEFORE first await
       try {
         const games = await getWaitingGames();
         const avail = games.filter((g) => g.host_id !== playerId);
         if (avail.length > 0) {
           joiningRef.current = true;
+          creatingRef.current = false; // release create lock before join
           const updated = await joinGame(avail[0].id, playerId, deck, displayName);
           joiningRef.current = false;
           if (updated) { setRandomQueue(false); setRoom(updated); }
         } else if (!createdOwnRef.current && Date.now() - startTime >= 3000) {
-          // No rooms found after 3s — create one automatically
           createdOwnRef.current = true;
-          creatingRef.current = true;
           const g = await createGame(playerId, deck, displayName);
-          creatingRef.current = false;
           if (g) { setRandomQueue(false); setRoom(g); }
+        } else {
+          creatingRef.current = false; // nothing to do, release lock
         }
-      } catch {}
+      } catch {
+        creatingRef.current = false;
+      }
     };
     check();
     const i = setInterval(check, 2000);
