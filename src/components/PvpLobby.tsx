@@ -116,12 +116,12 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         const games = await getWaitingGames();
         const avail = games.filter((g) => g.host_id !== playerId);
         if (avail.length > 0) {
-          const updated = await joinGame(avail[0].id, playerId, deck);
+          const updated = await joinGame(avail[0].id, playerId, deck, displayName);
           if (updated) { setRandomQueue(false); setRoom(updated); }
         } else if (!createdOwn && searchTimer >= 3) {
           // No rooms found after 3s — create one automatically
           createdOwn = true;
-          const g = await createGame(playerId, deck);
+          const g = await createGame(playerId, deck, displayName);
           if (g) { setRandomQueue(false); setRoom(g); }
         }
       } catch {}
@@ -146,7 +146,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   const handleJoinOpen = async (game: Game) => {
     try {
       setWaiting(true); setError(null);
-      const updated = await joinGame(game.id, playerId, deck);
+      const updated = await joinGame(game.id, playerId, deck, displayName);
       if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
@@ -159,7 +159,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       const game = games.find((g) => g.id === joinCode.trim());
       if (!game) { setError(t('pvp.errorRoomNotFound')); setWaiting(false); return; }
       if (game.host_id === playerId) { setError(t('pvp.errorSelfJoin')); setWaiting(false); return; }
-      const updated = await joinGame(joinCode.trim(), playerId, deck);
+      const updated = await joinGame(joinCode.trim(), playerId, deck, displayName);
       if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
   };
@@ -436,7 +436,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                     👤
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white">{g.host_id === playerId ? displayName : g.host_id}</div>
+                    <div className="text-sm font-bold text-white">{g.host_id === playerId ? displayName : (g.host_name || g.host_id)}</div>
                     <div className="text-[10px] text-white/30 flex items-center gap-2">
                       <span>{g.host_deck?.length || 0}/8 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />

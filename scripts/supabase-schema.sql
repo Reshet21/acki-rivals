@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS public.games (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   host_id TEXT NOT NULL,
   guest_id TEXT,
+  host_name TEXT,
+  guest_name TEXT,
   host_deck JSONB NOT NULL DEFAULT '[]',
   guest_deck JSONB,
   state JSONB NOT NULL DEFAULT '{"phase":"waiting","round":0,"hostHP":100,"guestHP":100,"hostPillz":0,"guestPillz":0}'::jsonb,

@@ -54,6 +54,8 @@ export interface Game {
   id: string;
   host_id: string;
   guest_id: string | null;
+  host_name: string | null;
+  guest_name: string | null;
   host_deck: Card[];
   guest_deck: Card[] | null;
   state: GameState;
@@ -72,7 +74,7 @@ export interface Move {
 
 // ─── Game actions ────────────────────────────────────────
 
-export async function createGame(hostId: string, hostDeck: Card[]): Promise<Game | null> {
+export async function createGame(hostId: string, hostDeck: Card[], hostName?: string): Promise<Game | null> {
   const client = getClient();
   if (!client) throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env');
 
@@ -80,6 +82,7 @@ export async function createGame(hostId: string, hostDeck: Card[]): Promise<Game
     .from('games')
     .insert({
       host_id: hostId,
+      host_name: hostName || null,
       host_deck: hostDeck,
       status: 'waiting',
     })
@@ -90,7 +93,7 @@ export async function createGame(hostId: string, hostDeck: Card[]): Promise<Game
   return data;
 }
 
-export async function joinGame(gameId: string, guestId: string, guestDeck: Card[]): Promise<Game | null> {
+export async function joinGame(gameId: string, guestId: string, guestDeck: Card[], guestName?: string): Promise<Game | null> {
   const client = getClient();
   if (!client) throw new Error('Supabase not configured');
 
@@ -98,6 +101,7 @@ export async function joinGame(gameId: string, guestId: string, guestDeck: Card[
     .from('games')
     .update({
       guest_id: guestId,
+      guest_name: guestName || null,
       guest_deck: guestDeck,
       status: 'active',
     })

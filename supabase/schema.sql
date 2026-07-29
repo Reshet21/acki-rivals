@@ -9,6 +9,8 @@ create table games (
   id uuid default uuid_generate_v4() primary key,
   host_id text not null,
   guest_id text,
+  host_name text,
+  guest_name text,
   host_deck jsonb not null,
   guest_deck jsonb,
   state jsonb default '{"phase":"waiting","round":0,"hostHP":12,"guestHP":12,"hostPillz":12,"guestPillz":12}'::jsonb,

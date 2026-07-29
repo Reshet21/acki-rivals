@@ -530,7 +530,9 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
     'text-neon-red';
 
   const youLabel = playerName || t('pvp.youShort');
-  const opponentLabel = t('pvp.opponent');
+  const opponentLabel = isHost
+    ? (game.guest_name || game.guest_id || t('pvp.opponent'))
+    : (game.host_name || game.host_id || t('pvp.opponent'));
 
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
@@ -543,7 +545,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
         <span className="text-xs text-white/60">{t('pvp.roundShort')} {round}/{TOTAL_ROUNDS}</span>
-        <span className="text-[10px] text-neon-red/70">{opponentLabel}: {opponentPillz} {t('battle.pillzShort')}</span>
+        <span className="text-[10px] text-neon-red/70 truncate max-w-[120px]">{opponentLabel}: {opponentPillz} {t('battle.pillzShort')}</span>
 
         <button onClick={() => { impactOccurred('heavy'); handleSurrender(); }}
           className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/40 active:text-white/70 active:bg-white/10 transition-all">
