@@ -42,6 +42,7 @@ function AppInner() {
     battlesWon,
     battlesLost,
     addCard,
+    removeCard,
     upgradeCard,
     saveToStorage,
     recordWin,
@@ -387,6 +388,9 @@ function AppInner() {
           <Marketplace
             walletConnection={walletConnection}
             nacklBalance={nacklBalance}
+            collection={collection}
+            onAddCard={addCard}
+            onRemoveCard={removeCard}
             onBack={() => setScreen('menu')}
           />
         </div>

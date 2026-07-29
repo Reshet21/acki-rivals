@@ -146,10 +146,19 @@ export function useGameState(initialWalletAddress?: string | null) {
   const addCard = useCallback((card: Card) => {
     const cardWithUid: Card = {
       ...card,
-      uid: crypto.randomUUID(),
+      uid: card.uid || crypto.randomUUID(),
       stars: card.stars ?? 0,
     };
     setCollection((prev) => [...prev, cardWithUid]);
+  }, []);
+
+  /**
+   * Remove a card from collection by uid (e.g. when listing on marketplace).
+   * Also removes it from deck if present.
+   */
+  const removeCard = useCallback((cardUid: string) => {
+    setCollection((prev) => prev.filter((c) => c.uid !== cardUid));
+    setDeck((prev) => prev.filter((c) => c.uid !== cardUid));
   }, []);
 
   const addCredits = useCallback((amount: number) => {
@@ -266,6 +275,7 @@ export function useGameState(initialWalletAddress?: string | null) {
     battlesLost,
     walletAddress,
     addCard,
+    removeCard,
     addCredits,
     upgradeCard,
     setWalletName,
