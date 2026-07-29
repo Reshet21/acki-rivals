@@ -66,8 +66,7 @@ jobs:
             contracts/GameCardNFTToken.sol
             contracts/GameCardNFTCollection.sol
             contracts/GameMatch.sol
-            contracts/Marketplace.sol
-          # TODO: PvPStaking.sol — временно исключён, будет переписан в B5
+          # TODO: PvPStaking.sol, Marketplace.sol — будут в B5/B6
           )
 
           for SRC in "${CONTRACTS[@]}"; do
