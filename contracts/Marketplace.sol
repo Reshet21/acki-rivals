@@ -231,7 +231,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
 
         // Декодируем: action = "buy", tokenAddress
         (string action, address tokenAddress) = abi.decode(payload, (string, address));
-        require(keccak256(action) == keccak256("buy"), 300);
+        require(sha256(action) == sha256("buy"), 300);
 
         Listing listing = listings[tokenAddress];
         require(listing.active, 200);
@@ -291,7 +291,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
     /* ─── Admin ───────────────────────────────────────────── */
 
     /**
-     * @note Принудительно снять листинг (админ).
+     * @notice Принудительно снять листинг (админ).
      */
     function forceCancel(address tokenAddress) public onlyOwnerOrAdmin listingExists(tokenAddress) {
         Listing listing = listings[tokenAddress];
@@ -308,7 +308,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
     /* ─── Withdraw ────────────────────────────────────────── */
 
     /**
-     * @note Вывести накопленные NACKL (комиссии маркетплейса).
+     * @notice Вывести накопленные NACKL (комиссии маркетплейса).
      */
     function withdraw(address to, uint128 amount) public onlyOwnerOrAdmin {
         require(tokenWallet != address(0), 104);
