@@ -42,6 +42,8 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
     address public tokenWallet;
     /// Адрес NACKL TokenRoot
     address public nacklTokenRoot;
+    /// Пустая TvmCell для передачи в transfer
+    TvmCell _empty;
     /// Счётчик листингов
     uint256 public listingCount;
 
@@ -199,7 +201,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         uint128 sellerAmount = listing.price - fee;
 
         ITokenWallet(tokenWallet).transfer{ value: 0.2 ton }(
-            listing.seller, sellerAmount, false, ""
+            listing.seller, sellerAmount, false, _empty
         );
 
         GameCardNFTToken token = GameCardNFTToken(tokenAddress);
@@ -243,14 +245,14 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         // Отправляем NACKL продавцу
         ITokenWallet(tokenWallet).transfer{
             value: 0.2 ton
-        }(listing.seller, sellerAmount, false, "");
+        }(listing.seller, sellerAmount, false, _empty);
 
         // Излишек (если покупатель отправил больше) — возвращаем
         uint128 excess = amount - listing.price;
         if (excess > 0) {
             ITokenWallet(tokenWallet).transfer{
                 value: 0.1 ton
-            }(sender, excess, false, "");
+            }(sender, excess, false, _empty);
         }
 
         // Передаём карту покупателю
@@ -315,7 +317,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
 
         ITokenWallet(tokenWallet).transfer{
             value: 0.1 ton
-        }(to, amount, false, "");
+        }(to, amount, false, _empty);
     }
 
     /* ─── Getter ──────────────────────────────────────────── */
