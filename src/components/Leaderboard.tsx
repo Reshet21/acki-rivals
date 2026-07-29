@@ -58,7 +58,7 @@ export default function Leaderboard({ walletAddress, wins, losses, onBack }: Pro
   const entries = getLeaderboard(wins, losses, walletAddress);
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden">
       <div className="shrink-0 px-3 pt-3 pb-2">
         <div className="text-sm font-bold text-white mb-1">{t('leaderboard.title')}</div>
         <div className="text-[10px] text-white/40">{t('leaderboard.subtitle')}</div>

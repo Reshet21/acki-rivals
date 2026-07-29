@@ -61,7 +61,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden">
       {/* Header */}
       <div className="shrink-0 px-3 pt-3 pb-2">
         <div className="flex justify-between items-center text-sm mb-1">

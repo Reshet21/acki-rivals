@@ -303,7 +303,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
     'text-neon-red';
 
   return (
-    <div className={`flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative ${screenShake ? 'animate-damage-shake' : ''}`}>
+    <div className={`flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative ${screenShake ? 'animate-damage-shake' : ''}`}>
       {/* Damage Flash Overlay */}
       {damageFlash !== 'none' && (
         <div className={`absolute inset-0 pointer-events-none z-50 ${damageFlash === 'player' ? 'animate-red-flash' : 'animate-green-flash'}`} />

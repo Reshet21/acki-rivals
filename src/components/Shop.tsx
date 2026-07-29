@@ -188,7 +188,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     const allRevealed = revealIndex >= openedCards.length;
 
     return (
-      <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
+      <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
         {/* Background glow based on best rarity */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className={`absolute w-96 h-96 rounded-full opacity-20 ${topRarity === 'legendary' ? 'animate-title-glow' : 'animate-pulse-glow'}`}
@@ -311,7 +311,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
 
   // ═══ Shop ═══
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-shop relative">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-shop relative">
       {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute w-48 h-48 rounded-full animate-aurora-1 opacity-15"

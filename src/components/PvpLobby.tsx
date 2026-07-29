@@ -137,7 +137,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
 
   // ═══ DECK CHECK ═══
   if (deck.length !== 8) return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto items-center justify-center p-4">
       <div className="text-white/50 text-center"><div className="text-lg mb-2">⚠️</div><div className="text-sm">{t('menu.buildDeck')}</div></div>
       <button onClick={() => { impactOccurred('soft'); onBack(); }} className="mt-4 px-6 py-2 rounded-lg text-sm font-bold bg-white/5 border border-white/10 text-white/60 active:bg-white/10">{t('pvp.back')}</button>
     </div>
@@ -145,7 +145,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
 
   // ═══ WAITING FOR OPPONENT ═══
   if (room && !room.guest_id) return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4 gap-4 bg-battle relative overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto items-center justify-center p-4 gap-4 bg-battle relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-64 h-64 rounded-full bg-an-gold/5 animate-pulse-glow" style={{ top: '10%', left: '50%', transform: 'translateX(-50%)' }} />
         <div className="absolute w-32 h-32 rounded-full bg-an-orange/5 animate-float" style={{ top: '60%', left: '20%' }} />
@@ -185,7 +185,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
 
   // ═══ RANDOM MATCHMAKING ═══
   if (randomQueue) return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto items-center justify-center p-4 gap-6 bg-battle relative overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto items-center justify-center p-4 gap-6 bg-battle relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-80 h-80 rounded-full bg-an-gold/5 animate-pulse-glow" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
         <div className="absolute w-40 h-40 rounded-full bg-an-red/5 animate-float" style={{ top: '20%', right: '10%' }} />
@@ -228,7 +228,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack }: Prop
 
   // ═══ MAIN MENU ═══
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
       {/* Background particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute w-72 h-72 rounded-full bg-an-gold/[0.04] animate-aurora-1" style={{ top: '-10%', left: '-20%' }} />

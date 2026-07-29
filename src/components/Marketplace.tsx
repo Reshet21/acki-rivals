@@ -152,7 +152,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute w-72 h-72 rounded-full bg-an-gold/[0.03] animate-aurora-1" style={{ top: '-10%', left: '-20%' }} />

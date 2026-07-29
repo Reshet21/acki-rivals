@@ -492,7 +492,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
   const opponentName = isHost ? (game.guest_id || t('pvp.waitingShort')) : game.host_id;
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute w-1 h-1 bg-neon-blue/20 rounded-full animate-drift" style={{ top: '10%', left: '20%' }} />
         <div className="absolute w-1.5 h-1.5 bg-neon-purple/15 rounded-full animate-drift" style={{ top: '30%', right: '15%', animationDelay: '2s' }} />

@@ -23,7 +23,7 @@ export default function InfoScreen({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('about');
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
       {/* Header */}
       <div className="shrink-0 px-4 pt-4 pb-0">
         <div className="flex items-center gap-2 mb-3">
