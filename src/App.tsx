@@ -463,6 +463,7 @@ function AppInner() {
         <div className="flex-1">
           <PvpLobby
             playerId={playerId}
+            playerName={walletConnection?.walletName || playerId}
             deck={deck}
             onStartBattle={(game, isHost) => {
               setPvpGame(game);
@@ -480,6 +481,7 @@ function AppInner() {
           <PvpBattleScreen
             game={pvpGame}
             playerId={playerId}
+            playerName={walletConnection?.walletName || playerId}
             isHost={pvpIsHost}
             onBattleEnd={(result) => {
               if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }

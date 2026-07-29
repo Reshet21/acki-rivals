@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
-import { getRarityLabel } from '../i18n/cardTranslations';
 import { useHaptic } from '../hooks/useHaptic';
+import CardComponent from './CardComponent';
 
 interface Props {
   collection: Card[];
@@ -12,18 +12,13 @@ interface Props {
 
 const MAX_STARS = 5;
 
-const clanEmojis: Record<string, string> = {
-  'Неоновые Наемники': '⚔️',
-  'Цифровые Монахи': '🧘',
-};
-
 export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { notificationOccurred, selectionChanged, impactOccurred } = useHaptic();
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Group cards by id, count duplicates
+  // Group cards by id, count duplicates and take the highest-starred base
   const cardGroups = useMemo(() => {
     const groups = new Map<number, { base: Card; copies: Card[]; stars: number }>();
 
@@ -44,10 +39,25 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
       }
     }
 
-    return Array.from(groups.values()).sort((a, b) => b.stars - a.stars || b.base.id - a.base.id);
+    const enriched = Array.from(groups.values()).map((g) => {
+      const copies = g.copies.length - 1;
+      const needed = g.stars === 0 ? 1 : g.stars;
+      const isMax = g.stars >= MAX_STARS;
+      const canUpgrade = !isMax && copies >= needed;
+      return { ...g, copies, needed, isMax, canUpgrade };
+    });
+
+    // Sort: ready cards first, then by stars/rarity
+    return enriched.sort((a, b) => {
+      if (a.canUpgrade && !b.canUpgrade) return -1;
+      if (!a.canUpgrade && b.canUpgrade) return 1;
+      return b.stars - a.stars || b.base.id - a.base.id;
+    });
   }, [collection]);
 
-  const selectedGroup = cardGroups.find((g) => g.base.uid === selectedUid);
+  const ready = cardGroups.filter((g) => g.canUpgrade);
+  const notReady = cardGroups.filter((g) => !g.canUpgrade);
+  const selGroup = cardGroups.find((g) => g.base.uid === selectedUid);
 
   const handleUpgrade = () => {
     if (!selectedUid) return;
@@ -60,153 +70,166 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
     setTimeout(() => setMessage(null), 3000);
   };
 
+  const renderGridItem = (g: typeof cardGroups[0]) => (
+    <div key={g.base.uid} className="relative transform transition-all active:scale-95">
+      <CardComponent
+        card={g.base}
+        compact
+        noPopup
+        onClick={() => {
+          selectionChanged();
+          setSelectedUid(g.base.uid!);
+        }}
+      />
+      <div
+        className={`absolute -top-2 -right-2 z-10 px-2 py-0.5 text-[11px] font-black rounded-full border shadow-lg ${
+          g.isMax
+            ? 'bg-black text-yellow-400 border-yellow-400/50'
+            : g.canUpgrade
+            ? 'bg-neon-green text-black border-neon-green shadow-neon-green/40'
+            : 'bg-black/90 text-white/50 border-white/20'
+        }`}
+      >
+        {g.isMax ? 'MAX' : `${g.copies}/${g.needed}`}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
       {/* Header */}
-      <div className="shrink-0 px-3 pt-3 pb-2">
-        <div className="flex justify-between items-center text-sm mb-1">
-          <div className="text-neon-purple font-bold">⚒️ {t('upgrade.title')}</div>
-          <div className="text-white/40 text-xs">{collection.length} {t('upgrade.cards')}</div>
+      <div className="shrink-0 p-4 border-b border-white/10 flex justify-between items-center bg-black/60 backdrop-blur-md safe-top">
+        <div>
+          <h1 className="text-xl font-black bg-gradient-to-r from-cyan-400 to-neon-blue bg-clip-text text-transparent tracking-wide">
+            ⚒️ {t('upgrade.title')}
+          </h1>
+          <p className="text-[10px] text-white/40 mt-0.5">{t('upgrade.mergeHint')}</p>
         </div>
-        <div className="text-[10px] text-white/30">
-          {t('upgrade.mergeHint')}
-        </div>
-      </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`mx-3 mb-2 px-3 py-2 rounded-lg text-xs font-bold text-center ${
-          message.type ? 'bg-neon-green/10 text-neon-green border border-neon-green/30' : 'bg-neon-red/10 text-neon-red border border-neon-red/30'
-        }`}>
-          {t(message.text)}
-        </div>
-      )}
-
-      {/* Selected card detail */}
-      {selectedGroup && (
-        <div className="shrink-0 mx-3 mb-2 bg-white/5 rounded-xl p-3 border border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-12 rounded-lg bg-gradient-to-b from-gray-700 to-gray-900 border border-white/10 flex items-center justify-center text-sm shrink-0">
-              {clanEmojis[selectedGroup.base.clan]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-white truncate">{selectedGroup.base.name}</div>
-              <div className="flex items-center gap-2 text-[10px] text-white/50">
-                <span>{selectedGroup.base.power}⚡ {selectedGroup.base.damage}💥</span>
-                <span>★{selectedGroup.stars}</span>
-                <span className="text-white/30">×{selectedGroup.copies.length} {t('upgrade.copies')}</span>
-              </div>
-            </div>
-          </div>
-
-          {selectedGroup.stars < MAX_STARS ? (
-            <div className="mt-2 flex items-center justify-between">
-              <div className="text-[10px] text-white/40">
-                {t('upgrade.extraCopies')}: <span className="text-white/70 font-bold">{selectedGroup.copies.length - 1}</span>
-                <span className="text-white/30 ml-1">({t('upgrade.needed')} {selectedGroup.stars === 0 ? 1 : selectedGroup.stars})</span>
-              </div>
-              <button
-                onClick={handleUpgrade}
-                disabled={(selectedGroup.copies.length - 1) < (selectedGroup.stars === 0 ? 1 : selectedGroup.stars)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  selectedGroup.copies.length >= selectedGroup.stars + 1
-                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black active:scale-95'
-                    : 'bg-white/5 text-white/20 cursor-not-allowed'
-                }`}
-              >
-                ★ {t('upgrade.upgradeTo')} → ★{selectedGroup.stars + 1}
-              </button>
-            </div>
-          ) : (
-            <div className="mt-2 text-center text-xs text-yellow-400 font-bold">
-              ★ {t('upgrade.max')}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Card list */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
-        <div className="flex flex-col gap-1.5">
-          {cardGroups.map((group) => {
-            const base = group.base;
-            const stars = group.stars;
-            const extras = group.copies.length - 1; // exclude the base card
-            const copiesNeeded = stars === 0 ? 1 : stars;
-            const canUpgrade = stars < MAX_STARS && extras >= copiesNeeded;
-
-            return (
-              <button
-                key={base.id}
-                onClick={() => { selectionChanged(); setSelectedUid(base.uid!); }}
-                className={`
-                  flex items-center gap-3 p-2.5 rounded-xl text-left transition-all
-                  ${selectedUid === base.uid
-                    ? 'bg-white/10 border border-yellow-400/40'
-                    : 'bg-white/5 border border-white/5 active:bg-white/10'
-                  }
-                `}
-              >
-                <div className="w-10 h-12 rounded-lg bg-gradient-to-b from-gray-700 to-gray-900 border border-white/10 flex items-center justify-center text-sm shrink-0">
-                  {clanEmojis[base.clan]}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-white truncate">{base.name}</span>
-                    {stars > 0 && (
-                      <span className="text-yellow-400 text-[10px]">
-                        {'★'.repeat(stars)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-[10px] text-white/40">
-                    <span>{base.power + stars}⚡ {base.damage + stars}💥</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
-                      base.rarity === 'legendary' ? 'bg-yellow-400/20 text-yellow-400' :
-                      base.rarity === 'rare' ? 'bg-blue-500/20 text-blue-400' :
-                      'bg-white/10 text-white/40'
-                    }`}>
-                      {getRarityLabel(lang, base.rarity)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-0.5 shrink-0">
-                  <div className="text-[10px] text-white/50">
-                    <span className="font-bold text-white/70">{extras}</span> {t('upgrade.copies')}
-                  </div>
-                  {stars < MAX_STARS && (
-                    <div className={`text-[9px] px-1.5 py-0.5 rounded ${
-                      canUpgrade
-                        ? 'bg-neon-green/20 text-neon-green'
-                        : 'bg-white/5 text-white/30'
-                    }`}>
-                      →★{stars + 1} ({copiesNeeded} {t('upgrade.copies')})
-                    </div>
-                  )}
-                  {stars >= MAX_STARS && (
-                    <div className="text-[9px] text-yellow-400">★ MAX</div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Back button */}
-      <div className="shrink-0 px-3 pb-3">
         <button
           onClick={() => { impactOccurred('soft'); onBack(); }}
-          className="w-full py-2.5 rounded-lg font-bold text-sm
-            bg-white/5 border border-white/10 text-white/60
-            active:bg-white/10 active:scale-[0.98]
-            transition-all duration-150"
+          className="px-4 py-2 bg-white/10 rounded-lg text-xs font-bold text-white/80 active:bg-white/20 active:scale-95 transition-all"
         >
           {t('deck.back')}
         </button>
       </div>
+
+      {/* Message */}
+      {message && (
+        <div
+          className={`mx-4 mt-4 px-3 py-2 rounded-lg text-xs font-bold text-center border relative z-10 shadow-lg ${
+            message.type === 'success'
+              ? 'bg-neon-green/20 text-neon-green border-neon-green/50'
+              : 'bg-an-red/20 text-an-red border-an-red/50'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      {/* Roster */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-20">
+        {ready.length > 0 && (
+          <section>
+            <h2 className="text-sm font-bold text-neon-green mb-4 flex items-center gap-2 drop-shadow-md">
+              <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
+              {t('upgrade.ready') || 'Ready to upgrade'}
+            </h2>
+            <div className="grid grid-cols-3 gap-3">
+              {ready.map(renderGridItem)}
+            </div>
+          </section>
+        )}
+
+        <section>
+          <h2 className="text-sm font-bold text-white/40 mb-4 block">
+            {t('upgrade.collection') || 'Collection (Need Copies / Maxed)'}
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            {notReady.map(renderGridItem)}
+          </div>
+        </section>
+      </div>
+
+      {/* Upgrade Modal */}
+      {selGroup && (
+        <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-fade-in">
+          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-6 tracking-wider">
+            {selGroup.isMax ? t('upgrade.max') : t('upgrade.title')}
+          </h2>
+
+          <div className="w-48 mb-6 transform hover:scale-105 transition-all duration-300">
+            <CardComponent card={selGroup.base} noPopup />
+          </div>
+
+          {!selGroup.isMax && (
+            <div className="w-full max-w-xs bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 mb-6 shadow-2xl">
+              <div className="flex items-center justify-between text-center">
+                <div className="flex-1">
+                  <div className="text-[10px] uppercase text-white/40 font-bold mb-1">{t('card.power')}</div>
+                  <div className="text-2xl font-black text-white">
+                    {selGroup.base.power + selGroup.stars}{' '}
+                    <span className="text-neon-green text-lg ml-1">→ {selGroup.base.power + selGroup.stars + 1}</span>
+                  </div>
+                </div>
+                <div className="w-px h-10 bg-white/10 mx-4" />
+                <div className="flex-1">
+                  <div className="text-[10px] uppercase text-white/40 font-bold mb-1">{t('card.damage')}</div>
+                  <div className="text-2xl font-black text-white">
+                    {selGroup.base.damage + selGroup.stars}{' '}
+                    <span className="text-neon-green text-lg ml-1">→ {selGroup.base.damage + selGroup.stars + 1}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="w-full max-w-xs mb-8 bg-black/40 p-4 rounded-xl border border-white/5">
+            <div className="flex justify-between text-xs font-bold mb-2">
+              <span className="text-white/60">{t('upgrade.copies')}</span>
+              <span
+                className={
+                  selGroup.isMax ? 'text-yellow-400' : selGroup.canUpgrade ? 'text-neon-green' : 'text-red-400'
+                }
+              >
+                {selGroup.isMax ? 'MAX LEVEL' : `${selGroup.copies} / ${selGroup.needed}`}
+              </span>
+            </div>
+            {!selGroup.isMax && (
+              <div className="h-2.5 bg-white/10 rounded-full overflow-hidden shadow-inner">
+                <div
+                  className={`h-full transition-all duration-500 rounded-full ${
+                    selGroup.canUpgrade ? 'bg-neon-green shadow-[0_0_10px_#10b981]' : 'bg-neon-blue'
+                  }`}
+                  style={{ width: `${Math.min(100, (selGroup.copies / selGroup.needed) * 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          {selGroup.canUpgrade ? (
+            <button
+              onClick={handleUpgrade}
+              className="w-full max-w-xs py-4 rounded-xl font-black text-black bg-gradient-to-r from-yellow-400 to-orange-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] active:scale-95 transition-all outline-none"
+            >
+              ★ {t('upgrade.upgradeTo')} {selGroup.stars + 1}
+            </button>
+          ) : (
+            <button
+              disabled
+              className="w-full max-w-xs py-4 rounded-xl font-black text-white/30 bg-white/5 border border-white/10 cursor-not-allowed"
+            >
+              {selGroup.isMax ? t('upgrade.max') : t('upgrade.notEnough')}
+            </button>
+          )}
+
+          <button
+            onClick={() => setSelectedUid(null)}
+            className="mt-6 text-sm font-bold text-white/40 active:text-white pb-1 border-b border-transparent active:border-white transition-all uppercase tracking-widest"
+          >
+            {t('deck.back')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

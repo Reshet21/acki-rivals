@@ -44,10 +44,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Translations are stored as flat keys: { 'menu.pvp': 'PvP', 'menu.ai': 'AI Battle' }
+  // Fall back to English if the current language doesn't have a given key.
   const t = useCallback((key: string): string => {
     const langTranslations = translations[lang];
-    if (!langTranslations) return key;
-    return langTranslations[key] ?? key;
+    if (langTranslations && langTranslations[key]) return langTranslations[key];
+    return translations.en[key] ?? key;
   }, [lang]);
 
   return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;

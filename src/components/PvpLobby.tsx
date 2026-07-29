@@ -6,6 +6,7 @@ import { useI18n } from '../i18n';
 
 interface Props {
   playerId: string;
+  playerName?: string;
   deck: Card[];
   onStartBattle: (game: Game, isHost: boolean) => void;
   onBack: () => void;
@@ -14,7 +15,8 @@ interface Props {
 
 type Tab = 'menu' | 'open' | 'join';
 
-export default function PvpLobby({ playerId, deck, onStartBattle, onBack, onMinimize }: Props) {
+export default function PvpLobby({ playerId, playerName, deck, onStartBattle, onBack, onMinimize }: Props) {
+  const displayName = playerName || playerId;
   const { impactOccurred, selectionChanged } = useHaptic();
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('menu');
@@ -211,7 +213,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack, onMini
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-xs text-white/40 uppercase tracking-wider">{t('pvp.youShort')}</div>
-            <div className="text-sm font-bold text-white truncate">{playerId}</div>
+            <div className="text-sm font-bold text-white truncate">{displayName}</div>
           </div>
           <div className="text-xs text-an-gold font-bold">{t('pvp.host')}</div>
         </div>
@@ -434,7 +436,7 @@ export default function PvpLobby({ playerId, deck, onStartBattle, onBack, onMini
                     👤
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white">{g.host_id}</div>
+                    <div className="text-sm font-bold text-white">{g.host_id === playerId ? displayName : g.host_id}</div>
                     <div className="text-[10px] text-white/30 flex items-center gap-2">
                       <span>{g.host_deck?.length || 0}/8 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />

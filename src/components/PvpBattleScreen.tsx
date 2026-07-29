@@ -19,6 +19,7 @@ import {
 interface Props {
   game: Game;
   playerId: string;
+  playerName?: string;
   isHost: boolean;
   onBattleEnd: (result: 'win' | 'loss' | 'draw') => void;
   onSurrender: () => void;
@@ -43,7 +44,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, onSurrender }: Props) {
+export default function PvpBattleScreen({ game, playerId, playerName, isHost, onBattleEnd, onSurrender }: Props) {
   const { t } = useI18n();
   const { impactOccurred } = useHaptic();
 
@@ -528,7 +529,8 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
     timer > 5 ? 'text-yellow-400' :
     'text-neon-red';
 
-  const opponentName = isHost ? (game.guest_id || t('pvp.waitingShort')) : game.host_id;
+  const youLabel = playerName || t('pvp.youShort');
+  const opponentLabel = t('pvp.opponent');
 
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
@@ -541,7 +543,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
 
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
         <span className="text-xs text-white/60">{t('pvp.roundShort')} {round}/{TOTAL_ROUNDS}</span>
-        <span className="text-[10px] text-neon-red/70">{opponentName}: {opponentPillz} {t('battle.pillzShort')}</span>
+        <span className="text-[10px] text-neon-red/70">{opponentLabel}: {opponentPillz} {t('battle.pillzShort')}</span>
 
         <button onClick={() => { impactOccurred('heavy'); handleSurrender(); }}
           className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/40 active:text-white/70 active:bg-white/10 transition-all">
@@ -566,7 +568,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
 
       <div className="grid grid-cols-2 gap-2 px-3 py-1.5 shrink-0">
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-green font-bold">{t('pvp.youShort')}</div>
+          <div className="text-[9px] text-neon-green font-bold truncate">{youLabel}</div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-neon-green to-emerald-400 rounded-full transition-all duration-700"
               style={{ width: `${(playerHP / TOTAL_HP) * 100}%` }} />
@@ -574,7 +576,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
           <div className="text-[10px] text-white font-bold text-right">{playerHP}</div>
         </div>
         <div className="flex flex-col gap-0.5">
-          <div className="text-[9px] text-neon-red font-bold text-right">{t('pvp.opponent')}</div>
+          <div className="text-[9px] text-neon-red font-bold text-right truncate">{opponentLabel}</div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-neon-red to-orange-400 rounded-full transition-all duration-700"
               style={{ width: `${(opponentHP / TOTAL_HP) * 100}%` }} />
@@ -643,7 +645,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
           <div className="flex flex-col items-center gap-3 w-full animate-fade-in px-3">
             <div className="flex items-center gap-4 justify-center">
               <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-green mb-0.5">{t('pvp.youShort')}</div>
+                <div className="text-[9px] text-neon-green mb-0.5 truncate">{youLabel}</div>
                 <CardComponent card={currentPlayerCard} compact />
                 <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentPlayerPillz}</div>
               </div>
@@ -679,7 +681,7 @@ export default function PvpBattleScreen({ game, playerId, isHost, onBattleEnd, o
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="text-[9px] text-neon-red mb-0.5">{t('pvp.opponent')}</div>
+                <div className="text-[9px] text-neon-red mb-0.5 truncate">{opponentLabel}</div>
                 <CardComponent card={currentOpponentCard} compact />
                 <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentOpponentPillz}</div>
               </div>
