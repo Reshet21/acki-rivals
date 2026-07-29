@@ -164,7 +164,8 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         // Проверяем, что маркетплейс — менеджер карты
         GameCardNFTToken token = GameCardNFTToken(tokenAddress);
         require(token.manager() == address(this), 204);
-        require(token.owner() == msg.sender, 205);
+        (address tokenOwner) = token.owner();
+        require(tokenOwner == msg.sender, 205);
 
         listings[tokenAddress] = Listing({
             seller: msg.sender,
@@ -194,7 +195,8 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         Listing listing = listings[tokenAddress];
         require(tokenWallet != address(0), 104);
         // ⚠️ NACKL должен быть уже на балансе контракта
-        require(ITokenWallet(tokenWallet).balance() >= listing.price, 208);
+        (uint128 walletBal) = ITokenWallet(tokenWallet).balance();
+        require(walletBal >= listing.price, 208);
         tvm.accept();
 
         uint128 fee = (listing.price * feeBps) / BPS_DENOMINATOR;
@@ -338,7 +340,8 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
 
     function getBalance() public view returns (uint128) {
         if (tokenWallet == address(0)) return 0;
-        return ITokenWallet(tokenWallet).balance();
+        (uint128 bal) = ITokenWallet(tokenWallet).balance();
+        return bal;
     }
 
     /* ─── Приём SHELL ─────────────────────────────────────── */
