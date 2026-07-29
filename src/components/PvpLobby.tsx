@@ -436,7 +436,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                     👤
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white">{g.host_id === playerId ? displayName : (g.host_name || g.host_id)}</div>
+                    <div className="text-sm font-bold text-white truncate max-w-[140px]">{g.host_id === playerId ? displayName : (g.host_name || t('pvp.host'))}</div>
                     <div className="text-[10px] text-white/30 flex items-center gap-2">
                       <span>{g.host_deck?.length || 0}/8 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />

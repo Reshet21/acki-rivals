@@ -531,8 +531,8 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
   const youLabel = playerName || t('pvp.youShort');
   const opponentLabel = isHost
-    ? (game.guest_name || game.guest_id || t('pvp.opponent'))
-    : (game.host_name || game.host_id || t('pvp.opponent'));
+    ? (game.guest_name || t('pvp.opponent'))
+    : (game.host_name || t('pvp.opponent'));
 
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
