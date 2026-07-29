@@ -33,6 +33,9 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   const [waitTime, setWaitTime] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const waitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const creatingRef = useRef(false);
+  const joiningRef = useRef(false);
+  const createdOwnRef = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setMenuItemsRevealed(true), 100);
@@ -108,20 +111,27 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
 
   // Random matchmaking — if no room found after 3s, create one automatically
   useEffect(() => {
-    if (!randomQueue) return;
-    let createdOwn = false;
-
+    if (!randomQueue) {
+      createdOwnRef.current = false;
+      return;
+    }
+    const startTime = Date.now();
     const check = async () => {
+      if (joiningRef.current || creatingRef.current) return;
       try {
         const games = await getWaitingGames();
         const avail = games.filter((g) => g.host_id !== playerId);
         if (avail.length > 0) {
+          joiningRef.current = true;
           const updated = await joinGame(avail[0].id, playerId, deck, displayName);
+          joiningRef.current = false;
           if (updated) { setRandomQueue(false); setRoom(updated); }
-        } else if (!createdOwn && searchTimer >= 3) {
+        } else if (!createdOwnRef.current && Date.now() - startTime >= 3000) {
           // No rooms found after 3s — create one automatically
-          createdOwn = true;
+          createdOwnRef.current = true;
+          creatingRef.current = true;
           const g = await createGame(playerId, deck, displayName);
+          creatingRef.current = false;
           if (g) { setRandomQueue(false); setRoom(g); }
         }
       } catch {}
@@ -129,30 +139,34 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     check();
     const i = setInterval(check, 2000);
     return () => clearInterval(i);
-  }, [randomQueue, playerId, deck, searchTimer]);
+  }, [randomQueue, playerId, deck, displayName]);
 
   const handleCreate = async () => {
-    if (deck.length !== 8) return;
+    if (deck.length !== 8 || creatingRef.current) return;
+    creatingRef.current = true;
     try {
       setWaiting(true); setError(null);
-      const g = await createGame(playerId, deck);
+      const g = await createGame(playerId, deck, displayName);
       if (g) { setRoom(g); localStorage.setItem('pvp_pending_room_id', g.id); setTab('menu'); }
-    } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
+    } catch (e: any) { setError(e.message); } finally { setWaiting(false); creatingRef.current = false; }
   };
 
   const handleRandom = () => { if (deck.length !== 8) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
   const cancelRandom = () => { setRandomQueue(false); setSearchTimer(0); };
 
   const handleJoinOpen = async (game: Game) => {
+    if (joiningRef.current) return;
+    joiningRef.current = true;
     try {
       setWaiting(true); setError(null);
       const updated = await joinGame(game.id, playerId, deck, displayName);
       if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
-    } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
+    } catch (e: any) { setError(e.message); } finally { setWaiting(false); joiningRef.current = false; }
   };
 
   const handleJoinCode = async () => {
-    if (!joinCode.trim()) return;
+    if (!joinCode.trim() || joiningRef.current) return;
+    joiningRef.current = true;
     try {
       setWaiting(true); setError(null);
       const games = await getWaitingGames();
@@ -161,7 +175,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       if (game.host_id === playerId) { setError(t('pvp.errorSelfJoin')); setWaiting(false); return; }
       const updated = await joinGame(joinCode.trim(), playerId, deck, displayName);
       if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
-    } catch (e: any) { setError(e.message); } finally { setWaiting(false); }
+    } catch (e: any) { setError(e.message); } finally { setWaiting(false); joiningRef.current = false; }
   };
 
   const handleCopy = () => { navigator.clipboard.writeText(room?.id || '').then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
