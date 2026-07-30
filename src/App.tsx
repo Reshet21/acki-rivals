@@ -152,18 +152,32 @@ function AppInner() {
   }, [setWalletAddress]);
 
   return (
-    <div className="h-full w-full overflow-x-hidden overflow-y-auto text-white flex flex-col relative safe-top safe-bottom" style={{ background: '#050508' }}>
+    <div className="h-full w-full overflow-x-hidden overflow-y-auto text-white flex flex-col relative safe-top safe-bottom animate-page-enter" style={{ background: '#050508' }}>
       {screen === 'menu' && (
         <div className="relative flex flex-col items-center h-full w-full overflow-hidden">
           {/* Premium background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <img src="/cards/acki-nacki-hero.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" style={{ filter: 'blur(2px)' }} />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,8,0.3) 0%, rgba(5,5,8,0.7) 40%, rgba(5,5,8,0.95) 70%, #050508 100%)' }} />
+            {/* Animated grid */}
+            <div className="absolute inset-0 bg-grid-sm animate-grid-scroll opacity-60" />
             {/* Premium glow effects */}
             <div className="absolute animate-aurora-1 rounded-full" style={{ width: 400, height: 400, top: '-150px', left: '-100px', background: 'radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%)' }} />
             <div className="absolute animate-aurora-2 rounded-full" style={{ width: 350, height: 350, bottom: '5%', right: '-80px', background: 'radial-gradient(circle, rgba(255,100,0,0.08) 0%, transparent 70%)', animationDelay: '4s' }} />
-            {/* Grid pattern */}
-            <div style={{ position: 'absolute', inset: 0, opacity: 0.02, backgroundImage: 'linear-gradient(rgba(255,215,0,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,215,0,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+            <div className="absolute animate-aurora-3 rounded-full" style={{ width: 300, height: 300, top: '30%', left: '30%', background: 'radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%)', animationDelay: '8s' }} />
+            {/* Animated particles */}
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="absolute animate-particle" style={{
+                width: `${2 + Math.random() * 4}px`,
+                height: `${2 + Math.random() * 4}px`,
+                borderRadius: '50%',
+                background: ['rgba(255,215,0,0.4)', 'rgba(255,61,0,0.3)', 'rgba(0,212,255,0.3)'][i % 3],
+                left: `${10 + Math.random() * 80}%`,
+                bottom: '-10px',
+                '--duration': `${8 + Math.random() * 12}s`,
+                '--delay': `${Math.random() * 10}s`,
+              } as React.CSSProperties} />
+            ))}
             {/* Sparkles */}
             {[{ top: '12%', left: '8%', delay: '0s', size: 'sm' }, { top: '25%', right: '5%', delay: '1s', size: 'md' }, { top: '45%', left: '3%', delay: '2s', size: 'sm' }, { top: '65%', right: '8%', delay: '0.5s', size: 'lg' }, { top: '80%', left: '15%', delay: '1.5s', size: 'sm' }].map((pos, i) => (
               <div key={i} className="absolute animate-sparkle" style={{ ...pos, animationDelay: pos.delay, color: 'rgba(255,215,0,0.4)' }}>
@@ -171,18 +185,18 @@ function AppInner() {
               </div>
             ))}
             {/* Floating card previews - Urban Rivals style */}
-            <div className="absolute animate-card-float-1 pointer-events-none" style={{ top: '15%', right: '5%', opacity: 0.08, transform: 'rotate(12deg)' }}>
-              <div className="w-12 h-16 rounded-lg" style={{ background: 'linear-gradient(160deg, #1a120a, #2a1a0a)', border: '1px solid rgba(255,215,0,0.2)' }}>
+            <div className="absolute animate-card-float-1 pointer-events-none" style={{ top: '15%', right: '5%', opacity: 0.1, transform: 'rotate(12deg)' }}>
+              <div className="w-12 h-16 rounded-lg menu-card-preview">
                 <div className="w-full h-8 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #4b5563, #6b7280)' }} />
               </div>
             </div>
-            <div className="absolute animate-card-float-2 pointer-events-none" style={{ bottom: '20%', left: '3%', opacity: 0.06, transform: 'rotate(-8deg)' }}>
-              <div className="w-14 h-16 rounded-lg" style={{ background: 'linear-gradient(160deg, #1a120a, #2a1a0a)', border: '1px solid rgba(255,215,0,0.15)' }}>
+            <div className="absolute animate-card-float-2 pointer-events-none" style={{ bottom: '20%', left: '3%', opacity: 0.08, transform: 'rotate(-8deg)' }}>
+              <div className="w-14 h-16 rounded-lg menu-card-preview">
                 <div className="w-full h-9 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #581c87, #a855f7)' }} />
               </div>
             </div>
-            <div className="absolute animate-card-float-3 pointer-events-none" style={{ top: '50%', right: '2%', opacity: 0.05, transform: 'rotate(18deg)' }}>
-              <div className="w-10 h-14 rounded-lg" style={{ background: 'linear-gradient(160deg, #1a120a, #2a1a0a)', border: '1px solid rgba(255,215,0,0.15)' }}>
+            <div className="absolute animate-card-float-3 pointer-events-none" style={{ top: '50%', right: '2%', opacity: 0.06, transform: 'rotate(18deg)' }}>
+              <div className="w-10 h-14 rounded-lg menu-card-preview">
                 <div className="w-full h-7 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #78350f, #f59e0b)' }} />
               </div>
             </div>

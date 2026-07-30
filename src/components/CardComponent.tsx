@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
 import { getCardName, getAbilityName, getStatLabel, getRarityLabel } from '../i18n/cardTranslations';
@@ -28,6 +28,31 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
   const { lang } = useI18n();
   const { selectionChanged } = useHaptic();
   const [showDetail, setShowDetail] = useState(false);
+  const cardRef = useRef<HTMLButtonElement>(null);
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateY = ((x - centerX) / centerX) * 8;
+    const rotateX = ((centerY - y) / centerY) * 8;
+    setTilt({ rotateX, rotateY });
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setTilt({ rotateX: 0, rotateY: 0 });
+    setIsHovered(false);
+  }, []);
   const s = card.stars ?? 0;
   const r = R[card.rarity || 'common'] || R.common;
   const img = cardArt[card.id];
@@ -109,9 +134,27 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
     </>
   );
 
+  const tiltStyle: React.CSSProperties = isHovered ? {
+    transform: `perspective(800px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) scale3d(1.02, 1.02, 1.02)`,
+    transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+    willChange: 'transform',
+    filter: 'brightness(1.1)',
+    zIndex: 10,
+  } : {
+    transform: 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+    transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+    willChange: 'transform',
+  };
+
   return (
     <>
-      <button onClick={() => { selectionChanged(); onClick?.(); }} style={{ ...S.btn, position: 'relative' } as React.CSSProperties}>
+      <button
+        ref={cardRef}
+        onClick={() => { selectionChanged(); onClick?.(); }}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{ ...S.btn, position: 'relative' as const, ...tiltStyle } as React.CSSProperties}>
         {inner}
         {/* Info button — top right */}
         {!noPopup && (

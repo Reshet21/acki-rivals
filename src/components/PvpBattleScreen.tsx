@@ -92,6 +92,8 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
   const [roundLog, setRoundLog] = useState<any[]>([]);
   const [, setOpponentDisconnected] = useState(false);
   const [opponentMoveTimer, setOpponentMoveTimer] = useState(0);
+  const [damageFlash, setDamageFlash] = useState<'none' | 'player' | 'opponent'>('none');
+  const [screenShake, setScreenShake] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -177,24 +179,35 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
         let newMyHP = playerHPRef.current;
         let newOppHP = opponentHPRef.current;
 
-        if (mappedResult.winner === 'player') {
+        // ─── Visual effects: screen shake + damage flash ───
+        if (mappedResult.winner === 'player' && mappedResult.damageDealt > 0) {
           newOppHP = Math.max(0, newOppHP - mappedResult.damageDealt);
-        } else if (mappedResult.winner === 'opponent') {
+          setDamageFlash('opponent');
+          setScreenShake(true);
+          setTimeout(() => setScreenShake(false), 500);
+        } else if (mappedResult.winner === 'opponent' && mappedResult.damageDealt > 0) {
           newMyHP = Math.max(0, newMyHP - mappedResult.damageDealt);
+          setDamageFlash('player');
+          setScreenShake(true);
+          setTimeout(() => setScreenShake(false), 500);
         }
+        setTimeout(() => setDamageFlash('none'), 800);
 
+        // ─── Heal (loser heals) ───
         if (mappedResult.winner === 'opponent') {
           newMyHP = Math.min(TOTAL_HP, newMyHP + mappedResult.healAmount);
         } else if (mappedResult.winner === 'player') {
           newOppHP = Math.min(TOTAL_HP, newOppHP + mappedResult.healAmount);
         }
 
+        // ─── Life steal (winner heals) ───
         if (mappedResult.winner === 'player') {
           newMyHP = Math.min(TOTAL_HP, newMyHP + mappedResult.lifeStealAmount);
         } else if (mappedResult.winner === 'opponent') {
           newOppHP = Math.min(TOTAL_HP, newOppHP + mappedResult.lifeStealAmount);
         }
 
+        // ─── Poison (extra damage to loser) ───
         if (mappedResult.winner === 'player') {
           newOppHP = Math.max(0, newOppHP - mappedResult.poisonAmount);
         } else if (mappedResult.winner === 'opponent') {
@@ -546,7 +559,11 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
     : (game.host_name || t('pvp.opponent'));
 
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
+    <div className={`flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative ${screenShake ? 'animate-damage-shake' : ''}`}>
+      {/* Damage Flash Overlay */}
+      {damageFlash !== 'none' && (
+        <div className={`absolute inset-0 pointer-events-none z-50 ${damageFlash === 'player' ? 'animate-red-flash' : 'animate-green-flash'}`} />
+      )}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute w-1 h-1 bg-neon-blue/20 rounded-full animate-drift" style={{ top: '10%', left: '20%' }} />
         <div className="absolute w-1.5 h-1.5 bg-neon-purple/15 rounded-full animate-drift" style={{ top: '30%', right: '15%', animationDelay: '2s' }} />
@@ -582,19 +599,45 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
       <div className="grid grid-cols-2 gap-2 px-3 py-1.5 shrink-0">
         <div className="flex flex-col gap-0.5">
           <div className="text-[9px] text-neon-green font-bold truncate">{youLabel}</div>
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-neon-green to-emerald-400 rounded-full transition-all duration-700"
-              style={{ width: `${(playerHP / TOTAL_HP) * 100}%` }} />
+          <div className="h-2.5 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
+            <div className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'player' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-neon-green to-emerald-400'}`}
+              style={{ width: `${(playerHP / TOTAL_HP) * 100}%`, boxShadow: damageFlash === 'player' ? 'none' : '0 0 8px rgba(0,230,118,0.3)' }} />
+            {currentResult?.winner === 'opponent' && battlePhase === 'damage' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-red-400 animate-damage-float">-{currentResult.damageDealt}</span>
+              </div>
+            )}
+            {currentResult?.winner === 'player' && currentResult?.lifeStealAmount > 0 && battlePhase === 'damage' && (
+              <div className="absolute inset-0 flex items-center justify-start ml-1">
+                <span className="text-[8px] font-bold text-purple-400 animate-damage-float">+{currentResult.lifeStealAmount}</span>
+              </div>
+            )}
           </div>
-          <div className="text-[10px] text-white font-bold text-right">{playerHP}</div>
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-white font-bold">{playerHP}</span>
+            <span className="text-[8px] text-white/20">{TOTAL_HP}</span>
+          </div>
         </div>
         <div className="flex flex-col gap-0.5">
           <div className="text-[9px] text-neon-red font-bold text-right truncate">{opponentLabel}</div>
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-neon-red to-orange-400 rounded-full transition-all duration-700"
-              style={{ width: `${(opponentHP / TOTAL_HP) * 100}%` }} />
+          <div className="h-2.5 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
+            <div className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'opponent' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-neon-red to-orange-400'}`}
+              style={{ width: `${(opponentHP / TOTAL_HP) * 100}%`, boxShadow: damageFlash === 'opponent' ? 'none' : '0 0 8px rgba(255,61,0,0.3)' }} />
+            {currentResult?.winner === 'player' && battlePhase === 'damage' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-green-400 animate-damage-float">-{currentResult.damageDealt}</span>
+              </div>
+            )}
+            {currentResult?.winner === 'opponent' && currentResult?.lifeStealAmount > 0 && battlePhase === 'damage' && (
+              <div className="absolute inset-0 flex items-center justify-end mr-1">
+                <span className="text-[8px] font-bold text-purple-400 animate-damage-float">+{currentResult.lifeStealAmount}</span>
+              </div>
+            )}
           </div>
-          <div className="text-[10px] text-white font-bold">{opponentHP}</div>
+          <div className="flex justify-between items-center">
+            <span className="text-[8px] text-white/20">{TOTAL_HP}</span>
+            <span className="text-[10px] text-white font-bold">{opponentHP}</span>
+          </div>
         </div>
       </div>
 
@@ -656,44 +699,62 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
         {battlePhase === 'vs' && currentPlayerCard && currentOpponentCard && currentResult && (
           <div className="flex flex-col items-center gap-3 w-full animate-fade-in px-3">
-            <div className="flex items-center gap-4 justify-center">
-              <div className="flex flex-col items-center">
+            {/* VS Banner — dramatic impact */}
+            <div className="text-5xl font-black animate-vs-impact" style={{
+              background: 'linear-gradient(90deg, #FF3D00, #FFD700, #FF3D00)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '0.2em',
+            }}>
+              VS
+            </div>
+            <div className="flex items-center gap-3 justify-center w-full">
+              {/* Player Card */}
+              <div className={`flex flex-col items-center ${currentResult.winner === 'player' ? 'animate-card-win' : currentResult.winner === 'opponent' ? 'animate-card-loss' : ''}`}>
                 <div className="text-[9px] text-neon-green mb-0.5 truncate">{youLabel}</div>
                 <CardComponent card={currentPlayerCard} compact />
                 <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentPlayerPillz}</div>
               </div>
 
+              {/* Battle Stats Center */}
               <div className="flex flex-col items-center gap-1">
-                <div className="text-3xl font-black text-white">
-                  {currentResult.playerAttack} <span className="text-white/30">vs</span> {currentResult.opponentAttack}
+                <div className="text-2xl font-black text-white animate-pulse">
+                  {currentResult.playerAttack}
+                </div>
+                <div className="text-[10px] text-white/30">VS</div>
+                <div className="text-2xl font-black text-white animate-pulse" style={{ animationDelay: '0.3s' }}>
+                  {currentResult.opponentAttack}
                 </div>
                 <div className={`
-                  text-lg font-black
-                  ${currentResult.winner === 'player' ? 'text-neon-green' : ''}
-                  ${currentResult.winner === 'opponent' ? 'text-neon-red' : ''}
-                  ${currentResult.winner === 'draw' ? 'text-white/50' : ''}
+                  text-sm font-black px-3 py-0.5 rounded-full animate-card-pop
+                  ${currentResult.winner === 'player' ? 'text-neon-green bg-neon-green/10 border border-neon-green/30' : ''}
+                  ${currentResult.winner === 'opponent' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
+                  ${currentResult.winner === 'draw' ? 'text-white/50 bg-white/5 border border-white/10' : ''}
                 `}>
                   {currentResult.winner === 'player' && `⚔️ ${t('battle.victory')}`}
                   {currentResult.winner === 'opponent' && `⚔️ ${t('battle.defeat')}`}
                   {currentResult.winner === 'draw' && `⚔️ ${t('battle.draw')}`}
                 </div>
-                <div className="flex flex-wrap gap-1 justify-center">
+                {/* Ability effect badges */}
+                <div className="flex flex-wrap gap-1 justify-center mt-1">
                   {currentResult.damageDealt > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300">-{currentResult.damageDealt} HP</span>
+                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/20">💥 -{currentResult.damageDealt} HP</span>
                   )}
                   {currentResult.healAmount > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300">+{currentResult.healAmount} HP</span>
+                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 border border-green-500/20" style={{ animationDelay: '0.2s' }}>💚 +{currentResult.healAmount} HP</span>
                   )}
                   {currentResult.lifeStealAmount > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">+{currentResult.lifeStealAmount} HP</span>
+                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20" style={{ animationDelay: '0.3s' }}>🩸 +{currentResult.lifeStealAmount} HP</span>
                   )}
                   {currentResult.poisonAmount > 0 && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300">☠️ {currentResult.poisonAmount}</span>
+                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 border border-yellow-500/20" style={{ animationDelay: '0.4s' }}>☠️ {currentResult.poisonAmount}</span>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col items-center">
+              {/* Opponent Card */}
+              <div className={`flex flex-col items-center ${currentResult.winner === 'opponent' ? 'animate-card-win' : currentResult.winner === 'player' ? 'animate-card-loss' : ''}`}>
                 <div className="text-[9px] text-neon-red mb-0.5 truncate">{opponentLabel}</div>
                 <CardComponent card={currentOpponentCard} compact />
                 <div className="text-[10px] text-white/60 mt-0.5">{t('battle.pillzShort')}: {currentOpponentPillz}</div>
@@ -703,26 +764,39 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
         )}
 
         {battlePhase === 'damage' && currentResult && (
-          <div className="flex flex-col items-center gap-2 w-full px-3">
+          <div className="flex flex-col items-center gap-3 w-full px-3">
+            {/* Main damage number — big and dramatic */}
             <div className={`
-              text-4xl font-black animate-bounce
-              ${currentResult.winner === 'player' ? 'text-neon-red' : ''}
-              ${currentResult.winner === 'opponent' ? 'text-red-500' : ''}
+              text-6xl font-black animate-card-pop
+              ${currentResult.winner === 'player' ? 'text-neon-red drop-shadow-[0_0_20px_rgba(255,61,0,0.6)]' : ''}
+              ${currentResult.winner === 'opponent' ? 'text-red-500 drop-shadow-[0_0_20px_rgba(255,0,0,0.6)]' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
             `}>
-              {currentResult.winner === 'draw' && '0'}
+              {currentResult.winner === 'draw' && 'НИЧЬЯ'}
               {currentResult.winner === 'player' && `-${currentResult.damageDealt}`}
               {currentResult.winner === 'opponent' && `-${currentResult.damageDealt}`}
             </div>
             <div className={`
-              text-sm font-bold
+              text-base font-bold animate-card-pop
               ${currentResult.winner === 'player' ? 'text-neon-red' : ''}
               ${currentResult.winner === 'opponent' ? 'text-red-400' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
-            `}>
-              {currentResult.winner === 'player' && t('pvp.hpOpponent')}
-              {currentResult.winner === 'opponent' && t('pvp.hpYour')}
-              {currentResult.winner === 'draw' && t('pvp.draw')}
+            `} style={{ animationDelay: '0.2s' }}>
+              {currentResult.winner === 'player' && `💥 ${t('pvp.hpOpponent')}`}
+              {currentResult.winner === 'opponent' && `💥 ${t('pvp.hpYour')}`}
+              {currentResult.winner === 'draw' && `🤝 ${t('pvp.draw')}`}
+            </div>
+            {/* Additional effects */}
+            <div className="flex gap-2 animate-card-pop" style={{ animationDelay: '0.3s' }}>
+              {currentResult.healAmount > 0 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/20">💚 +{currentResult.healAmount}</span>
+              )}
+              {currentResult.poisonAmount > 0 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/20">☠️ {currentResult.poisonAmount}</span>
+              )}
+              {currentResult.lifeStealAmount > 0 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/20">🩸 +{currentResult.lifeStealAmount}</span>
+              )}
             </div>
           </div>
         )}
