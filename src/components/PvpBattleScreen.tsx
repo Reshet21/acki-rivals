@@ -5,6 +5,7 @@ import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
 import { useHaptic } from '../hooks/useHaptic';
+import { playCardSwoosh, playVS, playHit, playVictory, playDefeat, playDraw, playHeal, playPoison, playLifeSteal } from '../utils/soundEffects';
 import {
   submitMove,
   getRoundMoves,
@@ -170,6 +171,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
       opponentDamageReduction: result.opponentDamageReduction,
     }]);
 
+    playVS();
     setBattlePhase('vs');
 
     vsTimerRef.current = setTimeout(() => {
@@ -182,11 +184,13 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
         // ─── Visual effects: screen shake + damage flash ───
         if (mappedResult.winner === 'player' && mappedResult.damageDealt > 0) {
           newOppHP = Math.max(0, newOppHP - mappedResult.damageDealt);
+          playHit();
           setDamageFlash('opponent');
           setScreenShake(true);
           setTimeout(() => setScreenShake(false), 500);
         } else if (mappedResult.winner === 'opponent' && mappedResult.damageDealt > 0) {
           newMyHP = Math.max(0, newMyHP - mappedResult.damageDealt);
+          playHit();
           setDamageFlash('player');
           setScreenShake(true);
           setTimeout(() => setScreenShake(false), 500);
@@ -196,22 +200,28 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
         // ─── Heal (loser heals) ───
         if (mappedResult.winner === 'opponent') {
           newMyHP = Math.min(TOTAL_HP, newMyHP + mappedResult.healAmount);
+          if (mappedResult.healAmount > 0) playHeal();
         } else if (mappedResult.winner === 'player') {
           newOppHP = Math.min(TOTAL_HP, newOppHP + mappedResult.healAmount);
+          if (mappedResult.healAmount > 0) playHeal();
         }
 
         // ─── Life steal (winner heals) ───
         if (mappedResult.winner === 'player') {
           newMyHP = Math.min(TOTAL_HP, newMyHP + mappedResult.lifeStealAmount);
+          if (mappedResult.lifeStealAmount > 0) playLifeSteal();
         } else if (mappedResult.winner === 'opponent') {
           newOppHP = Math.min(TOTAL_HP, newOppHP + mappedResult.lifeStealAmount);
+          if (mappedResult.lifeStealAmount > 0) playLifeSteal();
         }
 
         // ─── Poison (extra damage to loser) ───
         if (mappedResult.winner === 'player') {
           newOppHP = Math.max(0, newOppHP - mappedResult.poisonAmount);
+          if (mappedResult.poisonAmount > 0) playPoison();
         } else if (mappedResult.winner === 'opponent') {
           newMyHP = Math.max(0, newMyHP - mappedResult.poisonAmount);
+          if (mappedResult.poisonAmount > 0) playPoison();
         }
 
         setPlayerHP(newMyHP);
@@ -220,11 +230,11 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
         // KO check
         if (newMyHP <= 0 || newOppHP <= 0) {
           let r: 'win' | 'loss' | 'draw' = 'draw';
-          if (newMyHP > newOppHP) r = 'win';
-          else if (newOppHP > newMyHP) r = 'loss';
-          else if (newMyHP <= 0 && newOppHP <= 0) r = 'draw';
-          else if (newOppHP <= 0) r = 'win';
-          else r = 'loss';
+          if (newMyHP > newOppHP) { r = 'win'; playVictory(); }
+          else if (newOppHP > newMyHP) { r = 'loss'; playDefeat(); }
+          else if (newMyHP <= 0 && newOppHP <= 0) { r = 'draw'; playDraw(); }
+          else if (newOppHP <= 0) { r = 'win'; playVictory(); }
+          else { r = 'loss'; playDefeat(); }
           setBattleResult(r);
           setBattlePhase('ended');
           const koState: GameState = { phase: 'ended', round: roundRef.current, hostHP: isHost ? newMyHP : newOppHP, guestHP: isHost ? newOppHP : newMyHP, hostPillz: isHost ? playerPillzRef.current : opponentPillzRef.current, guestPillz: isHost ? opponentPillzRef.current : playerPillzRef.current, lastResolvedRound: roundRef.current, roundResult: lastRoundResultRef.current ?? undefined };
@@ -254,8 +264,9 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
         if (nextRound > TOTAL_ROUNDS) {
           let r: 'win' | 'loss' | 'draw' = 'draw';
-          if (newMyHP > newOppHP) r = 'win';
-          else if (newOppHP > newMyHP) r = 'loss';
+          if (newMyHP > newOppHP) { r = 'win'; playVictory(); }
+          else if (newOppHP > newMyHP) { r = 'loss'; playDefeat(); }
+          else { r = 'draw'; playDraw(); }
           setBattleResult(r);
           setBattlePhase('ended');
           if (isHost) abandonGame(game.id).catch(console.error);
@@ -484,6 +495,8 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
   const handleSelect = useCallback(async (card: Card, pillz: number) => {
     if (battlePhase !== 'select') return;
     if (timerRef.current) clearInterval(timerRef.current);
+
+    playCardSwoosh();
 
     setBattlePhase('submitting');
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Card } from '../types';
 import { cards as allCards } from '../data/cards';
 import { resolveRound } from '../utils/battleLogic';
+import { playCardSwoosh, playVS, playHit, playVictory, playDefeat, playDraw, playHeal, playPoison, playLifeSteal, playAbility } from '../utils/soundEffects';
 import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
@@ -182,9 +183,17 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
       },
     ]);
 
+    // Play card swoosh
+    playCardSwoosh();
+
     setBattlePhase('vs');
 
     vsTimerRef.current = setTimeout(() => {
+      // Play VS dramatic sound
+      playVS();
+      // Play ability activation sound
+      playAbility();
+
       setBattlePhase('damage');
 
       damageTimerRef.current = setTimeout(() => {
@@ -194,11 +203,13 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         // Apply main damage with visual effects
         if (result.winner === 'player') {
           newAiHP = Math.max(0, newAiHP - result.damageDealt);
+          if (result.damageDealt > 0) playHit();
           setDamageFlash('ai');
           setScreenShake(true);
           setTimeout(() => setScreenShake(false), 500);
         } else if (result.winner === 'ai') {
           newPlayerHP = Math.max(0, newPlayerHP - result.damageDealt);
+          if (result.damageDealt > 0) playHit();
           setDamageFlash('player');
           setScreenShake(true);
           setTimeout(() => setScreenShake(false), 500);
@@ -209,22 +220,28 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         // Apply heal on loss (loser heals)
         if (result.winner === 'ai') {
           newPlayerHP = Math.min(TOTAL_HP, newPlayerHP + result.healAmount);
+          if (result.healAmount > 0) playHeal();
         } else if (result.winner === 'player') {
           newAiHP = Math.min(TOTAL_HP, newAiHP + result.healAmount);
+          if (result.healAmount > 0) playHeal();
         }
 
         // Apply life steal on win (winner heals)
         if (result.winner === 'player') {
           newPlayerHP = Math.min(TOTAL_HP, newPlayerHP + result.lifeStealAmount);
+          if (result.lifeStealAmount > 0) playLifeSteal();
         } else if (result.winner === 'ai') {
           newAiHP = Math.min(TOTAL_HP, newAiHP + result.lifeStealAmount);
+          if (result.lifeStealAmount > 0) playLifeSteal();
         }
 
         // Apply poison on loss (extra damage to loser)
         if (result.winner === 'player') {
           newAiHP = Math.max(0, newAiHP - result.poisonAmount);
+          if (result.poisonAmount > 0) playPoison();
         } else if (result.winner === 'ai') {
           newPlayerHP = Math.max(0, newPlayerHP - result.poisonAmount);
+          if (result.poisonAmount > 0) playPoison();
         }
 
         setPlayerHP(newPlayerHP);
@@ -233,11 +250,11 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         // KO check — immediate victory if HP reaches 0
         if (newPlayerHP <= 0 || newAiHP <= 0) {
           let r: 'win' | 'loss' | 'draw' = 'draw';
-          if (newPlayerHP > newAiHP) r = 'win';
-          else if (newAiHP > newPlayerHP) r = 'loss';
-          else if (newPlayerHP <= 0 && newAiHP <= 0) r = 'draw';
-          else if (newAiHP <= 0) r = 'win';
-          else r = 'loss';
+          if (newPlayerHP > newAiHP) { r = 'win'; playVictory(); }
+          else if (newAiHP > newPlayerHP) { r = 'loss'; playDefeat(); }
+          else if (newPlayerHP <= 0 && newAiHP <= 0) { r = 'draw'; playDraw(); }
+          else if (newAiHP <= 0) { r = 'win'; playVictory(); }
+          else { r = 'loss'; playDefeat(); }
           setBattleResult(r);
           setBattlePhase('ended');
           if (r === 'win') haptic.notificationOccurred('success');
@@ -250,8 +267,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
 
         if (nextRound > TOTAL_ROUNDS) {
           let r: 'win' | 'loss' | 'draw' = 'draw';
-          if (newPlayerHP > newAiHP) r = 'win';
-          else if (newAiHP > newPlayerHP) r = 'loss';
+          if (newPlayerHP > newAiHP) { r = 'win'; playVictory(); }
+          else if (newAiHP > newPlayerHP) { r = 'loss'; playDefeat(); }
+          else { r = 'draw'; playDraw(); }
           setBattleResult(r);
           setBattlePhase('ended');
           if (r === 'win') haptic.notificationOccurred('success');
