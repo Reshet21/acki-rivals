@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { Card } from '../types';
 import { useI18n } from '../i18n';
 import { getCardName, getAbilityName, getStatLabel, getRarityLabel } from '../i18n/cardTranslations';
@@ -172,7 +173,10 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
           >ⓘ</div>
         )}
       </button>
-      {showDetail && <CardDetailPopup card={card} hand={hand} onClose={() => setShowDetail(false)} />}
+      {showDetail && createPortal(
+        <CardDetailPopup card={card} hand={hand} onClose={() => setShowDetail(false)} />,
+        document.body
+      )}
     </>
   );
 }
