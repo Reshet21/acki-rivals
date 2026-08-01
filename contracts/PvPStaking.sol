@@ -370,8 +370,9 @@ contract PvPStaking is IAcceptTokensTransferCallback {
     }
 
     function getBalance() public view returns (uint128) {
-        if (tokenWallet == address(0)) return 0;
-        return ITokenWallet(tokenWallet).balance{ value: 0 }();
+        // TODO: GOSH TVM не поддерживает внешние getter-вызовы.
+        // Реальный баланс можно читать через SDK (get-метод TokenWallet).
+        return 0;
     }
 
     /* ─── Приём SHELL ─────────────────────────────────────── */
