@@ -138,7 +138,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     // Показываем предупреждение, что платёж не прошёл, но паки выданы
     const isPaymentAttempted = walletConnection !== null;
     if (isPaymentAttempted) {
-      setPaymentError('⚡ DEV MODE: Блокчейн-платёж недоступен. Паки выданы бесплатно. Когда появится поддержка AN Wallet — отключи VITE_PAYMENT_MODE=dev в .env');
+      setPaymentError(t('shop.devModeWarning'));
     }
   };
 

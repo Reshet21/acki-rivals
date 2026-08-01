@@ -156,28 +156,41 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
       </div>
 
       {/* Attack panel */}
-      <div className="shrink-0 bg-dark-card border-t border-dark-border px-3 py-2 flex items-center gap-2"
-        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
+      <div className="shrink-0 px-3 py-2 flex items-center gap-2"
+        style={{
+          background: 'rgba(15,10,5,0.9)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
       >
         <div className="flex flex-col items-center gap-0.5 min-w-[60px]">
-          <div className="text-[9px] text-white/50">
-            <span className="text-neon-blue font-bold">{maxPillz}</span> {t('battle.pillz')}
+          <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <span className="font-bold" style={{ color: '#00d4ff' }}>{maxPillz}</span> {t('battle.pillz')}
           </div>
           <input
             type="range" min={0} max={maxPillz} value={pillz}
             onChange={(e) => setPillz(Number(e.target.value))}
-            className="w-full h-1 rounded-full appearance-none cursor-pointer bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink accent-neon-blue"
+            style={{
+              width: '100%', height: 4, borderRadius: 999, cursor: 'pointer',
+              background: `linear-gradient(to right, #00d4ff ${(pillz/Math.max(1,maxPillz))*100}%, rgba(255,255,255,0.1) ${(pillz/Math.max(1,maxPillz))*100}%)`,
+              accentColor: '#00d4ff',
+              WebkitAppearance: 'none',
+            }}
           />
-          <div className="text-[9px] text-white/40">{t('battle.spend')}: {pillz}</div>
+          <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('battle.spend')}: {pillz}</div>
         </div>
         <button
           onClick={go}
           disabled={!sel}
-          className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all duration-150 ${
-            sel
-              ? 'bg-gradient-to-r from-neon-blue to-neon-purple active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.3)] text-white'
-              : 'bg-white/5 text-white/20 cursor-not-allowed'
-          }`}
+          className="flex-1 py-2.5 rounded-lg font-bold text-sm transition-all duration-150"
+          style={{
+            background: sel ? 'linear-gradient(135deg, #00d4ff, #8b5cf6)' : 'rgba(255,255,255,0.05)',
+            color: sel ? 'white' : 'rgba(255,255,255,0.2)',
+            boxShadow: sel ? '0 4px 20px rgba(0,212,255,0.3), inset 0 1px 0 rgba(255,255,255,0.15)' : 'none',
+            cursor: sel ? 'pointer' : 'not-allowed',
+          }}
         >
           {t('battle.attackButton')}
         </button>

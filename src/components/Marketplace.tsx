@@ -108,7 +108,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     if (!IS_DEV_PAYMENT) {
       const balance = parseFloat(nacklBalance || '0');
       if (balance < listing.price_nackl) {
-        setStatus({ kind: 'error', text: `❌ Недостаточно NACKL (нужно ${listing.price_nackl})` });
+        setStatus({ kind: 'error', text: `❌ ${t('marketplace.notEnoughNackl')} ${listing.price_nackl})` });
         notificationOccurred('error');
         return;
       }
@@ -179,7 +179,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
         {/* Tabs */}
         <div className="flex gap-1 rounded-xl bg-white/[0.03] border border-white/[0.06] p-1">
           {(['buy', 'my', 'sell'] as const).map((tabKey) => {
-            const label = tabKey === 'buy' ? '🛒 Купить' : tabKey === 'my' ? '👤 Мои' : '💰 Продать';
+            const label = tabKey === 'buy' ? t('marketplace.tabBuy') : tabKey === 'my' ? t('marketplace.tabMy') : t('marketplace.tabSell');
             const badge = tabKey === 'buy' ? allListings.length : tabKey === 'my' ? myActiveListings.length : 0;
             return (
               <button key={tabKey}
@@ -211,7 +211,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
       {/* Dev mode banner */}
       {IS_DEV_PAYMENT && tab === 'buy' && allListings.length > 0 && (
         <div className="relative z-10 mx-4 mb-2 px-3 py-1.5 rounded-lg text-[10px] text-center" style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)', color: 'rgba(0,212,255,0.6)' }}>
-          ⚡ DEV MODE: покупка бесплатна. После деплоя контрактов — реальная торговля за NACKL.
+          {t('marketplace.devModeBanner')}
         </div>
       )}
 
@@ -224,8 +224,8 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
             {allListings.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-4xl mb-3">🏪</div>
-                <div className="text-white/40 text-sm">Листингов пока нет</div>
-                <div className="text-white/20 text-[10px] mt-1">Выстави карты на продажу во вкладке «Продать»</div>
+                <div className="text-white/40 text-sm">{t('marketplace.noListings')}</div>
+                <div className="text-white/20 text-[10px] mt-1">{t('marketplace.noListingsHint')}</div>
               </div>
             ) : (
               <>
@@ -260,7 +260,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                           )}
                         </div>
                         <div className="text-[9px] text-white/20 mt-0.5">
-                          Продавец: {listing.seller_name}
+                          {t('marketplace.seller')} {listing.seller_name}
                         </div>
                       </div>
                       {/* Price + buy button */}
@@ -271,7 +271,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                           onClick={() => handleBuy(listing)}
                           className="mt-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-90 transition-all shadow-[0_0_10px_rgba(0,212,255,0.2)] relative overflow-hidden">
                           <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
-                          Купить
+                          {t('marketplace.buyButton')}
                         </button>
                       </div>
                     </div>
@@ -307,7 +307,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                     <button
                       onClick={() => handleCancel(listing.id)}
                       className="shrink-0 px-3 py-2 rounded-lg text-[11px] font-bold bg-an-red/10 text-an-red border border-an-red/30 active:scale-90 transition-all">
-                      Отменить
+                      {t('marketplace.cancelButton')}
                     </button>
                   </div>
                 </div>
@@ -322,13 +322,13 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
             {/* Card selection */}
             <div className="mb-4">
               <div className="text-xs text-white/40 mb-2 uppercase tracking-wider">
-                Выбери карту для продажи ({sellableCards.length} доступно)
+                {t('marketplace.selectCard')} ({sellableCards.length} {t('marketplace.available')})
               </div>
               {sellableCards.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-3xl mb-2">🃏</div>
-                  <div className="text-white/40 text-sm">Нет карт для продажи</div>
-                  <div className="text-white/20 text-[10px] mt-1">Открой паки в магазине, чтобы получить карты</div>
+                  <div className="text-white/40 text-sm">{t('marketplace.noCardsToSell')}</div>
+                  <div className="text-white/20 text-[10px] mt-1">{t('marketplace.noCardsHint')}</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
@@ -385,7 +385,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                       ? 'bg-gradient-to-r from-an-gold to-an-orange text-an-dark active:scale-95 shadow-[0_0_20px_rgba(255,215,0,0.2)]'
                       : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
                   }`}>
-                  💰 Выставить на продажу
+                  💰 {t('marketplace.sellButton')}
                 </button>
 
                 <div className="text-[10px] text-white/20 text-center">

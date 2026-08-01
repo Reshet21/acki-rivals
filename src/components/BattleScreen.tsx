@@ -459,7 +459,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
       )}
 
       {/* Center area */}
-      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden relative z-10">
         {battlePhase === 'select' && (
           <CardSelector cards={playerCardsRemaining} onSelect={handleSelect} maxPillz={playerPillz} />
         )}

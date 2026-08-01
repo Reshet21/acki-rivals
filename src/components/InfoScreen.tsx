@@ -90,106 +90,94 @@ function StatBadge({ emoji, label }: { emoji: string; label: string }) {
 }
 
 function AboutSection() {
+  const { t } = useI18n();
   return (
     <>
-      <Section title="🎯 Что такое ACKI RIVALS?" accent="#00d4ff">
-        <p>Это PvP карточная баталия на блокчейне Acki Nacki. Собирай колоду из 8 уникальных карт двух кланов, сражайся с другими игроками и ставь реальные NACKL токены на кон!</p>
-        <p className="mt-2 text-white/50 text-[10px]">Бой проходит 4 раунда. Из твоей колоды в 8 карт случайно выбираются 4 — с ними ты и будешь сражаться.</p>
+      <Section title={t('info.aboutTitle1')} accent="#00d4ff">
+        <p>{t('info.aboutDesc1')}</p>
+        <p className="mt-2 text-white/50 text-[10px]">{t('info.aboutSubtitle1')}</p>
       </Section>
 
-      <Section title="🎮 Как играть" accent="#a855f7">
+      <Section title={t('info.howToPlay')} accent="#a855f7">
         <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">1️⃣</span>
-            <div>
-              <span className="text-white/80 font-bold">Собери колоду</span>
-              <p className="text-[10px] text-white/40">Собери 8 карт в меню «Колода»</p>
+          {[
+            { emoji: '1️⃣', titleKey: 'info.howToStep1Title', descKey: 'info.howToStep1Desc' },
+            { emoji: '2️⃣', titleKey: 'info.howToStep2Title', descKey: 'info.howToStep2Desc' },
+            { emoji: '3️⃣', titleKey: 'info.howToStep3Title', descKey: 'info.howToStep3Desc' },
+            { emoji: '4️⃣', titleKey: 'info.howToStep4Title', descKey: 'info.howToStep4Desc' },
+          ].map(({ emoji, titleKey, descKey }) => (
+            <div key={titleKey} className="flex items-start gap-2">
+              <span className="text-sm shrink-0">{emoji}</span>
+              <div>
+                <span className="text-white/80 font-bold">{t(titleKey)}</span>
+                <p className="text-[10px] text-white/40">{t(descKey)}</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">2️⃣</span>
-            <div>
-              <span className="text-white/80 font-bold">Подключи кошелёк</span>
-              <p className="text-[10px] text-white/40">AN Wallet с NACKL для ставок</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">3️⃣</span>
-            <div>
-              <span className="text-white/80 font-bold">Создай комнату</span>
-              <p className="text-[10px] text-white/40">Укажи ставку в NACKL, поделись кодом с другом</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">4️⃣</span>
-            <div>
-              <span className="text-white/80 font-bold">Сражайся и побеждай</span>
-              <p className="text-[10px] text-white/40">Победитель забирает ставку!</p>
-            </div>
-          </div>
+          ))}
         </div>
       </Section>
 
-      <Section title="💰 Экономика" accent="#fbbf24">
-        <p>В игре используется <b>реальный токен NACKL</b> из твоего кошелька AN Wallet.</p>
+      <Section title={t('info.economyTitle')} accent="#fbbf24">
+        <p>{t('info.economyDesc')}</p>
         <div className="flex flex-wrap gap-1.5 mt-2">
-          <StatBadge emoji="🪙" label="NACKL — токен ставок" />
-          <StatBadge emoji="⛽" label="SHELL — газ" />
+          <StatBadge emoji="🪙" label={t('info.tokenBetting')} />
+          <StatBadge emoji="⛽" label={t('info.tokenGas')} />
         </div>
-        <p className="text-[10px] text-white/40 mt-2">Никаких фейковых кредитов, никаких наград от нас. Только PvP на реальные токены!</p>
+        <p className="text-[10px] text-white/40 mt-2">{t('info.economyNote')}</p>
       </Section>
     </>
   );
 }
 
 function CardsSection() {
+  const { t } = useI18n();
   return (
     <>
-      <Section title="🃏 Система карт" accent="#a855f7">
-        <p>Всего 50+ уникальных карт в двух кланах. У каждой карты есть:</p>
+      <Section title={t('info.cardSystemTitle')} accent="#a855f7">
+        <p>{t('info.cardSystemCount')}</p>
         <div className="grid grid-cols-2 gap-2 mt-2">
           <div className="p-2 rounded-xl" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.15)' }}>
-            <div className="text-xs font-bold" style={{ color: '#60a5fa' }}>⚔️ Сила</div>
-            <div className="text-[10px] text-white/50">Определяет атаку в бою</div>
+            <div className="text-xs font-bold" style={{ color: '#60a5fa' }}>⚔️ {t('info.powerLabel')}</div>
+            <div className="text-[10px] text-white/50">{t('info.powerShortDesc')}</div>
           </div>
           <div className="p-2 rounded-xl" style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.15)' }}>
-            <div className="text-xs font-bold" style={{ color: '#f87171' }}>💥 Урон</div>
-            <div className="text-[10px] text-white/50">HP, наносимый проигравшему</div>
+            <div className="text-xs font-bold" style={{ color: '#f87171' }}>💥 {t('info.damageLabel')}</div>
+            <div className="text-[10px] text-white/50">{t('info.damageShortDesc')}</div>
           </div>
           <div className="p-2 rounded-xl" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>
-            <div className="text-xs font-bold" style={{ color: '#fbbf24' }}>⭐ Звёзды</div>
-            <div className="text-[10px] text-white/50">+1 сила и +1 урон за звезду</div>
+            <div className="text-xs font-bold" style={{ color: '#fbbf24' }}>⭐ {t('info.starsLabel')}</div>
+            <div className="text-[10px] text-white/50">{t('info.starsShortDesc')}</div>
           </div>
           <div className="p-2 rounded-xl" style={{ background: 'rgba(192,132,252,0.08)', border: '1px solid rgba(192,132,252,0.15)' }}>
-            <div className="text-xs font-bold" style={{ color: '#c084fc' }}>🛡️ Способность</div>
-            <div className="text-[10px] text-white/50">Уникальный эффект в бою</div>
+            <div className="text-xs font-bold" style={{ color: '#c084fc' }}>🛡️ {t('info.abilityShortLabel')}</div>
+            <div className="text-[10px] text-white/50">{t('info.abilityShortDesc')}</div>
           </div>
         </div>
       </Section>
 
-      <Section title="⚔️ Клан Неоновых Наемников" accent="#FF6D00">
-        <p>Агрессивный клан. Специализируются на атаке и прямом уроне.</p>
-        <p className="mt-1"><b>Бонус клана:</b> <span style={{ color: '#4ade80' }}>+1 к силе</span> всех карт клана, когда 2+ карты клана в руке.</p>
+      <Section title={t('info.neonClanTitle')} accent="#FF6D00">
+        <p>{t('info.neonClanDesc')}</p>
+        <p className="mt-1"><b>{t('info.clanBonus')}</b> <span style={{ color: '#4ade80' }}>+1 {t('info.powerLabel')}</span> {t('info.neonClanBonusText')}</p>
       </Section>
 
-      <Section title="🧘 Клан Цифровых Монахов" accent="#00d4ff">
-        <p>Защитный клан. Лечение, ослабление врага, контроль.</p>
-        <p className="mt-1"><b>Бонус клана:</b> <span style={{ color: '#4ade80' }}>+1 к урону</span> всех карт клана, когда 2+ карты клана в руке.</p>
+      <Section title={t('info.digiClanTitle')} accent="#00d4ff">
+        <p>{t('info.digiClanDesc')}</p>
+        <p className="mt-1"><b>{t('info.clanBonus')}</b> <span style={{ color: '#4ade80' }}>+1 {t('info.damageLabel')}</span> {t('info.digiClanBonusText')}</p>
       </Section>
 
-      <Section title="🌟 Редкость" accent="#fbbf24">
+      <Section title={t('info.raritySectionTitle')} accent="#fbbf24">
         <div className="space-y-1">
-          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(107,114,128,0.3)', color: '#9ca3af' }}>C</span><span style={{ color: '#9ca3af' }}>Обычная</span></div>
-          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(16,185,129,0.3)', color: '#10b981' }}>U</span><span style={{ color: '#10b981' }}>Необычная</span></div>
-          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(59,130,246,0.3)', color: '#3b82f6' }}>R</span><span style={{ color: '#3b82f6' }}>Редкая</span></div>
-          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(168,85,247,0.3)', color: '#a855f7' }}>E</span><span style={{ color: '#a855f7' }}>Эпическая</span></div>
-          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(245,158,11,0.3)', color: '#f59e0b' }}>L</span><span style={{ color: '#f59e0b' }}>Легендарная</span></div>
+          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(107,114,128,0.3)', color: '#9ca3af' }}>C</span><span style={{ color: '#9ca3af' }}>{t('info.commonName')}</span></div>
+          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(16,185,129,0.3)', color: '#10b981' }}>U</span><span style={{ color: '#10b981' }}>{t('info.uncommonName')}</span></div>
+          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(59,130,246,0.3)', color: '#3b82f6' }}>R</span><span style={{ color: '#3b82f6' }}>{t('info.rareName')}</span></div>
+          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(168,85,247,0.3)', color: '#a855f7' }}>E</span><span style={{ color: '#a855f7' }}>{t('info.epicName')}</span></div>
+          <div className="flex items-center gap-2"><span className="w-4 h-4 rounded flex items-center justify-center text-[8px]" style={{ background: 'rgba(245,158,11,0.3)', color: '#f59e0b' }}>L</span><span style={{ color: '#f59e0b' }}>{t('info.legendaryName')}</span></div>
         </div>
-        <p className="text-[10px] text-white/40 mt-2">Чем выше редкость — тем сильнее базовая карта.</p>
+        <p className="text-[10px] text-white/40 mt-2">{t('info.rarityNote')}</p>
       </Section>
 
-      <Section title="⭐ Улучшение карт" accent="#fbbf24">
-        <p>Объединяй дубликаты, чтобы повышать звёздность карт. Каждая звезда даёт +1 к силе и +1 к урону.</p>
+      <Section title={t('info.upgradeSectionTitle')} accent="#fbbf24">
+        <p>{t('info.upgradeSectionDesc')}</p>
         <div className="grid grid-cols-5 gap-1 mt-2">
           {[
             { lv: '★0→1', copies: 1 },
@@ -200,160 +188,154 @@ function CardsSection() {
           ].map(({ lv, copies }) => (
             <div key={lv} className="text-center p-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
               <div className="text-[9px] font-bold" style={{ color: '#fbbf24' }}>{lv}</div>
-              <div className="text-[8px] text-white/40">{copies} коп.</div>
+              <div className="text-[8px] text-white/40">{copies} {t('info.copiesShort')}</div>
             </div>
           ))}
         </div>
-        <p className="text-[10px] text-white/40 mt-1">Максимум ★5. Дубликаты карт получаются из наборов.</p>
+        <p className="text-[10px] text-white/40 mt-1">{t('info.upgradeMaxNote')}</p>
       </Section>
     </>
   );
 }
 
 function BattleSection() {
+  const { t } = useI18n();
   return (
     <>
-      <Section title="⚔️ Механика боя" accent="#FF6D00">
-        <p>Бой длится до 4 раундов. Твоя задача — снизить HP противника до 0, сохранив свои HP.</p>
+      <Section title={t('info.battleSectionTitle')} accent="#FF6D00">
+        <p>{t('info.battleSectionDesc')}</p>
         <div className="space-y-2 mt-2">
-          <div className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <span className="text-base shrink-0">1️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Выбери карту</span>
-              <p className="text-[10px] text-white/40">Из 4 случайных карт своей колоды выбери одну</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <span className="text-base shrink-0">2️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Распредели пиллзы</span>
-              <p className="text-[10px] text-white/40">Каждый пиллз увеличивает атаку на 100% от силы карты</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <span className="text-base shrink-0">3️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Узнай результат</span>
-              <p className="text-[10px] text-white/40">Победитель наносит свой урон проигравшему</p>
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="🎯 Расчёт атаки" accent="#00d4ff">
-        <div className="p-3 rounded-xl text-center" style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.1)' }}>
-          <div className="text-xs font-bold" style={{ color: '#00d4ff' }}>Атака = Сила × (1 + Пиллзы) × (0.9 — 1.1)</div>
-          <div className="text-[10px] text-white/40 mt-1">Случайный множитель 0.9–1.1 добавляет элемент удачи</div>
-        </div>
-        <div className="grid grid-cols-2 gap-2 mt-2">
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.1)' }}>
-            <div className="text-xs font-bold" style={{ color: '#4ade80' }}>0 пиллз</div>
-            <div className="text-[10px] text-white/50">Базовая атака силой × 0.9–1.1</div>
-          </div>
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.1)' }}>
-            <div className="text-xs font-bold" style={{ color: '#f87171' }}>3 пиллза</div>
-            <div className="text-[10px] text-white/50">Атака ×4 (сила × 4 × 0.9–1.1)</div>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="❤️ Пиллзы" accent="#4ade80">
-        <p>У тебя есть <b>12 пиллз</b> на всё игру + 1 бесплатный каждый раунд (макс. 16). Трать их с умом!</p>
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          <StatBadge emoji="💊" label="12 + 1/раунд" />
-          <StatBadge emoji="⚡" label="+100% атаки за пиллз" />
-          <StatBadge emoji="⏱️" label="30 сек на ход" />
-        </div>
-      </Section>
-
-      <Section title="🛡️ Способности" accent="#c084fc">
-        <div className="grid grid-cols-1 gap-1.5">
           {[
-            { icon: '⚔️', name: 'Укрепление', desc: 'Даёт +N к силе карты в раунде', color: '#60a5fa' },
-            { icon: '🛡️', name: 'Ослабление', desc: 'Снижает силу карты противника на N', color: '#fb923c' },
-            { icon: '💥', name: 'Усиление урона', desc: 'Увеличивает урон при победе на N', color: '#f87171' },
-            { icon: '💚', name: 'Лечение', desc: 'Восстанавливает N HP при проигрыше в раунде', color: '#4ade80' },
-            { icon: '☠️', name: 'Яд', desc: 'Наносит N доп. урона проигравшему', color: '#facc15' },
-            { icon: '🩸', name: 'Кража жизни', desc: 'Восстанавливает N HP победителю', color: '#c084fc' },
-            { icon: '🚫', name: 'Глушитель', desc: 'Отменяет способность карты противника', color: '#f87171' },
-            { icon: '⚡', name: 'Двойной урон', desc: 'Удваивает урон при победе', color: '#fbbf24' },
-            { icon: '💊', name: 'Запас', desc: 'Даёт дополнительные пиллзы в этом раунде', color: '#4ade80' },
-          ].map(({ icon, name, desc, color }) => (
-            <div key={name} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: `${color}06`, border: `1px solid ${color}15` }}>
-              <span className="text-base shrink-0">{icon}</span>
+            { emoji: '1️⃣', titleKey: 'info.chooseCardTitle', descKey: 'info.chooseCardDesc' },
+            { emoji: '2️⃣', titleKey: 'info.distributePillzTitle', descKey: 'info.distributePillzDesc' },
+            { emoji: '3️⃣', titleKey: 'info.seeResultTitle', descKey: 'info.seeResultDesc' },
+          ].map(({ emoji, titleKey, descKey }) => (
+            <div key={titleKey} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <span className="text-base shrink-0">{emoji}</span>
               <div>
-                <span className="text-[11px] font-bold" style={{ color }}>{name}</span>
-                <p className="text-[9px] text-white/40">{desc}</p>
+                <span className="text-white/80 text-[11px] font-bold">{t(titleKey)}</span>
+                <p className="text-[10px] text-white/40">{t(descKey)}</p>
               </div>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section title="🏆 Победа" accent="#fbbf24">
-        <p>После 4 раундов побеждает тот, у кого больше HP. Если у кого-то HP падает до 0 — досрочная победа!</p>
-        <p className="mt-1 text-[10px] text-white/40">При одинаковом HP — ничья.</p>
+      <Section title={t('info.attackCalcTitle')} accent="#00d4ff">
+        <div className="p-3 rounded-xl text-center" style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.1)' }}>
+          <div className="text-xs font-bold" style={{ color: '#00d4ff' }}>{t('info.attackFormulaText')}</div>
+          <div className="text-[10px] text-white/40 mt-1">{t('info.attackRandomNote')}</div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <div className="p-2 rounded-xl" style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.1)' }}>
+            <div className="text-xs font-bold" style={{ color: '#4ade80' }}>{t('info.zeroPillzLabel')}</div>
+            <div className="text-[10px] text-white/50">{t('info.zeroPillzDesc')}</div>
+          </div>
+          <div className="p-2 rounded-xl" style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.1)' }}>
+            <div className="text-xs font-bold" style={{ color: '#f87171' }}>{t('info.threePillzLabel')}</div>
+            <div className="text-[10px] text-white/50">{t('info.threePillzDesc')}</div>
+          </div>
+        </div>
+      </Section>
+
+      <Section title={t('info.pillzSectionTitle')} accent="#4ade80">
+        <p>{t('info.pillzSectionDesc')}</p>
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          <StatBadge emoji="💊" label={t('info.pillzStat1')} />
+          <StatBadge emoji="⚡" label={t('info.pillzStat2')} />
+          <StatBadge emoji="⏱️" label={t('info.pillzStat3')} />
+        </div>
+      </Section>
+
+      <Section title={t('info.abilitiesSectionTitle')} accent="#c084fc">
+        <div className="grid grid-cols-1 gap-1.5">
+          {[
+            { icon: '⚔️', nameKey: 'info.abilityStrengthenShort', descKey: 'info.abilityStrengthenShortDesc', color: '#60a5fa' },
+            { icon: '🛡️', nameKey: 'info.abilityWeakenShort', descKey: 'info.abilityWeakenShortDesc', color: '#fb923c' },
+            { icon: '💥', nameKey: 'info.abilityDamageUpShort', descKey: 'info.abilityDamageUpShortDesc', color: '#f87171' },
+            { icon: '💚', nameKey: 'info.abilityHealShort', descKey: 'info.abilityHealShortDesc', color: '#4ade80' },
+            { icon: '☠️', nameKey: 'info.abilityPoisonShort', descKey: 'info.abilityPoisonShortDesc', color: '#facc15' },
+            { icon: '🩸', nameKey: 'info.abilityLifeStealShort', descKey: 'info.abilityLifeStealShortDesc', color: '#c084fc' },
+            { icon: '🚫', nameKey: 'info.abilitySilenceShort', descKey: 'info.abilitySilenceShortDesc', color: '#f87171' },
+            { icon: '⚡', nameKey: 'info.abilityDoubleDamageShort', descKey: 'info.abilityDoubleDamageShortDesc', color: '#fbbf24' },
+            { icon: '💊', nameKey: 'info.abilityExtraPillzShort', descKey: 'info.abilityExtraPillzShortDesc', color: '#4ade80' },
+          ].map(({ icon, nameKey, descKey, color }) => (
+            <div key={nameKey} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: `${color}06`, border: `1px solid ${color}15` }}>
+              <span className="text-base shrink-0">{icon}</span>
+              <div>
+                <span className="text-[11px] font-bold" style={{ color }}>{t(nameKey)}</span>
+                <p className="text-[9px] text-white/40">{t(descKey)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title={t('info.winnerSectionTitle')} accent="#fbbf24">
+        <p>{t('info.winnerSectionDesc')}</p>
+        <p className="mt-1 text-[10px] text-white/40">{t('info.winnerDrawNote')}</p>
       </Section>
     </>
   );
 }
 
 function CombosSection() {
+  const { t } = useI18n();
   return (
     <>
-      <Section title="🔗 Комбо карты" accent="#fbbf24">
-        <p>Когда определённые пары карт оказываются в руке одновременно, активируется комбо-эффект. Карты не обязаны быть сыграны в одном раунде — достаточно иметь их обоих в руке.</p>
+      <Section title={t('info.combosSectionTitle')} accent="#fbbf24">
+        <p>{t('info.combosSectionDesc')}</p>
       </Section>
 
-      <Section title="⚔️ Комбо Неоновых Наемников" accent="#FF6D00">
+      <Section title={t('info.neonCombosTitle')} accent="#FF6D00">
         <div className="space-y-1.5">
           {[
-            { cards: 'Малый Блок + Курьер Хешей', effect: 'Оба получают +2 к силе' },
-            { cards: 'Хеш-Волк + Валидатор', effect: 'Валидатор +2 к урону' },
-            { cards: 'Гиперблок + Император Блоков', effect: 'Гиперблок +3 к урону' },
-            { cards: 'Тень Блока + Фантомная Нода', effect: 'Кража жизни ×2 у обоих' },
-          ].map(({ cards, effect }) => (
-            <div key={cards} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            { cardsKey: 'info.combo1Cards', effectKey: 'info.combo1Effect' },
+            { cardsKey: 'info.combo2Cards', effectKey: 'info.combo2Effect' },
+            { cardsKey: 'info.combo3Cards', effectKey: 'info.combo3Effect' },
+            { cardsKey: 'info.combo4Cards', effectKey: 'info.combo4Effect' },
+          ].map(({ cardsKey, effectKey }) => (
+            <div key={cardsKey} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <span className="text-[9px] text-white/20 shrink-0">⚔️</span>
               <div>
-                <div className="text-[10px] font-bold text-white/80">{cards}</div>
-                <div className="text-[9px] text-white/40">{effect}</div>
+                <div className="text-[10px] font-bold text-white/80">{t(cardsKey)}</div>
+                <div className="text-[9px] text-white/40">{t(effectKey)}</div>
               </div>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section title="🧘 Комбо Цифровых Монахов" accent="#00d4ff">
+      <Section title={t('info.digiCombosTitle')} accent="#00d4ff">
         <div className="space-y-1.5">
           {[
-            { cards: 'Медитативная Нода + Страж Эпохи', effect: 'Оба получают +2 к исцелению' },
-            { cards: 'Мастер Эпох + Архонт Блоков', effect: 'Яд ×2 у обоих' },
-            { cards: 'Император Кода + Космический Валидатор', effect: '+3 к силе Императора' },
-            { cards: 'Будда Блокчейна + Дух Генезиса', effect: 'Исцеление ×3 у Будды' },
-          ].map(({ cards, effect }) => (
-            <div key={cards} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            { cardsKey: 'info.combo5Cards', effectKey: 'info.combo5Effect' },
+            { cardsKey: 'info.combo6Cards', effectKey: 'info.combo6Effect' },
+            { cardsKey: 'info.combo7Cards', effectKey: 'info.combo7Effect' },
+            { cardsKey: 'info.combo8Cards', effectKey: 'info.combo8Effect' },
+          ].map(({ cardsKey, effectKey }) => (
+            <div key={cardsKey} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <span className="text-[9px] text-white/20 shrink-0">🧘</span>
               <div>
-                <div className="text-[10px] font-bold text-white/80">{cards}</div>
-                <div className="text-[9px] text-white/40">{effect}</div>
+                <div className="text-[10px] font-bold text-white/80">{t(cardsKey)}</div>
+                <div className="text-[9px] text-white/40">{t(effectKey)}</div>
               </div>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section title="🌐 Кросс-клан комбо" accent="#a855f7">
+      <Section title={t('info.crossClanCombosTitle')} accent="#a855f7">
         <div className="space-y-1.5">
           {[
-            { cards: 'Гиперблок + Император Кода', effect: 'Оба +2 к урону' },
-            { cards: 'Бог Блокчейна + Будда Блокчейна', effect: 'Оба +3 к силе' },
-          ].map(({ cards, effect }) => (
-            <div key={cards} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.1)' }}>
+            { cardsKey: 'info.combo9Cards', effectKey: 'info.combo9Effect' },
+            { cardsKey: 'info.combo10Cards', effectKey: 'info.combo10Effect' },
+          ].map(({ cardsKey, effectKey }) => (
+            <div key={cardsKey} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.1)' }}>
               <span className="text-[9px] shrink-0">🌐</span>
               <div>
-                <div className="text-[10px] font-bold text-white/80">{cards}</div>
-                <div className="text-[9px] text-white/40">{effect}</div>
+                <div className="text-[10px] font-bold text-white/80">{t(cardsKey)}</div>
+                <div className="text-[9px] text-white/40">{t(effectKey)}</div>
               </div>
             </div>
           ))}
@@ -364,96 +346,75 @@ function CombosSection() {
 }
 
 function PvpSection() {
+  const { t } = useI18n();
   return (
     <>
-      <Section title="🌐 PvP на ставки" accent="#FF3D00">
-        <p>Сражайся с другими игроками на реальные NACKL токены! Победитель забирает весь банк.</p>
+      <Section title={t('info.pvpSectionTitle')} accent="#FF3D00">
+        <p>{t('info.pvpSectionDesc')}</p>
         <div className="p-3 rounded-xl mt-2" style={{ background: 'rgba(255,61,0,0.06)', border: '1px solid rgba(255,61,0,0.15)' }}>
           <div className="text-[10px] font-bold text-center" style={{ color: '#FF3D00' }}>
-            ⚔️ Создай комнату → Назначь ставку → Победитель забирает всё!
+            ⚔️ {t('info.pvpHighlight')}
           </div>
         </div>
       </Section>
 
-      <Section title="🎮 Как начать PvP" accent="#FF6D00">
+      <Section title={t('info.pvpHowToSectionTitle')} accent="#FF6D00">
         <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">1️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Собери колоду</span>
-              <p className="text-[9px] text-white/40">Нужно ровно 8 карт в колоде</p>
+          {[
+            { emoji: '1️⃣', titleKey: 'info.pvpStep1Title', descKey: 'info.pvpStep1Desc' },
+            { emoji: '2️⃣', titleKey: 'info.pvpStep2Title', descKey: 'info.pvpStep2Desc' },
+            { emoji: '3️⃣', titleKey: 'info.pvpStep3Title', descKey: 'info.pvpStep3Desc' },
+            { emoji: '4️⃣', titleKey: 'info.pvpStep4Title', descKey: 'info.pvpStep4Desc' },
+            { emoji: '5️⃣', titleKey: 'info.pvpStep5Title', descKey: 'info.pvpStep5Desc' },
+          ].map(({ emoji, titleKey, descKey }) => (
+            <div key={titleKey} className="flex items-start gap-2">
+              <span className="text-sm shrink-0">{emoji}</span>
+              <div>
+                <span className="text-white/80 text-[11px] font-bold">{t(titleKey)}</span>
+                <p className="text-[9px] text-white/40">{t(descKey)}</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">2️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Подключи кошелёк</span>
-              <p className="text-[9px] text-white/40">AN Wallet с достаточным балансом NACKL</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">3️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Выбери режим</span>
-              <p className="text-[9px] text-white/40">Случайный бой или комната по коду</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">4️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Назначь ставку</span>
-              <p className="text-[9px] text-white/40">Сколько NACKL ставишь на кон?</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-sm shrink-0">5️⃣</span>
-            <div>
-              <span className="text-white/80 text-[11px] font-bold">Сражайся!</span>
-              <p className="text-[9px] text-white/40">4 раунда, победитель забирает ставку</p>
-            </div>
-          </div>
+          ))}
         </div>
       </Section>
 
-      <Section title="📋 Правила" accent="#FF3D00">
+      <Section title={t('info.pvpRulesSectionTitle')} accent="#FF3D00">
         <div className="space-y-1 text-[10px]">
-          <p>• <b>Ставка:</b> NACKL из твоего кошелька. Победитель забирает банк.</p>
-          <p>• <b>Колода:</b> 8 карт, в бой попадает 4 случайных.</p>
-          <p>• <b>Формат:</b> 4 раунда, 12 HP, 12 пиллз + 1/раунд.</p>
-          <p>• <b>Код комнаты:</b> Поделись с другом, чтобы сыграть вдвоём.</p>
-          <p>• <b>Случайный бой:</b> Автоматический подбор соперника.</p>
-          <p>• <b>Условия:</b> Нужен подключённый кошелёк и колода из 8 карт.</p>
+          {['info.pvpRule1', 'info.pvpRule2', 'info.pvpRule3', 'info.pvpRule4', 'info.pvpRule5', 'info.pvpRule6'].map((key) => (
+            <p key={key}>• {t(key)}</p>
+          ))}
         </div>
       </Section>
 
-      <Section title="🔐 Безопасность" accent="#4ade80">
-        <p>Транзакции ставок проходят через блокчейн Acki Nacki. Токены NACKL никогда не покидают твой кошелёк без твоего подтверждения через AN Wallet.</p>
+      <Section title={t('info.pvpSecuritySectionTitle')} accent="#4ade80">
+        <p>{t('info.pvpSecurityDesc')}</p>
       </Section>
     </>
   );
 }
 
 function WalletSection() {
+  const { t } = useI18n();
   return (
     <>
-      <Section title="👛 Подключение кошелька" accent="#4ade80">
-        <p>Для игры с реальными ставками тебе понадобится <b>AN Wallet</b>.</p>
+      <Section title={t('info.walletConnectSectionTitle')} accent="#4ade80">
+        <p>{t('info.walletConnectSectionDesc')}</p>
         <div className="flex flex-wrap gap-1.5 mt-2">
-          <StatBadge emoji="📱" label="AN Wallet в App Store" />
-          <StatBadge emoji="🔗" label="Acki Nacki mainnet" />
-          <StatBadge emoji="🪙" label="NACKL для ставок" />
-          <StatBadge emoji="⛽" label="SHELL для газа" />
+          <StatBadge emoji="📱" label={t('info.walletAppStore')} />
+          <StatBadge emoji="🔗" label={t('info.walletMainnet')} />
+          <StatBadge emoji="🪙" label={t('info.walletForBets')} />
+          <StatBadge emoji="⛽" label={t('info.walletForGas')} />
         </div>
       </Section>
 
-      <Section title="🪙 Токены" accent="#fbbf24">
+      <Section title={t('info.tokensSectionTitle')} accent="#fbbf24">
         <div className="space-y-2">
           <div className="p-2 rounded-lg" style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.1)' }}>
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🪙</span>
               <div>
                 <div className="text-[11px] font-bold" style={{ color: '#FFD700' }}>NACKL</div>
-                <div className="text-[9px] text-white/40">Основной токен для ставок в PvP</div>
+                <div className="text-[9px] text-white/40">{t('info.tokenNacklDesc')}</div>
               </div>
             </div>
           </div>
@@ -462,20 +423,20 @@ function WalletSection() {
               <span className="text-sm">⛽</span>
               <div>
                 <div className="text-[11px] font-bold" style={{ color: '#00d4ff' }}>SHELL</div>
-                <div className="text-[9px] text-white/40">Газовый токен для транзакций</div>
+                <div className="text-[9px] text-white/40">{t('info.tokenShellDesc')}</div>
               </div>
             </div>
           </div>
         </div>
       </Section>
 
-      <Section title="📊 Баланс" accent="#00d4ff">
-        <p>На главном экране с подключённым кошельком отображаются:</p>
+      <Section title={t('info.balanceSectionTitle')} accent="#00d4ff">
+        <p>{t('info.balanceSectionDesc')}</p>
         <div className="flex flex-wrap gap-1.5 mt-2">
-          <StatBadge emoji="👤" label="Имя кошелька" />
-          <StatBadge emoji="🪙" label="Баланс NACKL" />
-          <StatBadge emoji="⛽" label="Баланс SHELL" />
-          <StatBadge emoji="🏆" label="Победы/поражения" />
+          <StatBadge emoji="👤" label={t('info.balanceName')} />
+          <StatBadge emoji="🪙" label={t('info.balanceNackl')} />
+          <StatBadge emoji="⛽" label={t('info.balanceShell')} />
+          <StatBadge emoji="🏆" label={t('info.balanceStats')} />
         </div>
       </Section>
     </>

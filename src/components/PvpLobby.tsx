@@ -490,7 +490,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                 {waiting ? (
                   <span className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-an-dark/30 border-t-an-dark rounded-full animate-spin" />
-                    Подключение...
+                    {t('pvp.connecting')}
                   </span>
                 ) : (
                   `⚔️ ${t('pvp.join')}`

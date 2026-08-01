@@ -730,7 +730,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
               ${currentResult.winner === 'opponent' ? 'text-red-500 drop-shadow-[0_0_20px_rgba(255,0,0,0.6)]' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
             `}>
-              {currentResult.winner === 'draw' && 'НИЧЬЯ'}
+              {currentResult.winner === 'draw' && t('pvp.nichya')}
               {currentResult.winner === 'player' && `-${currentResult.damageDealt}`}
               {currentResult.winner === 'opponent' && `-${currentResult.damageDealt}`}
             </div>
