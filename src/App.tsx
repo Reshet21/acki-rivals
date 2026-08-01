@@ -21,6 +21,7 @@ import Leaderboard from './components/Leaderboard';
 import SettingsScreen from './components/SettingsScreen';
 import Marketplace from './components/Marketplace';
 import AnimatedBackground from './components/AnimatedBackground';
+import StarfieldCanvas from './components/StarfieldCanvas';
 import type { Game } from './services/pvpService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
@@ -164,12 +165,13 @@ function AppInner() {
 
       {screen === 'menu' && (
         <div className="relative flex flex-col items-center h-full w-full overflow-hidden">
-          {/* Premium background */}
+          {/* Premium background — Canvas Starfield */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <img src="/cards/acki-nacki-hero.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" style={{ filter: 'blur(2px)' }} />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,8,0.3) 0%, rgba(5,5,8,0.7) 40%, rgba(5,5,8,0.95) 70%, #050508 100%)' }} />
+            <StarfieldCanvas speed={0.6} />
+            <img src="/cards/acki-nacki-hero.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 mix-blend-screen" style={{ filter: 'blur(3px)' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,8,0.1) 0%, rgba(5,5,8,0.6) 40%, rgba(5,5,8,0.92) 70%, #050508 100%)' }} />
             {/* Animated grid */}
-            <div className="absolute inset-0 bg-grid-sm animate-grid-scroll opacity-60" />
+            <div className="absolute inset-0 bg-starfield-grid opacity-40" />
             {/* Premium glow effects */}
             <div className="absolute animate-aurora-1 rounded-full" style={{ width: 400, height: 400, top: '-150px', left: '-100px', background: 'radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%)' }} />
             <div className="absolute animate-aurora-2 rounded-full" style={{ width: 350, height: 350, bottom: '5%', right: '-80px', background: 'radial-gradient(circle, rgba(255,100,0,0.08) 0%, transparent 70%)', animationDelay: '4s' }} />
@@ -223,17 +225,17 @@ function AppInner() {
                     <img src="/cards/an-smiley-yellow.jpg" alt="" className="w-16 h-16 rounded-full border-2 relative z-10" style={{ borderColor: 'rgba(255,215,0,0.4)', boxShadow: '0 0 30px rgba(255,215,0,0.3)' }} />
                   </div>
                 </div>
-                <h1 className="text-3xl font-black tracking-tight animate-title-glow" style={{ background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 60%, #FFD700 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.05em' }}>
+                <h1 className="text-4xl font-black tracking-wider text-hero-gradient font-display" style={{ letterSpacing: '0.08em' }}>
                   ACKI RIVALS
                 </h1>
-                <p className="text-[10px] tracking-[0.4em] uppercase mt-1" style={{ color: 'rgba(255,215,0,0.35)' }}>BLOCKCHAIN CARD BATTLE</p>
+                <p className="text-[10px] tracking-[0.5em] uppercase mt-1 font-display" style={{ color: 'rgba(255,215,0,0.3)' }}>BLOCKCHAIN CARD BATTLE</p>
               </div>
 
               {/* Wallet / Stats Card */}
               <div className="w-full max-w-xs animate-slide-up" style={{ animationDelay: '0.1s' }}>
                 {walletConnection ? (
                   /* Connected wallet — show wallet info + balances */
-                  <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.04) 100%)', border: '1px solid rgba(255,215,0,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,215,0,0.1)' }}>
+                  <div className="rounded-2xl p-4 relative overflow-hidden frost" style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.04) 100%)', border: '1px solid rgba(255,215,0,0.15)' }}>
                     <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.05) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
                     {/* Wallet info */}
                     <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)' }}>
@@ -292,13 +294,14 @@ function AppInner() {
               <div className="w-full max-w-xs space-y-2.5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
                 {/* PvP Button - Hero */}
                 <button onClick={() => { impactOccurred('medium'); setScreen('pvp'); }} disabled={deck.length !== 8}
-                  className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.98]"
+                  className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.97] font-display"
                   style={{
                     background: deck.length === 8 ? 'linear-gradient(135deg, #FF3D00 0%, #FF6D00 50%, #FF9100 100%)' : 'rgba(255,255,255,0.03)',
                     border: deck.length === 8 ? '1px solid rgba(255,100,0,0.4)' : '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: deck.length === 8 ? '0 4px 20px rgba(255,61,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : 'none',
+                    boxShadow: deck.length === 8 ? '0 6px 30px rgba(255,61,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2)' : 'none',
                     color: deck.length === 8 ? 'white' : 'rgba(255,255,255,0.15)',
                   }}>
+                  {deck.length === 8 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
                   <span className="text-xl">⚔️</span>
                   <div className="flex flex-col items-start">
                     <span className="font-bold">{t('menu.pvpBattle')}</span>
@@ -308,13 +311,14 @@ function AppInner() {
 
                 {/* AI Battle Button */}
                 <button onClick={() => { impactOccurred('medium'); setScreen('battle'); }} disabled={deck.length !== 8}
-                  className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.98]"
+                  className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.97] font-display"
                   style={{
-                    background: deck.length === 8 ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' : 'rgba(255,255,255,0.03)',
-                    border: deck.length === 8 ? '1px solid rgba(0,212,255,0.3)' : '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: deck.length === 8 ? '0 4px 20px rgba(0,212,255,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' : 'none',
+                    background: deck.length === 8 ? 'linear-gradient(135deg, #0a1628 0%, #0f2847 50%, #163a5f 100%)' : 'rgba(255,255,255,0.03)',
+                    border: deck.length === 8 ? '1px solid rgba(0,180,255,0.3)' : '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: deck.length === 8 ? '0 6px 30px rgba(0,120,255,0.25), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)' : 'none',
                     color: deck.length === 8 ? 'white' : 'rgba(255,255,255,0.15)',
                   }}>
+                  {deck.length === 8 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(0,180,255,0.06) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
                   <span className="text-xl">🤖</span>
                   <div className="flex flex-col items-start">
                     <span className="font-bold">{t('menu.aiBattle')}</span>
@@ -326,22 +330,22 @@ function AppInner() {
               {/* Secondary Actions - Premium Cards */}
               <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <button onClick={() => { selectionChanged(); setScreen('deck'); }}
-                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,140,0,0.06) 100%)', border: '1px solid rgba(255,215,0,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95] frost"
+                  style={{ border: '1px solid rgba(255,215,0,0.15)' }}>
                   <span className="text-xl">📚</span>
-                  <span style={{ color: '#FFD700' }}>{t('menu.deck')}</span>
+                  <span className="font-display" style={{ color: '#FFD700', fontSize: '11px' }}>{t('menu.deck')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('shop'); }}
-                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(139,92,246,0.06) 100%)', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95] frost"
+                  style={{ border: '1px solid rgba(168,85,247,0.15)' }}>
                   <span className="text-xl">🛒</span>
-                  <span style={{ color: '#A855F7' }}>{t('menu.shop')}</span>
+                  <span className="font-display" style={{ color: '#A855F7', fontSize: '11px' }}>{t('menu.shop')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('marketplace'); }}
-                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,140,0,0.06) 100%)', border: '1px solid rgba(255,215,0,0.2)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95] frost"
+                  style={{ border: '1px solid rgba(255,215,0,0.15)' }}>
                   <span className="text-xl">🏪</span>
-                  <span style={{ color: '#FFD700' }}>{t('menu.marketplace') || 'Рынок'}</span>
+                  <span className="font-display" style={{ color: '#FFD700', fontSize: '11px' }}>{t('menu.marketplace') || 'Рынок'}</span>
                 </button>
               </div>
 
@@ -369,7 +373,7 @@ function AppInner() {
             </div>
             {/* Bottom Navigation - Premium Tab Bar (sticky at the bottom) */}
             <div className="shrink-0 px-5 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <div className="w-full max-w-xs mx-auto flex items-center justify-around py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="w-full max-w-xs mx-auto flex items-center justify-around py-3 rounded-2xl frost">
                 <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
                   <span className="text-lg">🏆</span>
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.leaderboard')}</span>

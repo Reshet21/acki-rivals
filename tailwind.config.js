@@ -3,6 +3,11 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['Orbitron', 'sans-serif'],
+        stats: ['Rajdhani', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
+      },
       colors: {
         'an-gold': '#FFD700',
         'an-yellow': '#FFC107',

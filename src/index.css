@@ -1017,6 +1017,159 @@ body {
   outline-offset: 2px;
 }
 
+/* ═══════════════════════════════════════
+   PREMIUM AAA — BLIZZARD-QUALITY UI
+   ═══════════════════════════════════════ */
+
+/* Ripple expand for PremiumButton */
+@keyframes ripple-expand {
+  0% { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+/* Starfield grid overlay */
+.bg-starfield-grid {
+  background-image:
+    linear-gradient(rgba(0,100,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,100,255,0.015) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: grid-drift 40s linear infinite;
+}
+
+@keyframes grid-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(80px, 80px); }
+}
+
+/* Hero text gradient — Blizzard style */
+.text-hero-gradient {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 25%, #FF6D00 50%, #FFA500 75%, #FFD700 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(255,180,0,0.4)) drop-shadow(0 0 40px rgba(255,100,0,0.2));
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Cinematic letterbox bars */
+.letterbox-top, .letterbox-bottom {
+  position: fixed;
+  left: 0; right: 0;
+  height: 0;
+  background: black;
+  z-index: 9998;
+  transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.letterbox-top { top: 0; }
+.letterbox-bottom { bottom: 0; }
+.letterbox-active .letterbox-top,
+.letterbox-active .letterbox-bottom {
+  height: 24px;
+}
+
+/* Floating badge — ranked badge */
+@keyframes badge-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-4px) rotate(2deg); }
+}
+.animate-badge-float { animation: badge-float 3s ease-in-out infinite; }
+
+/* Energy beam */
+@keyframes energy-beam {
+  0% { transform: scaleY(0); opacity: 1; }
+  50% { transform: scaleY(1); opacity: 0.8; }
+  100% { transform: scaleY(0); opacity: 0; }
+}
+
+/* Battle clash spark */
+@keyframes clash-spark {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  50% { transform: scale(2) rotate(180deg); opacity: 0.8; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+.animate-clash-spark { animation: clash-spark 0.6s ease-out forwards; }
+
+/* Neon underline */
+.neon-underline {
+  position: relative;
+}
+.neon-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #FFD700, transparent);
+  opacity: 0.5;
+}
+
+/* Frosted glass — enhanced */
+.frost {
+  background: rgba(10, 10, 20, 0.7);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(255, 215, 0, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Depth shadows — elevation system */
+.depth-1 { box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2); }
+.depth-2 { box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2); }
+.depth-3 { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.25); }
+.depth-4 { box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.3); }
+
+/* Animated border glow — per rarity */
+.border-glow-common { border: 1px solid rgba(255,255,255,0.1); }
+.border-glow-uncommon { border: 1px solid rgba(74,222,128,0.3); box-shadow: 0 0 12px rgba(74,222,128,0.15); }
+.border-glow-rare { border: 1px solid rgba(96,165,250,0.3); box-shadow: 0 0 16px rgba(96,165,250,0.2); }
+.border-glow-epic { border: 1px solid rgba(168,85,247,0.3); box-shadow: 0 0 20px rgba(168,85,247,0.25); }
+.border-glow-legendary {
+  border: 1px solid rgba(255,215,0,0.4);
+  box-shadow: 0 0 24px rgba(255,215,0,0.25), 0 0 48px rgba(255,100,0,0.15);
+  animation: legendary-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes legendary-shimmer {
+  0%, 100% { box-shadow: 0 0 24px rgba(255,215,0,0.25), 0 0 48px rgba(255,100,0,0.15); }
+  50% { box-shadow: 0 0 32px rgba(255,215,0,0.4), 0 0 64px rgba(255,100,0,0.25); }
+}
+
+/* Health bar premium */
+.health-bar-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+}
+.health-bar-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
+  pointer-events: none;
+}
+
+/* Tab indicator — animated underline */
+.tab-indicator {
+  position: relative;
+}
+.tab-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #FFD700, #FF8C00);
+  border-radius: 1px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 8px rgba(255,180,0,0.4);
+}
+
 /* ==== ANIMATED NUMBER BADGE ==== */
 @keyframes badge-pulse {
   0%, 100% { box-shadow: 0 0 4px rgba(255,215,0,0.2); }
