@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { Card, RoundResult } from '../types';
-import { resolveRound } from '../utils/battleLogic';
+import { resolvePvpRound, roundResultForView, applyRoundDamage, winnerFromHP } from '../services/pvpResolution';
 import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
@@ -178,63 +178,37 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
       setBattlePhase('damage');
 
       damageTimerRef.current = setTimeout(() => {
-        let newMyHP = playerHPRef.current;
-        let newOppHP = opponentHPRef.current;
+        // Pure HP resolution via pvpResolution.ts
+        const outcome = applyRoundDamage(playerHPRef.current, opponentHPRef.current, result, TOTAL_HP);
+        const newMyHP = outcome.myHP;
+        const newOppHP = outcome.oppHP;
 
         // ─── Visual effects: screen shake + damage flash ───
         if (mappedResult.winner === 'player' && mappedResult.damageDealt > 0) {
-          newOppHP = Math.max(0, newOppHP - mappedResult.damageDealt);
           playHit();
           setDamageFlash('opponent');
           setScreenShake(true);
           setTimeout(() => setScreenShake(false), 500);
         } else if (mappedResult.winner === 'opponent' && mappedResult.damageDealt > 0) {
-          newMyHP = Math.max(0, newMyHP - mappedResult.damageDealt);
           playHit();
           setDamageFlash('player');
           setScreenShake(true);
           setTimeout(() => setScreenShake(false), 500);
         }
         setTimeout(() => setDamageFlash('none'), 800);
-
-        // ─── Heal (loser heals) ───
-        if (mappedResult.winner === 'opponent') {
-          newMyHP = Math.min(TOTAL_HP, newMyHP + mappedResult.healAmount);
-          if (mappedResult.healAmount > 0) playHeal();
-        } else if (mappedResult.winner === 'player') {
-          newOppHP = Math.min(TOTAL_HP, newOppHP + mappedResult.healAmount);
-          if (mappedResult.healAmount > 0) playHeal();
-        }
-
-        // ─── Life steal (winner heals) ───
-        if (mappedResult.winner === 'player') {
-          newMyHP = Math.min(TOTAL_HP, newMyHP + mappedResult.lifeStealAmount);
-          if (mappedResult.lifeStealAmount > 0) playLifeSteal();
-        } else if (mappedResult.winner === 'opponent') {
-          newOppHP = Math.min(TOTAL_HP, newOppHP + mappedResult.lifeStealAmount);
-          if (mappedResult.lifeStealAmount > 0) playLifeSteal();
-        }
-
-        // ─── Poison (extra damage to loser) ───
-        if (mappedResult.winner === 'player') {
-          newOppHP = Math.max(0, newOppHP - mappedResult.poisonAmount);
-          if (mappedResult.poisonAmount > 0) playPoison();
-        } else if (mappedResult.winner === 'opponent') {
-          newMyHP = Math.max(0, newMyHP - mappedResult.poisonAmount);
-          if (mappedResult.poisonAmount > 0) playPoison();
-        }
+        if (mappedResult.healAmount > 0) playHeal();
+        if (mappedResult.lifeStealAmount > 0) playLifeSteal();
+        if (mappedResult.poisonAmount > 0) playPoison();
 
         setPlayerHP(newMyHP);
         setOpponentHP(newOppHP);
 
         // KO check
-        if (newMyHP <= 0 || newOppHP <= 0) {
-          let r: 'win' | 'loss' | 'draw' = 'draw';
-          if (newMyHP > newOppHP) { r = 'win'; playVictory(); }
-          else if (newOppHP > newMyHP) { r = 'loss'; playDefeat(); }
-          else if (newMyHP <= 0 && newOppHP <= 0) { r = 'draw'; playDraw(); }
-          else if (newOppHP <= 0) { r = 'win'; playVictory(); }
-          else { r = 'loss'; playDefeat(); }
+        if (outcome.ended) {
+          const r = winnerFromHP(newMyHP, newOppHP);
+          if (r === 'win') playVictory();
+          else if (r === 'loss') playDefeat();
+          else playDraw();
           setBattleResult(r);
           setBattlePhase('ended');
           const koState: GameState = { phase: 'ended', round: roundRef.current, hostHP: isHost ? newMyHP : newOppHP, guestHP: isHost ? newOppHP : newMyHP, hostPillz: isHost ? playerPillzRef.current : opponentPillzRef.current, guestPillz: isHost ? opponentPillzRef.current : playerPillzRef.current, lastResolvedRound: roundRef.current, roundResult: lastRoundResultRef.current ?? undefined };
@@ -263,10 +237,10 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
         }
 
         if (nextRound > TOTAL_ROUNDS) {
-          let r: 'win' | 'loss' | 'draw' = 'draw';
-          if (newMyHP > newOppHP) { r = 'win'; playVictory(); }
-          else if (newOppHP > newMyHP) { r = 'loss'; playDefeat(); }
-          else { r = 'draw'; playDraw(); }
+          const r = winnerFromHP(newMyHP, newOppHP);
+          if (r === 'win') playVictory();
+          else if (r === 'loss') playDefeat();
+          else playDraw();
           setBattleResult(r);
           setBattlePhase('ended');
           if (isHost) abandonGame(game.id).catch(console.error);
@@ -295,22 +269,8 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
     const myPillz = isPlayerGuest ? rr.guestPillzUsed : rr.hostPillzUsed;
     const oppPillz = isPlayerGuest ? rr.hostPillzUsed : rr.guestPillzUsed;
-
-    const result: RoundResult = {
-      winner: rr.winner === 'host' ? 'ai' : rr.winner === 'guest' ? 'player' : 'draw',
-      damageDealt: rr.damage,
-      playerAttack: isPlayerGuest ? rr.guestAttack : rr.hostAttack,
-      aiAttack: isPlayerGuest ? rr.hostAttack : rr.guestAttack,
-      playerBasePower: isPlayerGuest ? rr.guestBasePower : rr.hostBasePower,
-      playerFinalPower: isPlayerGuest ? rr.guestFinalPower : rr.hostFinalPower,
-      aiBasePower: isPlayerGuest ? rr.hostBasePower : rr.guestBasePower,
-      aiFinalPower: isPlayerGuest ? rr.hostFinalPower : rr.guestFinalPower,
-      healAmount: rr.healAmount,
-      poisonAmount: rr.poisonAmount,
-      lifeStealAmount: rr.lifeStealAmount,
-      opponentDamageReduction: rr.opponentDamageReduction,
-    };
-    runRoundAnimation(myCard, myPillz, oppCard, oppPillz, result);
+    const view = roundResultForView(rr, isPlayerGuest ? 'guest' : 'host');
+    runRoundAnimation(myCard, myPillz, oppCard, oppPillz, view);
   }, [isHost, myDeck, oppDeck, findCardById, runRoundAnimation]);
 
   // ─── Host: resolve round authoritatively and write to game state ───
@@ -325,26 +285,11 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
       return;
     }
 
-    const result = resolveRound(myCard, myMove.pillz, oppCard, oppMove.pillz, myDeck, oppDeck);
-
-    const roundResult = {
-      hostCardId: myMove.card_id,
-      guestCardId: oppMove.card_id,
-      hostPillzUsed: myMove.pillz,
-      guestPillzUsed: oppMove.pillz,
-      hostAttack: result.playerAttack,
-      guestAttack: result.aiAttack,
-      hostBasePower: result.playerBasePower,
-      hostFinalPower: result.playerFinalPower,
-      guestBasePower: result.aiBasePower,
-      guestFinalPower: result.aiFinalPower,
-      winner: (result.winner === 'player' ? 'host' : result.winner === 'ai' ? 'guest' : 'draw') as 'host' | 'guest' | 'draw',
-      damage: result.damageDealt,
-      healAmount: result.healAmount,
-      poisonAmount: result.poisonAmount,
-      lifeStealAmount: result.lifeStealAmount,
-      opponentDamageReduction: result.opponentDamageReduction,
-    };
+    const roundResult = resolvePvpRound({
+      hostCard: myCard, hostPillz: myMove.pillz,
+      guestCard: oppCard, guestPillz: oppMove.pillz,
+      hostDeck: myDeck, guestDeck: oppDeck,
+    });
     lastRoundResultRef.current = roundResult;
 
     updateGameState(game.id, {
@@ -358,7 +303,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
       roundResult,
     }).catch(console.error);
 
-    runRoundAnimation(myCard, myMove.pillz, oppCard, oppMove.pillz, result);
+    runRoundAnimation(myCard, myMove.pillz, oppCard, oppMove.pillz, roundResultForView(roundResult, 'host'));
   }, [isHost, myDeck, oppDeck, findCardById, game.id, runRoundAnimation]);
 
   // ─── Primary loop: polling-based resolution (works WITHOUT Realtime subscriptions) ───
