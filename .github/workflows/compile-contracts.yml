@@ -67,7 +67,7 @@ jobs:
             contracts/GameCardNFTCollection.sol
             contracts/GameMatch.sol
             contracts/Marketplace.sol
-          # TODO: PvPStaking.sol — будет в B5 (переписывание)
+            contracts/PvPStaking.sol
           )
 
           for SRC in "${CONTRACTS[@]}"; do

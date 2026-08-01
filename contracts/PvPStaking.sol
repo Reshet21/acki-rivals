@@ -23,14 +23,13 @@ import "./GameMatch.sol";
  *   5. После GameMatch.finalize → callback onGameMatchResult()
  *   6. PvPStaking отправляет NACKL победителю
  */
-contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
+contract PvPStaking is IAcceptTokensTransferCallback {
 
     /* ─── Константы ──────────────────────────────────────── */
 
     uint256 constant ROOM_TIMEOUT = 86400;       // 24 часа
     uint16 constant BPS_DENOMINATOR = 10000;    // 100%
     uint256 constant MIN_STAKE = 1_000_000_000; // 1 NACKL (nano)
-    uint128 constant MIN_GAS = 0.1 ton;
 
     /* ─── Структуры ───────────────────────────────────────── */
 
@@ -65,6 +64,8 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
     mapping(address => uint256) public activeRoomByPlayer;
     /// Адрес GameMatch контракта
     address public gameMatchAddress;
+    /// Пустая TvmCell для transfer
+    TvmCell _empty;
 
     /* ─── События ─────────────────────────────────────────── */
 
@@ -154,7 +155,7 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
         tvm.accept();
 
         ITokenRoot(nacklTokenRoot).deployWallet{
-            value: MIN_GAS
+            value: 0.1 ton
         }(address(this), 0.5 ton);
     }
 
@@ -232,7 +233,7 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
 
             // Если GameMatch настроен — запускаем commit-reveal
             if (gameMatchAddress != address(0)) {
-                IGameMatch(gameMatchAddress).startMatch{ value: MIN_GAS }(
+                IGameMatch(gameMatchAddress).startMatch{ value: 0.1 ton }(
                     room.creator, room.opponent, 600  // 10 минут на бой
                 );
             }
@@ -241,14 +242,14 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
             tvm.accept();
             ITokenWallet(tokenWallet).transfer{
                 value: 0.1 ton
-            }(sender, amount, false, "");
+            }(sender, amount, false, _empty);
         }
     }
 
     /* ─── GameMatch callback ──────────────────────────────── */
 
     /**
-     * @note Вызывается GameMatch после определения победителя.
+     * @notice Вызывается GameMatch после определения победителя.
      */
     function onGameMatchResult(uint256 roomId, address winner) public {
         require(msg.sender == gameMatchAddress, 107);
@@ -279,7 +280,7 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
         if (tokenWallet != address(0)) {
             ITokenWallet(tokenWallet).transfer{
                 value: 0.2 ton
-            }(winner, prize, false, "");
+            }(winner, prize, false, _empty);
         }
 
         activeRoomByPlayer[room.creator] = 0;
@@ -291,7 +292,7 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
     /* ─── Cancel ──────────────────────────────────────────── */
 
     /**
-     * @note Отмена комнаты создателем (только в статусе waiting).
+     * @notice Отмена комнаты создателем (только в статусе waiting).
      */
     function cancelRoom(uint256 roomId) public roomExists(roomId) {
         Room room = rooms[roomId];
@@ -307,7 +308,7 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
         if (tokenWallet != address(0)) {
             ITokenWallet(tokenWallet).transfer{
                 value: 0.2 ton
-            }(room.creator, room.stakeAmount, false, "");
+            }(room.creator, room.stakeAmount, false, _empty);
         }
 
         emit RoomCancelled(roomId, room.creator);
@@ -316,7 +317,7 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
     /* ─── Admin force ─────────────────────────────────────── */
 
     /**
-     * @note Принудительное завершение (только admin, например при таймауте).
+     * @notice Принудительное завершение (только admin, например при таймауте).
      */
     function forceFinish(uint256 roomId, address winner) public onlyOwnerOrAdmin roomExists(roomId) {
         Room room = rooms[roomId];
@@ -335,7 +336,7 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
         if (tokenWallet != address(0)) {
             ITokenWallet(tokenWallet).transfer{
                 value: 0.2 ton
-            }(winner, prize, false, "");
+            }(winner, prize, false, _empty);
         }
 
         activeRoomByPlayer[room.creator] = 0;
@@ -350,10 +351,10 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
         if (tokenWallet != address(0)) {
             ITokenWallet(tokenWallet).transfer{
                 value: 0.3 ton
-            }(room.creator, room.stakeAmount, false, "");
+            }(room.creator, room.stakeAmount, false, _empty);
             ITokenWallet(tokenWallet).transfer{
                 value: 0.3 ton
-            }(room.opponent, room.stakeAmount, false, "");
+            }(room.opponent, room.stakeAmount, false, _empty);
         }
 
         room.status = 3;
@@ -370,10 +371,9 @@ contract PvPStaking is IAcceptTokensTransferCallback, IPvPStaking {
 
     function getBalance() public view returns (uint128) {
         if (tokenWallet == address(0)) return 0;
-        return ITokenWallet(tokenWallet).balance();
+        return ITokenWallet(tokenWallet).balance{ value: 0 }();
     }
 
     /* ─── Приём SHELL ─────────────────────────────────────── */
-
-    fallback() external payable {}
+    // fallback убран — TVM-Solidity 0.77 не поддерживает payable fallback
 }

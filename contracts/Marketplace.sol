@@ -5,16 +5,16 @@ import "./interfaces.sol";
 import "./GameCardNFTToken.sol";
 
 // Локальные интерфейсы для внешних вызовов.
-// GOSH ABI (sold 0.77) не генерирует getter'ы public state vars для вызовов
-// через контрактный тип — нужны явные сигнатуры через interface.
+// GOSH ABI (sold 0.77): getter'ы public state vars НЕ вызываются через view —
+// только обычные external-функции с `{ value: 0 }`.
 interface IGameCardNFT {
-    function manager() external view returns (address);
-    function owner() external view returns (address);
+    function manager() external returns (address);
+    function owner() external returns (address);
     function simpleTransfer(address to) external;
 }
 
 interface INacklTokenWallet {
-    function balance() external view returns (uint128);
+    function balance() external returns (uint128);
     function transfer(address to, uint128 amount, bool notify, TvmCell payload) external;
 }
 
@@ -176,8 +176,8 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
 
         // Проверяем, что маркетплейс — менеджер карты
         IGameCardNFT token = IGameCardNFT(tokenAddress);
-        require(token.manager() == address(this), 204);
-        address tokenOwner = token.owner();
+        require(token.manager{ value: 0 }() == address(this), 204);
+        address tokenOwner = token.owner{ value: 0 }();
         require(tokenOwner == msg.sender, 205);
 
         listings[tokenAddress] = Listing({
@@ -208,7 +208,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         Listing listing = listings[tokenAddress];
         require(tokenWallet != address(0), 104);
         // ⚠️ NACKL должен быть уже на балансе контракта
-        uint128 walletBal = INacklTokenWallet(tokenWallet).balance();
+        uint128 walletBal = INacklTokenWallet(tokenWallet).balance{ value: 0 }();
         require(walletBal >= listing.price, 208);
         tvm.accept();
 
@@ -351,7 +351,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
 
     function getBalance() public view returns (uint128) {
         if (tokenWallet == address(0)) return 0;
-        uint128 bal = INacklTokenWallet(tokenWallet).balance();
+        uint128 bal = INacklTokenWallet(tokenWallet).balance{ value: 0 }();
         return bal;
     }
 
