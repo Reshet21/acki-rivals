@@ -160,21 +160,30 @@ export async function waitWalletHello(
 }
 
 export async function disconnectSession(conn: WalletConnection): Promise<void> {
-  const sdk = await loadSdk();
-  const beeConnect = new sdk.BeeConnect();
-
-  await beeConnect.disconnect_session(
-    ENDPOINTS,
-    conn.sessionId,
-    conn.description,
-    conn.sessionStateJson,
-    'user_requested',
-    30,
-    1000,
-  );
-
+  // Локальное отключение — ВСЕГДА мгновенно и первым.
+  // Не ждём ответа блокчейна: кошелёк должен отключаться сразу,
+  // иначе при недоступной сети кнопка висит 30 сек, а при ошибке
+  // сессия вообще не очищается.
   writeMiningKeys(conn.profileAddress, null);
   writeSession(null);
+
+  // Уведомление блокчейна (client_disconnect) — best-effort.
+  // Ошибка не должна ломать локальное отключение.
+  try {
+    const sdk = await loadSdk();
+    const beeConnect = new sdk.BeeConnect();
+    await beeConnect.disconnect_session(
+      ENDPOINTS,
+      conn.sessionId,
+      conn.description,
+      conn.sessionStateJson,
+      'user_requested',
+      10,
+      1000,
+    );
+  } catch (e) {
+    console.warn('[beeEngine] disconnect_session (blockchain) failed; local session cleared:', e);
+  }
 }
 
 export async function requestMiningKeys(conn: WalletConnection): Promise<{
