@@ -380,14 +380,15 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         {tab === 'menu' && (
           <div className="flex flex-col gap-3 animate-fade-in">
             {/* Random Battle */}
-            <button onClick={() => { impactOccurred('medium'); handleRandom(); }} disabled={waiting} 
-              className={`group relative py-5 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 
-                bg-gradient-to-br from-an-red via-red-600 to-an-orange text-white 
-                shadow-[0_0_30px_rgba(255,61,0,0.2)] 
+            <button onClick={() => { impactOccurred('medium'); handleRandom(); }} disabled={waiting}
+              className={`group relative py-5 rounded-2xl font-bold text-sm flex flex-col items-center gap-2
+                bg-gradient-to-br from-an-red via-red-600 to-an-orange text-white
+                shadow-[0_0_30px_rgba(255,61,0,0.2)]
                 active:scale-[0.97] disabled:opacity-50 transition-all duration-200 overflow-hidden
                 ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
               `}
               style={{ transitionDelay: '0.1s', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+              <div className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent group-hover:translate-x-full transition-transform duration-700" />
               <span className="text-3xl">🎲</span>
               <span className="text-base">{t('pvp.randomBattle')}</span>
@@ -395,14 +396,15 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
             </button>
             
             {/* Create Room */}
-            <button onClick={() => { impactOccurred('medium'); handleCreate(); }} disabled={waiting} 
-              className={`group relative py-5 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 
-                bg-gradient-to-br from-an-gold via-yellow-500 to-an-orange text-an-dark 
-                shadow-[0_0_30px_rgba(255,215,0,0.2)] 
+            <button onClick={() => { impactOccurred('medium'); handleCreate(); }} disabled={waiting}
+              className={`group relative py-5 rounded-2xl font-bold text-sm flex flex-col items-center gap-2
+                bg-gradient-to-br from-an-gold via-yellow-500 to-an-orange text-an-dark
+                shadow-[0_0_30px_rgba(255,215,0,0.2)]
                 active:scale-[0.97] disabled:opacity-50 transition-all duration-200 overflow-hidden
                 ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
               `}
               style={{ transitionDelay: '0.2s', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+              <div className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700" />
               <span className="text-3xl">🏠</span>
               <span className="text-base">{t('pvp.createRoom')}</span>

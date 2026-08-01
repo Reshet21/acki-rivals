@@ -103,7 +103,13 @@ export default function WalletPanel({ connection: initialConnection, onConnected
   if (connection) {
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
-        <div className="text-center">
+        <div className="text-center rounded-2xl p-6 w-full" style={{
+          background: 'linear-gradient(135deg, rgba(74,222,128,0.08) 0%, rgba(0,230,118,0.04) 100%)',
+          border: '1px solid rgba(74,222,128,0.2)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(74,222,128,0.1)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        }}>
           <div className="text-lg font-bold text-neon-green">✅ {t('wallet.connected')}</div>
           <div className="text-sm text-white/60 mt-1">{connection.walletName}</div>
           <div className="text-xs text-white/40 font-mono mt-0.5 truncate">
@@ -198,8 +204,9 @@ export default function WalletPanel({ connection: initialConnection, onConnected
           bg-gradient-to-r from-neon-blue to-neon-purple text-white
           shadow-[0_0_20px_rgba(0,212,255,0.3)]
           hover:opacity-90 active:scale-95 transition-all
-          disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
       >
+        <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
         {isCreating ? t('wallet.creatingSession') : t('wallet.connectAnWallet')}
       </button>
 

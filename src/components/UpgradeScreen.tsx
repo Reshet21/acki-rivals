@@ -209,8 +209,9 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
           {selGroup.canUpgrade ? (
             <button
               onClick={handleUpgrade}
-              className="w-full max-w-xs py-4 rounded-xl font-black text-black bg-gradient-to-r from-yellow-400 to-orange-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] active:scale-95 transition-all outline-none"
+              className="w-full max-w-xs py-4 rounded-xl font-black text-black bg-gradient-to-r from-yellow-400 to-orange-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] active:scale-95 transition-all outline-none relative overflow-hidden"
             >
+              <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
               ★ {t('upgrade.upgradeTo')} {selGroup.stars + 1}
             </button>
           ) : (

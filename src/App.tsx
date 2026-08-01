@@ -20,6 +20,7 @@ import InfoScreen from './components/InfoScreen';
 import Leaderboard from './components/Leaderboard';
 import SettingsScreen from './components/SettingsScreen';
 import Marketplace from './components/Marketplace';
+import AnimatedBackground from './components/AnimatedBackground';
 import type { Game } from './services/pvpService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
@@ -59,6 +60,11 @@ function AppInner() {
   });
 
   const [screen, setScreen] = useState<Screen>('menu');
+
+  // Background variant based on current screen
+  const bgVariant = screen === 'battle' ? 'battle' :
+    screen === 'shop' ? 'shop' :
+      (screen === 'pvp' || screen === 'pvp_battle') ? 'pvp' : 'default';
 
   // Pause music during battles, resume when back to menu
   useEffect(() => {
@@ -153,6 +159,9 @@ function AppInner() {
 
   return (
     <div className="h-full w-full overflow-x-hidden overflow-y-auto text-white flex flex-col relative safe-top safe-bottom animate-page-enter" style={{ background: '#050508' }}>
+      {/* Global animated background for non-menu screens */}
+      {screen !== 'menu' && <AnimatedBackground variant={bgVariant} />}
+
       {screen === 'menu' && (
         <div className="relative flex flex-col items-center h-full w-full overflow-hidden">
           {/* Premium background */}
@@ -384,11 +393,13 @@ function AppInner() {
       )}
 
       {screen === 'battle' && (
-        <BattleScreen playerDeck={deck} onBattleEnd={handleBattleEnd} />
+        <div key="battle" className="relative z-10 h-full animate-page-enter">
+          <BattleScreen playerDeck={deck} onBattleEnd={handleBattleEnd} />
+        </div>
       )}
 
       {screen === 'shop' && (
-        <div className="flex-1 flex items-center justify-center">
+        <div key="shop" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
           <Shop
             walletConnection={walletConnection}
             nacklBalance={nacklBalance}
@@ -401,7 +412,7 @@ function AppInner() {
       )}
 
       {screen === 'marketplace' && (
-        <div className="flex-1 flex items-center justify-center">
+        <div key="marketplace" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
           <Marketplace
             walletConnection={walletConnection}
             nacklBalance={nacklBalance}
@@ -414,7 +425,7 @@ function AppInner() {
       )}
 
       {screen === 'wallet' && (
-        <div className="flex-1 flex items-center justify-center">
+        <div key="wallet" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
           <WalletPanel
             connection={walletConnection}
             onConnected={handleWalletConnected}
@@ -425,7 +436,7 @@ function AppInner() {
       )}
 
       {screen === 'mining' && walletConnection && (
-        <div className="flex-1 flex items-center justify-center">
+        <div key="mining" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
           <MiningPanel
             connection={walletConnection}
             onBack={() => setScreen('menu')}
@@ -434,7 +445,7 @@ function AppInner() {
       )}
 
       {screen === 'mining' && !walletConnection && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
+        <div key="mining-connect" className="relative z-10 flex-1 flex flex-col items-center justify-center gap-4 p-4 animate-page-enter">
           <div className="text-white/50 text-center">
             {t('menu.connectWalletForMining')}
           </div>
@@ -453,7 +464,7 @@ function AppInner() {
       )}
 
       {screen === 'deck' && (
-        <div className="flex-1">
+        <div key="deck" className="relative z-10 flex-1 animate-page-enter">
           <DeckBuilder
             collection={collection}
             deck={deck}
@@ -464,7 +475,7 @@ function AppInner() {
       )}
 
       {screen === 'upgrade' && (
-        <div className="flex-1">
+        <div key="upgrade" className="relative z-10 flex-1 animate-page-enter">
           <UpgradeScreen
             collection={collection}
             onUpgrade={upgradeCard}
@@ -474,7 +485,7 @@ function AppInner() {
       )}
 
       {screen === 'pvp' && (
-        <div className="flex-1">
+        <div key="pvp" className="relative z-10 flex-1 animate-page-enter">
           <PvpLobby
             playerId={playerId}
             playerName={walletConnection?.walletName || playerId}
@@ -491,7 +502,7 @@ function AppInner() {
       )}
 
       {screen === 'pvp_battle' && pvpGame && (
-        <div className="flex-1">
+        <div key="pvp_battle" className="relative z-10 flex-1 animate-page-enter">
           <PvpBattleScreen
             game={pvpGame}
             playerId={playerId}
@@ -514,19 +525,19 @@ function AppInner() {
       )}
 
       {screen === 'info' && (
-        <div className="flex-1">
+        <div key="info" className="relative z-10 flex-1 animate-page-enter">
           <InfoScreen onBack={() => setScreen('menu')} />
         </div>
       )}
 
       {screen === 'settings' && (
-        <div className="flex-1">
+        <div key="settings" className="relative z-10 flex-1 animate-page-enter">
           <SettingsScreen onBack={() => setScreen('menu')} />
         </div>
       )}
 
       {screen === 'leaderboard' && (
-        <div className="flex-1">
+        <div key="leaderboard" className="relative z-10 flex-1 animate-page-enter">
           <Leaderboard
             walletAddress={walletConnection?.walletName || null}
             wins={battlesWon}

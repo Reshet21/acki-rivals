@@ -368,20 +368,26 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
             {t('battle.player')}
           </div>
-          <div className="h-3 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
+          <div className="h-3.5 bg-gray-900/80 rounded-full overflow-hidden border border-gray-800/50 relative"
+            style={{ boxShadow: damageFlash === 'player' ? '0 0 12px rgba(255,61,0,0.4)' : '0 0 6px rgba(0,230,118,0.15)' }}>
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'player' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-neon-green to-emerald-400'}`}
-              style={{ width: `${Math.max(0, (playerHP / TOTAL_HP) * 100)}%`, boxShadow: '0 0 8px rgba(0,230,118,0.3)' }}
+              style={{
+                width: `${Math.max(0, (playerHP / TOTAL_HP) * 100)}%`,
+                boxShadow: damageFlash === 'player' ? '0 0 16px rgba(255,61,0,0.6)' : '0 0 10px rgba(0,230,118,0.4)',
+              }}
             />
             {/* Damage number animation */}
             {currentResult?.winner === 'ai' && battlePhase === 'damage' && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-red-400 animate-damage-float">-{currentResult.damageDealt}</span>
+                <span className="text-xs font-black text-red-400 animate-damage-float" style={{ textShadow: '0 0 8px rgba(255,61,0,0.8)' }}>
+                  -{currentResult.damageDealt}
+                </span>
               </div>
             )}
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[10px] text-white font-bold">{playerHP}</span>
+            <span className="text-[10px] text-white font-bold tabular-nums">{playerHP}</span>
             <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.2)' }}>{TOTAL_HP}</span>
           </div>
         </div>
@@ -390,20 +396,26 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             {t('battle.ai')}
             <span className="w-1.5 h-1.5 rounded-full bg-neon-red animate-pulse" />
           </div>
-          <div className="h-3 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
+          <div className="h-3.5 bg-gray-900/80 rounded-full overflow-hidden border border-gray-800/50 relative"
+            style={{ boxShadow: damageFlash === 'ai' ? '0 0 12px rgba(0,230,118,0.4)' : '0 0 6px rgba(255,61,0,0.15)' }}>
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'ai' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-neon-red to-orange-400'}`}
-              style={{ width: `${Math.max(0, (aiHP / TOTAL_HP) * 100)}%`, boxShadow: '0 0 8px rgba(255,61,0,0.3)' }}
+              style={{
+                width: `${Math.max(0, (aiHP / TOTAL_HP) * 100)}%`,
+                boxShadow: damageFlash === 'ai' ? '0 0 16px rgba(0,230,118,0.6)' : '0 0 10px rgba(255,61,0,0.4)',
+              }}
             />
             {currentResult?.winner === 'player' && battlePhase === 'damage' && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-green-400 animate-damage-float">-{currentResult.damageDealt}</span>
+                <span className="text-xs font-black text-green-400 animate-damage-float" style={{ textShadow: '0 0 8px rgba(0,230,118,0.8)' }}>
+                  -{currentResult.damageDealt}
+                </span>
               </div>
             )}
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.2)' }}>{TOTAL_HP}</span>
-            <span className="text-[10px] text-white font-bold">{aiHP}</span>
+            <span className="text-[10px] text-white font-bold tabular-nums">{aiHP}</span>
           </div>
         </div>
       </div>
@@ -430,15 +442,27 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
 
         {/* VS screen — Urban Rivals style dramatic reveal */}
         {battlePhase === 'vs' && currentPlayerCard && currentAiCard && currentResult && (
-          <div className="flex flex-col items-center gap-3 w-full animate-fade-in px-3">
+          <div className="flex flex-col items-center gap-3 w-full animate-fade-in px-3 relative">
+            {/* Lightning particles during VS */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="absolute w-0.5 h-8 animate-sparkle" style={{
+                  background: 'linear-gradient(to bottom, transparent, rgba(255,215,0,0.8), transparent)',
+                  left: `${10 + (i * 11) % 80}%`,
+                  top: `${20 + (i * 7) % 60}%`,
+                  animationDelay: `${i * 0.15}s`,
+                  transform: `rotate(${-30 + (i * 15)}deg)`,
+                }} />
+              ))}
+            </div>
             {/* VS Banner */}
-            <div className="text-4xl font-black animate-battle-vs" style={{
+            <div className="text-5xl font-black animate-battle-vs relative z-10" style={{
               background: 'linear-gradient(90deg, #FF3D00, #FFD700, #FF3D00)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               letterSpacing: '0.2em',
-              textShadow: 'none',
+              filter: 'drop-shadow(0 0 20px rgba(255,61,0,0.6)) drop-shadow(0 0 40px rgba(255,215,0,0.3))',
             }}>
               VS
             </div>
@@ -555,20 +579,36 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
 
         {/* Damage phase — Urban Rivals style impact */}
         {battlePhase === 'damage' && currentResult && (
-          <div className="flex flex-col items-center gap-3 w-full px-3 animate-fade-in">
+          <div className="flex flex-col items-center gap-3 w-full px-3 animate-fade-in relative">
+            {/* Impact burst */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-48 h-48 rounded-full animate-glow-burst" style={{
+                background: currentResult.winner === 'player'
+                  ? 'radial-gradient(circle, rgba(0,230,118,0.3) 0%, transparent 70%)'
+                  : currentResult.winner === 'ai'
+                    ? 'radial-gradient(circle, rgba(255,61,0,0.3) 0%, transparent 70%)'
+                    : 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
+              }} />
+            </div>
             {/* Big Damage Number */}
-            <div className={`text-6xl font-black animate-damage-float
+            <div className={`text-7xl font-black animate-damage-float relative z-10
               ${currentResult.winner === 'player' ? 'text-neon-green' : ''}
               ${currentResult.winner === 'ai' ? 'text-neon-red' : ''}
-              ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
-            `}>
+              ${currentResult.winner === 'draw' ? 'text-white/40' : ''}
+            `} style={{
+              textShadow: currentResult.winner === 'player'
+                ? '0 0 20px rgba(0,230,118,0.8), 0 0 40px rgba(0,230,118,0.4)'
+                : currentResult.winner === 'ai'
+                  ? '0 0 20px rgba(255,61,0,0.8), 0 0 40px rgba(255,61,0,0.4)'
+                  : '0 0 10px rgba(255,255,255,0.3)',
+            }}>
               {currentResult.winner === 'draw' ? 'BLOCK' : `-${currentResult.damageDealt}`}
             </div>
             {/* HP bar flash */}
-            <div className={`animate-health-flash text-sm font-bold px-3 py-1 rounded-full
-              ${currentResult.winner === 'player' ? 'text-neon-green bg-neon-green/10' : ''}
-              ${currentResult.winner === 'ai' ? 'text-neon-red bg-neon-red/10' : ''}
-              ${currentResult.winner === 'draw' ? 'text-white/40 bg-white/5' : ''}
+            <div className={`animate-health-flash text-sm font-bold px-4 py-1.5 rounded-full relative z-10
+              ${currentResult.winner === 'player' ? 'text-neon-green bg-neon-green/10 border border-neon-green/30' : ''}
+              ${currentResult.winner === 'ai' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
+              ${currentResult.winner === 'draw' ? 'text-white/50 bg-white/5 border border-white/10' : ''}
             `}>
               {currentResult.winner === 'player' && `⚔️ ${t('battle.hpAi')} ↓`}
               {currentResult.winner === 'ai' && `⚔️ ${t('battle.hpPlayer')} ↓`}
@@ -590,26 +630,67 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         )}
 
         {battlePhase === 'ended' && (
-          <div className="flex flex-col items-center gap-3 px-4 w-full overflow-y-auto max-h-full">
+          <div className="flex flex-col items-center gap-3 px-4 w-full overflow-y-auto max-h-full relative">
+            {/* Victory/Defeat ambient effects */}
+            {battleResult === 'win' && (
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute w-96 h-96 rounded-full animate-pulse-glow" style={{
+                  top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                  background: 'radial-gradient(circle, rgba(0,230,118,0.15) 0%, transparent 70%)',
+                }} />
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="absolute animate-sparkle" style={{
+                    color: ['#FFD700', '#4ADE80', '#00E676', '#FFA500'][i % 4],
+                    top: `${15 + (i * 7) % 70}%`,
+                    left: `${5 + (i * 8) % 90}%`,
+                    animationDelay: `${i * 0.2}s`,
+                    fontSize: `${10 + (i % 3) * 4}px`,
+                  }}>✦</div>
+                ))}
+              </div>
+            )}
+            {battleResult === 'loss' && (
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute w-96 h-96 rounded-full" style={{
+                  top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                  background: 'radial-gradient(circle, rgba(255,61,0,0.1) 0%, transparent 70%)',
+                }} />
+              </div>
+            )}
+
             <div className={`
-              text-2xl font-black py-3 px-6 rounded-xl
+              text-3xl font-black py-4 px-8 rounded-2xl relative z-10
               ${battleResult === 'win' ? 'text-neon-green bg-neon-green/10 border border-neon-green/30' : ''}
               ${battleResult === 'loss' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
               ${battleResult === 'draw' ? 'text-white bg-white/5 border border-white/10' : ''}
-            `}>
-              {battleResult === 'win' && t('battle.victory') + '!'}
-              {battleResult === 'loss' && t('battle.defeat')}
-              {battleResult === 'draw' && t('battle.draw')}
+            `} style={{
+              boxShadow: battleResult === 'win'
+                ? '0 0 30px rgba(0,230,118,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
+                : battleResult === 'loss'
+                  ? '0 0 30px rgba(255,61,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}>
+              {battleResult === 'win' && `🏆 ${t('battle.victory')}!`}
+              {battleResult === 'loss' && `💀 ${t('battle.defeat')}`}
+              {battleResult === 'draw' && `⚡ ${t('battle.draw')}`}
             </div>
 
-            <div className="text-xs text-white/50 text-center">
+            <div className="text-xs text-white/50 text-center relative z-10">
               {playerHP} HP vs {aiHP} HP
             </div>
 
-            <div className="flex flex-col gap-1.5 w-full max-w-xs">
+            <div className="flex flex-col gap-1.5 w-full max-w-xs relative z-10">
               <div className="text-[8px] text-white/30 uppercase tracking-wider mb-0.5">📜 {t('battle.log')}</div>
               {roundLog.map((entry, i) => (
-                <div key={i} className="bg-white/5 rounded-lg px-2 py-2 text-[10px]">
+                <div key={i} className="rounded-lg px-2 py-2 text-[10px] animate-card-pop" style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  animationDelay: `${i * 0.1}s`,
+                }}>
                   {/* Header: round + result */}
                   <div className="flex justify-between items-center mb-1.5">
                     <span className="text-white/40 font-bold">{t('battle.round')} {entry.round}</span>

@@ -281,10 +281,20 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     className="animate-card-pop"
                     style={{ animationDelay: `${i * 0.15}s` }}>
                     <div className="relative">
-                      <div className={`absolute -inset-2 rounded-xl opacity-30 ${card.rarity === 'legendary' ? 'animate-legendary-glow' : card.rarity === 'epic' ? 'animate-epic-pulse' : ''}`}
+                      <div className={`absolute -inset-2 rounded-xl opacity-40 ${card.rarity === 'legendary' ? 'animate-legendary-glow' : card.rarity === 'epic' ? 'animate-epic-pulse' : ''}`}
                         style={{
                           background: `radial-gradient(circle, ${rarityColors[card.rarity]} 0%, transparent 70%)`,
                         }} />
+                      {/* Glow burst for legendary/epic */}
+                      {(card.rarity === 'legendary' || card.rarity === 'epic') && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-24 h-24 rounded-full animate-glow-burst"
+                            style={{
+                              background: `radial-gradient(circle, ${rarityColors[card.rarity]} 0%, transparent 70%)`,
+                              animationDelay: `${i * 0.15}s`,
+                            }} />
+                        </div>
+                      )}
                       <CardComponent card={card} />
                     </div>
                   </div>
@@ -363,9 +373,10 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                 key={pack.id}
                 className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
                   canBuy
-                    ? 'border-white/10 bg-white/5 hover:bg-white/8 active:scale-[0.98]'
+                    ? 'border-white/10 bg-white/[0.04] hover:bg-white/[0.07] active:scale-[0.98] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(255,215,0,0.08)]'
                     : 'border-white/5 bg-white/[0.02] opacity-50'
                 }`}
+                style={canBuy ? { backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' } : undefined}
               >
                 {/* Pack header with gradient */}
                 <div className={`bg-gradient-to-r ${visual.gradient} p-4 relative overflow-hidden`}>
@@ -408,12 +419,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                   <button
                     onClick={() => handleBuy(pack.id)}
                     disabled={!canBuy || isBuying}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden ${
                       canBuy && !isBuying
                         ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.2)]'
                         : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
                     }`}
                   >
+                    {canBuy && !isBuying && <span className="absolute inset-0 animate-shimmer pointer-events-none" />}
                     {isBuying
                       ? t('shop.sendingTransaction')
                       : canBuy

@@ -47,8 +47,8 @@ export default function Leaderboard({ walletAddress, wins, losses, onBack }: Pro
   const entries = getLeaderboard(wins, losses, walletAddress);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden">
-      <div className="shrink-0 px-3 pt-3 pb-2">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
+      <div className="shrink-0 px-3 pt-3 pb-2" style={{ background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="text-sm font-bold text-white mb-1">{t('leaderboard.title')}</div>
         <div className="text-[10px] text-white/40">{t('leaderboard.subtitle')}</div>
       </div>
@@ -56,22 +56,30 @@ export default function Leaderboard({ walletAddress, wins, losses, onBack }: Pro
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
         {entries.length > 0 ? (
           <div className="flex flex-col gap-1.5">
-            {entries.map((entry) => (
+            {entries.map((entry, idx) => (
               <div
                 key={entry.name}
-                className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${
+                className={`flex items-center gap-3 p-2.5 rounded-xl transition-all animate-card-pop ${
                   entry.isPlayer
-                    ? 'bg-neon-blue/10 border border-neon-blue/30'
-                    : 'bg-white/5 border border-white/5'
+                    ? 'border border-neon-blue/30'
+                    : 'border border-white/5'
                 }`}
+                style={{
+                  animationDelay: `${idx * 0.08}s`,
+                  background: entry.isPlayer ? 'rgba(0,212,255,0.08)' : 'rgba(255,255,255,0.03)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  boxShadow: entry.rank === 1 ? '0 0 20px rgba(255,215,0,0.15)' : undefined,
+                }}
               >
                 {/* Rank */}
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 relative overflow-hidden ${
                   entry.rank === 1 ? 'bg-yellow-500 text-yellow-900' :
                   entry.rank === 2 ? 'bg-gray-400 text-gray-900' :
                   entry.rank === 3 ? 'bg-orange-600 text-orange-100' :
                   'bg-white/10 text-white/40'
-                }`}>
+                }`} style={{ boxShadow: entry.rank === 1 ? '0 0 12px rgba(255,215,0,0.4)' : undefined }}>
+                  {entry.rank === 1 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
                   {entry.rank}
                 </div>
 

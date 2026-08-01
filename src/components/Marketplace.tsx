@@ -269,7 +269,8 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                         <div className="text-[9px] text-white/30 uppercase">NACKL</div>
                         <button
                           onClick={() => handleBuy(listing)}
-                          className="mt-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-90 transition-all shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+                          className="mt-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-90 transition-all shadow-[0_0_10px_rgba(0,212,255,0.2)] relative overflow-hidden">
+                          <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
                           Купить
                         </button>
                       </div>
@@ -397,9 +398,9 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
       </div>
 
       {/* Bottom bar */}
-      <div className="shrink-0 px-4 py-3 relative z-10 border-t border-white/[0.03]">
+      <div className="shrink-0 px-4 py-3 relative z-10 border-t border-white/[0.03]" style={{ background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <button onClick={() => { impactOccurred('soft'); onBack(); }}
-          className="w-full py-2.5 rounded-xl font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all">
+          className="w-full py-2.5 rounded-xl font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all hover:bg-white/[0.08]">
           {t('deck.back') || 'Назад'}
         </button>
       </div>

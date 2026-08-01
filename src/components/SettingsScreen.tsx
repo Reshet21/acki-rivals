@@ -23,7 +23,7 @@ export default function SettingsScreen({ onBack }: Props) {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Language Section */}
-        <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
           <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,215,0,0.5)' }}>{t('settings.language')}</div>
           <div className="grid grid-cols-3 gap-2">
             {[

@@ -189,7 +189,12 @@ export default function MiningPanel({ connection, onBack }: Props) {
       <div className="text-lg font-bold text-neon-green">{t('mining.title')}</div>
 
       {/* Mining keys status */}
-      <div className="w-full bg-white/5 rounded-lg p-3 text-xs">
+      <div className="w-full rounded-xl p-3 text-xs" style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}>
         <div className="flex justify-between text-white/50 mb-1">
           <span>{t('mining.miningKeys')}</span>
           <span className={keysPropagated ? 'text-neon-green' : 'text-yellow-400'}>
