@@ -55,8 +55,8 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
     /* ─── События ─────────────────────────────────────────── */
 
     // Listed, Bought, Cancelled — наследуются из IMarketplace
-    // Bought с fee перегружен: отличается от IMarketplace.Bought наличием fee
-    event Bought(address indexed buyer, address indexed tokenAddress, uint128 price, uint128 fee);
+    // BoughtWithFee — отдельное событие (перегрузка Bought не поддерживается в sold 0.77)
+    event BoughtWithFee(address indexed buyer, address indexed tokenAddress, uint128 price, uint128 fee);
     event FeeUpdated(uint16 feeBps);
     event TokenWalletDeployed(address indexed tokenWallet);
 
@@ -214,7 +214,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         listingCount--;
         sellerListingCount[listing.seller]--;
 
-        emit Bought(msg.sender, tokenAddress, listing.price, fee);
+        emit BoughtWithFee(msg.sender, tokenAddress, listing.price, fee);
     }
 
     /* ─── Buy with TIP-3 ─────────────────────────────────── */
@@ -267,7 +267,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         listingCount--;
         sellerListingCount[listing.seller]--;
 
-        emit Bought(sender, tokenAddress, listing.price, fee);
+        emit BoughtWithFee(sender, tokenAddress, listing.price, fee);
     }
 
     /* ─── Cancel ──────────────────────────────────────────── */
@@ -345,6 +345,5 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
     }
 
     /* ─── Приём SHELL ─────────────────────────────────────── */
-
-    fallback() external payable {}
+    // fallback убран — TVM-Solidity 0.77 не поддерживает payable fallback
 }
