@@ -4,6 +4,20 @@ pragma ton-solidity >= 0.58.0;
 import "./interfaces.sol";
 import "./GameCardNFTToken.sol";
 
+// Локальные интерфейсы для внешних вызовов.
+// GOSH ABI (sold 0.77) не генерирует getter'ы public state vars для вызовов
+// через контрактный тип — нужны явные сигнатуры через interface.
+interface IGameCardNFT {
+    function manager() external view returns (address);
+    function owner() external view returns (address);
+    function simpleTransfer(address to) external;
+}
+
+interface INacklTokenWallet {
+    function balance() external view returns (uint128);
+    function transfer(address to, uint128 amount, bool notify, TvmCell payload) external;
+}
+
 /**
  * @title Marketplace
  * @notice P2P маркетплейс NFT карт Acki Rivals за NACKL.
@@ -27,7 +41,6 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
     /* ─── Константы ──────────────────────────────────────── */
 
     uint16 constant BPS_DENOMINATOR = 10000;
-    uint128 constant MIN_GAS = 0.1 ton;
     uint128 constant MIN_PRICE = 1_000_000_000;     // 1 NACKL (nano)
 
     /* ─── Состояние ───────────────────────────────────────── */
@@ -130,7 +143,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         tvm.accept();
 
         ITokenRoot(nacklTokenRoot).deployWallet{
-            value: MIN_GAS
+            value: 0.1 ton
         }(address(this), 0.5 ton);
     }
 
@@ -162,9 +175,9 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         tvm.accept();
 
         // Проверяем, что маркетплейс — менеджер карты
-        GameCardNFTToken token = GameCardNFTToken(tokenAddress);
+        IGameCardNFT token = IGameCardNFT(tokenAddress);
         require(token.manager() == address(this), 204);
-        (address tokenOwner) = token.owner();
+        address tokenOwner = token.owner();
         require(tokenOwner == msg.sender, 205);
 
         listings[tokenAddress] = Listing({
@@ -195,19 +208,18 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         Listing listing = listings[tokenAddress];
         require(tokenWallet != address(0), 104);
         // ⚠️ NACKL должен быть уже на балансе контракта
-        (uint128 walletBal) = ITokenWallet(tokenWallet).balance();
+        uint128 walletBal = INacklTokenWallet(tokenWallet).balance();
         require(walletBal >= listing.price, 208);
         tvm.accept();
 
         uint128 fee = (listing.price * feeBps) / BPS_DENOMINATOR;
         uint128 sellerAmount = listing.price - fee;
 
-        ITokenWallet(tokenWallet).transfer{ value: 0.2 ton }(
+        INacklTokenWallet(tokenWallet).transfer{ value: 0.2 ton }(
             listing.seller, sellerAmount, false, _empty
         );
 
-        GameCardNFTToken token = GameCardNFTToken(tokenAddress);
-        token.simpleTransfer{ value: 0.3 ton }(msg.sender);
+        IGameCardNFT(tokenAddress).simpleTransfer{ value: 0.3 ton }(msg.sender);
 
         listing.active = false;
         listings[tokenAddress] = listing;
@@ -245,21 +257,20 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         uint128 sellerAmount = listing.price - fee;
 
         // Отправляем NACKL продавцу
-        ITokenWallet(tokenWallet).transfer{
+        INacklTokenWallet(tokenWallet).transfer{
             value: 0.2 ton
         }(listing.seller, sellerAmount, false, _empty);
 
         // Излишек (если покупатель отправил больше) — возвращаем
         uint128 excess = amount - listing.price;
         if (excess > 0) {
-            ITokenWallet(tokenWallet).transfer{
+            INacklTokenWallet(tokenWallet).transfer{
                 value: 0.1 ton
             }(sender, excess, false, _empty);
         }
 
         // Передаём карту покупателю
-        GameCardNFTToken token = GameCardNFTToken(tokenAddress);
-        token.simpleTransfer{ value: 0.3 ton }(sender);
+        IGameCardNFT(tokenAddress).simpleTransfer{ value: 0.3 ton }(sender);
 
         // Снимаем листинг
         listing.active = false;
@@ -317,7 +328,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
         require(to != address(0), 207);
         tvm.accept();
 
-        ITokenWallet(tokenWallet).transfer{
+        INacklTokenWallet(tokenWallet).transfer{
             value: 0.1 ton
         }(to, amount, false, _empty);
     }
@@ -340,7 +351,7 @@ contract Marketplace is IMarketplace, IAcceptTokensTransferCallback {
 
     function getBalance() public view returns (uint128) {
         if (tokenWallet == address(0)) return 0;
-        (uint128 bal) = ITokenWallet(tokenWallet).balance();
+        uint128 bal = INacklTokenWallet(tokenWallet).balance();
         return bal;
     }
 
