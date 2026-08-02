@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { WalletConnection } from '../services/beeEngine';
 import {
   requestMiningKeys,
   waitForMiningKeysPropagation,
+  initMiner as sdkInitMiner,
   getStoredMiningKeys,
   storeMiningKeys,
-  ENDPOINTS,
-  APP_ID,
 } from '../services/beeEngine';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
@@ -35,108 +34,17 @@ export default function MiningPanel({ connection, onBack }: Props) {
   const [isWaitingPropagation, setIsWaitingPropagation] = useState(false);
   const [waitElapsed, setWaitElapsed] = useState(0);
   const [isInitMiner, setIsInitMiner] = useState(false);
-  const [minerReady, setMinerReady] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [miner, setMiner] = useState<any>(null);
   const [minerState, setMinerState] = useState<MinerState>({ running: false, canStart: false, debug: null });
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(
     miningKeys?.areKeysPropagated ? t('mining.keysPropagated') : null
   );
 
-  const workerRef = useRef<Worker | null>(null);
+  const minerRef = useRef<typeof miner>(null);
   const propTokenRef = useRef(0);
   const waitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const dataTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const msgIdRef = useRef(0);
-  const pendingRef = useRef<Record<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>>({});
-
-  // ─── Worker lifecycle ─────────────────────────────────
-  const createWorker = useCallback(() => {
-    const w = new Worker(
-      new URL('../services/minerWorker.ts', import.meta.url),
-      { type: 'module' },
-    );
-    w.onmessage = (e: MessageEvent) => {
-      const msg = e.data;
-      if (!msg) return;
-      if (msg.reqId != null && pendingRef.current[msg.reqId]) {
-        const p = pendingRef.current[msg.reqId];
-        delete pendingRef.current[msg.reqId];
-        if (msg.type === 'error') p.reject(new Error(msg.message));
-        else p.resolve(msg);
-        return;
-      }
-      switch (msg.type) {
-        case 'ready':
-          setMinerReady(true);
-          break;
-        case 'status':
-          setMinerState((s) => ({ ...s, running: msg.running, canStart: msg.canStart }));
-          break;
-        case 'data':
-          setMinerState((s) => ({
-            ...s,
-            debug: {
-              tapSum: msg.tapSum,
-              tapSum5m: msg.tapSum5m,
-              updatedAt: new Date().toLocaleTimeString(),
-            },
-          }));
-          break;
-        case 'event':
-          try {
-            const payload = JSON.parse(msg.message);
-            if (payload.error) {
-              setMinerState((s) => ({ ...s, running: false }));
-              setError(`${payload.action ?? 'miner'}: ${payload.error}`);
-            }
-          } catch { /* non-json */ }
-          break;
-        case 'error':
-          setError(msg.message);
-          break;
-      }
-    };
-    w.onerror = (e) => {
-      setError(e.message || 'Worker error');
-      setMinerState((s) => ({ ...s, running: false }));
-    };
-    workerRef.current = w;
-    return w;
-  }, []);
-
-  const send = useCallback(<T,>(type: string, payload?: Record<string, unknown>): Promise<T> => {
-    const w = workerRef.current;
-    if (!w) return Promise.reject(new Error('Worker not ready'));
-    return new Promise<T>((resolve, reject) => {
-      const reqId = ++msgIdRef.current;
-      pendingRef.current[reqId] = { resolve: resolve as (v: unknown) => void, reject };
-      w.postMessage({ type, reqId, ...(payload || {}) });
-    });
-  }, []);
-
-  // Initialize worker on mount, dispose on unmount
-  useEffect(() => {
-    const w = createWorker();
-    return () => {
-      try { w.postMessage({ type: 'dispose' }); } catch { /* ignore */ }
-      w.terminate();
-      workerRef.current = null;
-    };
-  }, [createWorker]);
-
-  // Start data polling once miner is ready
-  useEffect(() => {
-    if (!minerReady) return;
-    const poll = async () => {
-      try { await send('data'); } catch { /* worker busy */ }
-    };
-    poll();
-    dataTimerRef.current = setInterval(poll, 5000);
-    return () => {
-      if (dataTimerRef.current) clearInterval(dataTimerRef.current);
-      dataTimerRef.current = null;
-    };
-  }, [minerReady, send]);
 
   // Elapsed-time counter while waiting for propagation
   useEffect(() => {
@@ -148,6 +56,47 @@ export default function MiningPanel({ connection, onBack }: Props) {
       waitTimerRef.current = null;
     };
   }, [isWaitingPropagation]);
+
+  useEffect(() => { minerRef.current = miner; }, [miner]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      propTokenRef.current++;
+      minerRef.current?.free?.();
+    };
+  }, []);
+
+  // Poll miner state
+  useEffect(() => {
+    if (!miner) return;
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const canStart = miner.can_start();
+        if (!cancelled) setMinerState((s) => ({ ...s, canStart }));
+
+        const data = await miner.get_miner_data();
+        if (!cancelled) {
+          setMinerState((s) => ({
+            ...s,
+            debug: {
+              tapSum: data.tap_sum.toString(),
+              tapSum5m: data.tap_sum_5m.toString(),
+              updatedAt: new Date().toLocaleTimeString(),
+            },
+          }));
+        }
+        data.free();
+      } catch { /* ignore */ }
+    };
+
+    poll();
+    const id = setInterval(poll, 5000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [miner]);
 
   // Save keys to storage
   useEffect(() => {
@@ -164,8 +113,8 @@ export default function MiningPanel({ connection, onBack }: Props) {
       setKeysPropagated(false);
       setMinerAddress(null);
       setMinerState({ running: false, canStart: false, debug: null });
-      setMinerReady(false);
-      try { workerRef.current?.postMessage({ type: 'dispose' }); } catch { /* ignore */ }
+      miner?.free?.();
+      setMiner(null);
 
       // Step 1: generate + request keys (fast)
       const keys = await requestMiningKeys(connection);
@@ -206,17 +155,10 @@ export default function MiningPanel({ connection, onBack }: Props) {
     try {
       setIsInitMiner(true);
       setError(null);
-      setMinerReady(false);
-      const w = workerRef.current;
-      if (!w) return;
-      w.postMessage({
-        type: 'init',
-        minerAddress,
-        ownerPublic: miningKeys.ownerPublic,
-        ownerSecret: miningKeys.ownerSecret,
-        appId: APP_ID,
-        endpoints: ENDPOINTS,
-      });
+      miner?.free?.();
+      const instance = await sdkInitMiner(minerAddress, miningKeys.ownerPublic, miningKeys.ownerSecret);
+      setMiner(instance);
+      setMinerState({ running: false, canStart: instance.can_start(), debug: null });
       setStatus(t('mining.initMiner'));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -226,31 +168,44 @@ export default function MiningPanel({ connection, onBack }: Props) {
   };
 
   const handleStart = () => {
+    if (!miner) return;
     try {
       setError(null);
+      miner.start(15000, (msg: string) => {
+        try {
+          const payload = JSON.parse(msg);
+          if (payload.error) {
+            setMinerState((s) => ({ ...s, running: false }));
+            setError(`${payload.action ?? 'miner'}: ${payload.error}`);
+          }
+          if (payload.action === 'status_updated' && payload.data?.status) {
+            const s = payload.data.status;
+            if (s === 'computing' || s === 'submitting') setMinerState((p) => ({ ...p, running: true }));
+            if (s === 'finished' || s === 'removed') setMinerState((p) => ({ ...p, running: false }));
+          }
+        } catch { /* non-json */ }
+      });
       setMinerState((s) => ({ ...s, running: true, canStart: false }));
-      workerRef.current?.postMessage({ type: 'start', durationMs: 15000 });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
 
   const handleStop = () => {
-    workerRef.current?.postMessage({ type: 'stop' });
+    if (!miner) return;
+    miner.stop();
+    setMinerState((s) => ({ ...s, running: false, canStart: miner.can_start() }));
   };
 
   const handleAddTap = () => {
-    try { workerRef.current?.postMessage({ type: 'tap', x: 1, y: 1 }); }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    if (!miner) return;
+    try { miner.add_tap(1, 1); } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
 
   const handleGetReward = async () => {
-    try {
-      await send('reward');
-      setStatus(t('mining.reward'));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
+    if (!miner) return;
+    try { await miner.get_reward(); setStatus(t('mining.reward')); }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
 
   return (
@@ -320,7 +275,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
           </div>
         )}
 
-        {keysPropagated && !minerReady && (
+        {keysPropagated && !miner && (
           <button
             onClick={handleInitMiner}
             disabled={isInitMiner}
@@ -333,7 +288,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
           </button>
         )}
 
-        {minerReady && (
+        {miner && (
           <div className="flex gap-2">
             <button
               onClick={() => { impactOccurred('medium'); minerState.running ? handleStop() : handleStart(); }}

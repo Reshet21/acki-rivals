@@ -260,7 +260,6 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
   // ─── Helper: animate round from GameState.roundResult (for guest or after host resolves) ───
   const animateFromRoundResult = useCallback((rr: NonNullable<GameState['roundResult']>) => {
     if (animatedRoundsRef.current.has(roundRef.current)) return;
-    animatedRoundsRef.current.add(roundRef.current);
 
     const isPlayerGuest = !isHost;
     const myCard = findCardById(myDeck, isPlayerGuest ? rr.guestCardId : rr.hostCardId, playerCardsUsedRef.current);
