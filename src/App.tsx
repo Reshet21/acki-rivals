@@ -551,7 +551,7 @@ function AppInner() {
       {screen === 'leaderboard' && (
         <div key="leaderboard" className="relative z-10 flex-1 animate-page-enter">
           <Leaderboard
-            walletAddress={walletConnection?.walletName || null}
+            playerId={playerId}
             playerName={walletConnection?.walletName || playerId}
             wins={battlesWon}
             losses={battlesLost}

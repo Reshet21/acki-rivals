@@ -4,14 +4,14 @@ import { useHaptic } from '../hooks/useHaptic';
 import { getLeaderboard, type PlayerEntry } from '../services/pvpService';
 
 interface Props {
-  walletAddress: string | null;
+  playerId: string;
   playerName: string | null;
   wins: number;
   losses: number;
   onBack: () => void;
 }
 
-export default function Leaderboard({ walletAddress, playerName, wins, losses, onBack }: Props) {
+export default function Leaderboard({ playerId, playerName, wins, losses, onBack }: Props) {
   const { t } = useI18n();
   const { impactOccurred } = useHaptic();
   const [entries, setEntries] = useState<PlayerEntry[]>([]);
@@ -33,15 +33,15 @@ export default function Leaderboard({ walletAddress, playerName, wins, losses, o
 
   // Calculate local player stats for display (even if not in Supabase yet)
   const localRating = wins * 100 - losses * 50;
-  const hasLocalPlayer = walletAddress && entries.some((e) => e.player_id === walletAddress);
+  const hasLocalPlayer = entries.some((e) => e.player_id === playerId);
 
   // Merge: show server entries, and add local player if not already present
   const displayEntries = [...entries];
-  if (walletAddress && !hasLocalPlayer && (wins > 0 || losses > 0)) {
+  if (!hasLocalPlayer && (wins > 0 || losses > 0)) {
     displayEntries.push({
       id: 'local',
-      player_id: walletAddress,
-      player_name: playerName || walletAddress.slice(0, 10),
+      player_id: playerId,
+      player_name: playerName || playerId.slice(0, 10),
       wins,
       losses,
       rating: localRating,
@@ -70,7 +70,7 @@ export default function Leaderboard({ walletAddress, playerName, wins, losses, o
         ) : displayEntries.length > 0 ? (
           <div className="flex flex-col gap-1.5">
             {displayEntries.map((entry, idx) => {
-              const isPlayer = entry.player_id === walletAddress;
+              const isPlayer = entry.player_id === playerId;
               const rank = (entry as any)._rank || idx + 1;
               return (
                 <div
