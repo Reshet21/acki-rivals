@@ -268,6 +268,10 @@ const translations: Record<string, Record<string, string>> = {
     'mining.taps': 'Тапов',
     'mining.taps5m': '5м',
     'mining.updatedAt': 'Обновлено',
+    'mining.cancel': 'Отменить',
+    'mining.cancelled': 'Ожидание отменено. Попробуйте ещё раз или проверьте подключение к сети.',
+    'mining.waitElapsed': 'Прошло',
+    'mining.waitHint': 'Распространение ключей в блокчейне может занять 1–3 минуты. Проверьте, что AN Wallet открыт и сеть стабильна.',
     // Settings
     'settings.title': 'Настройки',
     'settings.language': 'Язык',
@@ -793,6 +797,10 @@ const translations: Record<string, Record<string, string>> = {
     'mining.taps': 'Taps',
     'mining.taps5m': '5m',
     'mining.updatedAt': 'Updated',
+    'mining.cancel': 'Cancel',
+    'mining.cancelled': 'Waiting cancelled. Try again or check your network connection.',
+    'mining.waitElapsed': 'Elapsed',
+    'mining.waitHint': 'Key propagation on the blockchain can take 1–3 minutes. Make sure AN Wallet is open and your network is stable.',
     // Settings
     'settings.title': 'Settings',
     'settings.language': 'Language',

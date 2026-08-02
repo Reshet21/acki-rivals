@@ -32,6 +32,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
 
   const [isRequestingKeys, setIsRequestingKeys] = useState(false);
   const [isWaitingPropagation, setIsWaitingPropagation] = useState(false);
+  const [waitElapsed, setWaitElapsed] = useState(0);
   const [isInitMiner, setIsInitMiner] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [miner, setMiner] = useState<any>(null);
@@ -43,6 +44,18 @@ export default function MiningPanel({ connection, onBack }: Props) {
 
   const minerRef = useRef<typeof miner>(null);
   const propTokenRef = useRef(0);
+  const waitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Elapsed-time counter while waiting for propagation
+  useEffect(() => {
+    if (!isWaitingPropagation) { setWaitElapsed(0); return; }
+    setWaitElapsed(0);
+    waitTimerRef.current = setInterval(() => setWaitElapsed((s) => s + 1), 1000);
+    return () => {
+      if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+      waitTimerRef.current = null;
+    };
+  }, [isWaitingPropagation]);
 
   useEffect(() => { minerRef.current = miner; }, [miner]);
 
@@ -103,10 +116,13 @@ export default function MiningPanel({ connection, onBack }: Props) {
       miner?.free?.();
       setMiner(null);
 
+      // Step 1: generate + request keys (fast)
       const keys = await requestMiningKeys(connection);
       setMiningKeys({ ...keys, minerAddress: null, areKeysPropagated: false });
-      setStatus(t('mining.keysSent'));
 
+      // Step 2: wait for blockchain propagation (can take minutes)
+      setIsRequestingKeys(false);
+      setStatus(t('mining.keysSent'));
       const token = ++propTokenRef.current;
       setIsWaitingPropagation(true);
 
@@ -124,6 +140,14 @@ export default function MiningPanel({ connection, onBack }: Props) {
       setIsRequestingKeys(false);
       setIsWaitingPropagation(false);
     }
+  };
+
+  const handleCancelWait = () => {
+    propTokenRef.current++;
+    setIsRequestingKeys(false);
+    setIsWaitingPropagation(false);
+    setStatus(null);
+    setError(t('mining.cancelled'));
   };
 
   const handleInitMiner = async () => {
@@ -210,19 +234,42 @@ export default function MiningPanel({ connection, onBack }: Props) {
 
       {/* Actions */}
       <div className="flex flex-col gap-2 w-full">
-        {!keysPropagated && (
+        {!keysPropagated && !isWaitingPropagation && (
           <button
             onClick={handleRequestKeys}
-            disabled={isRequestingKeys || isWaitingPropagation}
+            disabled={isRequestingKeys}
             className="w-full py-3 rounded-lg font-bold text-sm
               bg-gradient-to-r from-neon-green to-emerald-500 text-white
               shadow-[0_0_16px_rgba(0,255,159,0.3)]
-              active:scale-95 transition-all disabled:opacity-50"
+              active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {isRequestingKeys ? t('mining.requestingKeys') :
-             isWaitingPropagation ? t('mining.waitingBlockchain') :
-             t('mining.setupKeys')}
+            {isRequestingKeys && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-slow" />}
+            {isRequestingKeys ? t('mining.requestingKeys') : t('mining.setupKeys')}
           </button>
+        )}
+
+        {isWaitingPropagation && (
+          <div className="w-full rounded-xl p-4 text-center" style={{
+            background: 'rgba(0,212,255,0.04)',
+            border: '1px solid rgba(0,212,255,0.15)',
+          }}>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <span className="w-5 h-5 border-2 border-neon-blue/30 border-t-neon-blue rounded-full animate-spin-slow" />
+              <span className="text-sm font-bold" style={{ color: '#00d4ff' }}>{t('mining.waitingBlockchain')}</span>
+            </div>
+            <div className="text-[10px] text-white/40">
+              {t('mining.waitElapsed')}: {Math.floor(waitElapsed / 60)}:{String(waitElapsed % 60).padStart(2, '0')}
+            </div>
+            <div className="text-[10px] text-white/30 mt-1">{t('mining.waitHint')}</div>
+            <button
+              onClick={handleCancelWait}
+              className="mt-3 px-4 py-1.5 rounded-lg text-[11px] font-bold
+                bg-white/5 border border-white/10 text-white/50
+                active:scale-95 transition-all"
+            >
+              {t('mining.cancel')}
+            </button>
+          </div>
         )}
 
         {keysPropagated && !miner && (
