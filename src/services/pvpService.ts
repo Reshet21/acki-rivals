@@ -72,6 +72,17 @@ export interface Move {
   pillz: number;
 }
 
+export interface PlayerEntry {
+  id: string;
+  player_id: string;
+  player_name: string;
+  wins: number;
+  losses: number;
+  rating: number;
+  last_active: string;
+  created_at: string;
+}
+
 // ─── Game actions ────────────────────────────────────────
 
 export async function createGame(hostId: string, hostDeck: Card[], hostName?: string): Promise<Game | null> {
@@ -247,6 +258,44 @@ export async function cancelGame(gameId: string): Promise<void> {
     .eq('status', 'waiting');
 
   if (error) throw error;
+}
+
+// ─── Leaderboard ─────────────────────────────────────────
+
+export async function updatePlayerStats(
+  playerId: string,
+  playerName: string,
+  isWin: boolean,
+): Promise<void> {
+  const client = getClient();
+  if (!client) return;
+
+  const { error } = await client.rpc('upsert_player_stats', {
+    p_player_id: playerId,
+    p_player_name: playerName,
+    p_is_win: isWin,
+  });
+
+  if (error) {
+    console.warn('[pvpService] updatePlayerStats failed:', error);
+  }
+}
+
+export async function getLeaderboard(limit = 50): Promise<PlayerEntry[]> {
+  const client = getClient();
+  if (!client) return [];
+
+  const { data, error } = await client
+    .from('players')
+    .select('*')
+    .order('rating', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.warn('[pvpService] getLeaderboard failed:', error);
+    return [];
+  }
+  return data || [];
 }
 
 // ─── Real-time subscriptions ─────────────────────────────

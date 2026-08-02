@@ -23,6 +23,7 @@ import Marketplace from './components/Marketplace';
 import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import type { Game } from './services/pvpService';
+import { updatePlayerStats } from './services/pvpService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
@@ -115,8 +116,11 @@ function AppInner() {
     if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }
     else if (result === 'loss') { recordLoss(); haptic.notificationOccurred('error'); }
     else { haptic.notificationOccurred('warning'); }
+    // Update leaderboard
+    const playerName = walletConnection?.walletName || playerId;
+    updatePlayerStats(playerId, playerName, result === 'win').catch(() => {});
     setScreen('menu');
-  }, [recordWin, recordLoss, haptic]);
+  }, [recordWin, recordLoss, haptic, walletConnection, playerId]);
 
   const handleBuyPack = useCallback((packId: string): Card[] | void => {
     const newCards = openPackCards(packId);
@@ -516,11 +520,15 @@ function AppInner() {
               if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }
               else if (result === 'loss') { recordLoss(); haptic.notificationOccurred('error'); }
               else { haptic.notificationOccurred('warning'); }
+              const pName = walletConnection?.walletName || playerId;
+              updatePlayerStats(playerId, pName, result === 'win').catch(() => {});
               setPvpGame(null);
               setScreen('menu');
             }}
             onSurrender={() => {
               recordLoss();
+              const pName = walletConnection?.walletName || playerId;
+              updatePlayerStats(playerId, pName, false).catch(() => {});
               setPvpGame(null);
               setScreen('menu');
             }}
@@ -544,6 +552,7 @@ function AppInner() {
         <div key="leaderboard" className="relative z-10 flex-1 animate-page-enter">
           <Leaderboard
             walletAddress={walletConnection?.walletName || null}
+            playerName={walletConnection?.walletName || playerId}
             wins={battlesWon}
             losses={battlesLost}
             onBack={() => setScreen('menu')}
