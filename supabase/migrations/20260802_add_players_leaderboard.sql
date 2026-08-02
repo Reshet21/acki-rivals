@@ -1,49 +1,63 @@
--- Players leaderboard table
--- Stores persistent player stats for the global leaderboard
+-- Players leaderboard table (idempotent migration)
+-- Safe to re-run: uses IF NOT EXISTS / EXCEPTION guards
 
-create table if not exists players (
-  id uuid default uuid_generate_v4() primary key,
-  player_id text unique not null,      -- wallet address or anonymous ID
-  player_name text not null default 'Игрок',
-  wins integer not null default 0,
-  losses integer not null default 0,
-  rating integer not null default 0,    -- wins*100 - losses*50
-  last_active timestamp with time zone default now(),
-  created_at timestamp with time zone default now()
+-- Таблица
+CREATE TABLE IF NOT EXISTS players (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  player_id TEXT UNIQUE NOT NULL,
+  player_name TEXT NOT NULL DEFAULT 'Игрок',
+  wins INTEGER NOT NULL DEFAULT 0,
+  losses INTEGER NOT NULL DEFAULT 0,
+  rating INTEGER NOT NULL DEFAULT 0,
+  last_active TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
-create index idx_players_rating on players(rating desc);
-create index idx_players_player_id on players(player_id);
+-- Индексы
+DO $$ BEGIN
+  CREATE INDEX idx_players_rating ON players(rating DESC);
+EXCEPTION WHEN duplicate_table THEN NULL;
+END $$;
 
--- Enable RLS
-alter table players enable row level security;
-create policy "Allow all on players" on players for all using (true);
+DO $$ BEGIN
+  CREATE INDEX idx_players_player_id ON players(player_id);
+EXCEPTION WHEN duplicate_table THEN NULL;
+END $$;
 
--- Enable realtime
-alter publication supabase_realtime add table players;
+-- RLS
+ALTER TABLE players ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Allow all on players" ON players FOR ALL USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Upsert function: create or update player stats after a match
-create or replace function upsert_player_stats(
-  p_player_id text,
-  p_player_name text,
-  p_is_win boolean
+-- Realtime
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE players;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Upsert function (safe to re-run)
+CREATE OR REPLACE FUNCTION upsert_player_stats(
+  p_player_id TEXT,
+  p_player_name TEXT,
+  p_is_win BOOLEAN
 )
-returns void as $$
-begin
-  insert into players (player_id, player_name, wins, losses, rating, last_active)
-  values (
-    p_player_id,
-    p_player_name,
-    case when p_is_win then 1 else 0 end,
-    case when p_is_win then 0 else 1 end,
-    case when p_is_win then 100 else -50 end,
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO players (player_id, player_name, wins, losses, rating, last_active)
+  VALUES (
+    p_player_id, p_player_name,
+    CASE WHEN p_is_win THEN 1 ELSE 0 END,
+    CASE WHEN p_is_win THEN 0 ELSE 1 END,
+    CASE WHEN p_is_win THEN 100 ELSE -50 END,
     now()
   )
-  on conflict (player_id) do update set
+  ON CONFLICT (player_id) DO UPDATE SET
     player_name = excluded.player_name,
-    wins = players.wins + case when p_is_win then 1 else 0 end,
-    losses = players.losses + case when p_is_win then 0 else 1 end,
-    rating = players.rating + case when p_is_win then 100 else -50 end,
+    wins = players.wins + CASE WHEN p_is_win THEN 1 ELSE 0 END,
+    losses = players.losses + CASE WHEN p_is_win THEN 0 ELSE 1 END,
+    rating = players.rating + CASE WHEN p_is_win THEN 100 ELSE -50 END,
     last_active = now();
-end;
-$$ language plpgsql;
+END;
+$$ LANGUAGE plpgsql;
