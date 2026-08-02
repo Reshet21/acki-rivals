@@ -18,6 +18,11 @@
  *   worker → main: { type: 'error', message }
  */
 
+// bee-sdk creates HTTP requests through the global `window` object
+// (for traceparent headers). Web Workers have no `window` — alias it to
+// `self` so network calls work from the worker thread.
+(globalThis as Record<string, unknown>).window = globalThis;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let sdk: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
