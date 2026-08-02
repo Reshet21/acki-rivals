@@ -18,9 +18,22 @@
  *   worker → main: { type: 'error', message }
  */
 
-// bee-sdk creates HTTP requests through the global `window` object
-// (for traceparent headers). Web Workers have no `window` — alias it to
-// `self` so network calls work from the worker thread.
+// bee-sdk (tvm_client) creates HTTP requests through `web_sys::window()`,
+// which resolves to `js_sys::global()` and then checks `instanceof Window`.
+// Web Workers have no `window` and their global is WorkerGlobalScope, so
+// that check fails ("Can not get `window`").
+//
+// Fix: define a `Window` global whose `Symbol.hasInstance` always returns
+// true, and alias `window` to the worker global. Then
+// `globalThis instanceof Window` is true, fetch/setTimeout (which exist on
+// the worker global) are used for HTTP, and the miner runs off the main
+// thread.
+const WindowLike = class Window {
+  static [Symbol.hasInstance]() {
+    return true;
+  }
+};
+(globalThis as Record<string, unknown>).Window = WindowLike;
 (globalThis as Record<string, unknown>).window = globalThis;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
