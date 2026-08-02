@@ -152,17 +152,18 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
 
       {/* Upgrade Modal */}
       {selGroup && (
-        <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-fade-in">
-          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-6 tracking-wider">
+        <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col overflow-y-auto animate-fade-in">
+          <div className="flex flex-col items-center justify-start px-4 pt-6 pb-8 min-h-full">
+          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-4 tracking-wider text-center">
             {selGroup.isMax ? t('upgrade.max') : t('upgrade.title')}
           </h2>
 
-          <div className="w-48 mb-6 transform hover:scale-105 transition-all duration-300">
+          <div className="w-40 mb-4 transform hover:scale-105 transition-all duration-300 shrink-0">
             <CardComponent card={selGroup.base} noPopup />
           </div>
 
           {!selGroup.isMax && (
-            <div className="w-full max-w-xs bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 mb-6 shadow-2xl">
+            <div className="w-full max-w-xs bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 mb-4 shadow-2xl">
               <div className="flex items-center justify-between text-center">
                 <div className="flex-1">
                   <div className="text-[10px] uppercase text-white/40 font-bold mb-1">{t('card.power')}</div>
@@ -183,7 +184,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             </div>
           )}
 
-          <div className="w-full max-w-xs mb-8 bg-black/40 p-4 rounded-xl border border-white/5">
+          <div className="w-full max-w-xs mb-4 bg-black/40 p-4 rounded-xl border border-white/5">
             <div className="flex justify-between text-xs font-bold mb-2">
               <span className="text-white/60">{t('upgrade.copies')}</span>
               <span
@@ -225,10 +226,11 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
 
           <button
             onClick={() => setSelectedUid(null)}
-            className="mt-6 text-sm font-bold text-white/40 active:text-white pb-1 border-b border-transparent active:border-white transition-all uppercase tracking-widest"
+            className="mt-4 mb-2 text-sm font-bold text-white/40 active:text-white pb-1 border-b border-transparent active:border-white transition-all uppercase tracking-widest"
           >
             {t('deck.back')}
           </button>
+          </div>
         </div>
       )}
     </div>
