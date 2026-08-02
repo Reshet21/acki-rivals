@@ -212,6 +212,19 @@ export async function requestMiningKeys(conn: WalletConnection): Promise<{
     writeSession(conn);
   }
 
+  console.log('[beeEngine] request_set_mining_keys:', {
+    message_id: request.message_id,
+    profile_address: request.profile_address,
+    owner_public: request.owner_public,
+  });
+
+  if (!request.message_id) {
+    throw new Error(
+      'Запрос не дошёл до кошелька (message_id отсутствует). ' +
+      'Проверьте, что AN Wallet открыт и сессия активна, затем попробуйте снова.'
+    );
+  }
+
   return {
     ownerPublic: generated.public,
     ownerSecret: generated.secret,
@@ -228,15 +241,17 @@ export async function waitForMiningKeysPropagation(
     client_config: { network: { endpoints: ENDPOINTS } },
     wallet_name: walletName,
   });
+  console.log('[beeEngine] miner_address:', minerAddress);
 
   await sdk.ensure_mining_keys_propagated({
     client_config: { network: { endpoints: ENDPOINTS } },
     miner_address: minerAddress,
     app_id: APP_ID,
     expected_owner_public: ownerPublic,
-    max_attempts: 120,
+    max_attempts: 45,
     interval_ms: 2000,
   });
+  console.log('[beeEngine] mining keys propagated for', minerAddress);
 
   return minerAddress;
 }

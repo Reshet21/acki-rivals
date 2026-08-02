@@ -271,7 +271,8 @@ const translations: Record<string, Record<string, string>> = {
     'mining.cancel': 'Отменить',
     'mining.cancelled': 'Ожидание отменено. Попробуйте ещё раз или проверьте подключение к сети.',
     'mining.waitElapsed': 'Прошло',
-    'mining.waitHint': 'Распространение ключей в блокчейне может занять 1–3 минуты. Проверьте, что AN Wallet открыт и сеть стабильна.',
+    'mining.waitHint': 'Откройте AN Wallet — подтвердите установку ключей майнинга. Пока ключи не подтверждены, распространение в блокчейне не начнётся. SHELL газ не нужен.',
+    'mining.confirmInWallet': '👆 Откройте AN Wallet и подтвердите установку ключей майнинга',
     // Settings
     'settings.title': 'Настройки',
     'settings.language': 'Язык',
@@ -800,7 +801,8 @@ const translations: Record<string, Record<string, string>> = {
     'mining.cancel': 'Cancel',
     'mining.cancelled': 'Waiting cancelled. Try again or check your network connection.',
     'mining.waitElapsed': 'Elapsed',
-    'mining.waitHint': 'Key propagation on the blockchain can take 1–3 minutes. Make sure AN Wallet is open and your network is stable.',
+    'mining.waitHint': 'Open AN Wallet — confirm the mining key installation. Keys won\'t propagate until confirmed. No SHELL gas needed.',
+    'mining.confirmInWallet': '👆 Open AN Wallet and confirm mining key installation',
     // Settings
     'settings.title': 'Settings',
     'settings.language': 'Language',

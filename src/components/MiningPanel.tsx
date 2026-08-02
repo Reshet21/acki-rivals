@@ -257,7 +257,10 @@ export default function MiningPanel({ connection, onBack }: Props) {
               <span className="w-5 h-5 border-2 border-neon-blue/30 border-t-neon-blue rounded-full animate-spin-slow" />
               <span className="text-sm font-bold" style={{ color: '#00d4ff' }}>{t('mining.waitingBlockchain')}</span>
             </div>
-            <div className="text-[10px] text-white/40">
+            <div className="px-3 py-2 rounded-lg text-[11px] font-bold text-yellow-400" style={{ background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)' }}>
+              {t('mining.confirmInWallet')}
+            </div>
+            <div className="text-[10px] text-white/40 mt-1.5">
               {t('mining.waitElapsed')}: {Math.floor(waitElapsed / 60)}:{String(waitElapsed % 60).padStart(2, '0')}
             </div>
             <div className="text-[10px] text-white/30 mt-1">{t('mining.waitHint')}</div>
