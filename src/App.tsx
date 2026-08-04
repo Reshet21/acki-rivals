@@ -24,6 +24,7 @@ import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import type { Game } from './services/pvpService';
 import { updatePlayerStats } from './services/pvpService';
+import { getStoredEpkKey, zkLoginFullFlow, handleOAuthRedirect } from './services/zkLoginService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
@@ -83,6 +84,32 @@ function AppInner() {
   const [starterPackClaimed, setStarterPackClaimed] = useState<boolean>(() => {
     return localStorage.getItem('acki-starter-claimed') === 'true';
   });
+  const [hasEpkKey, setHasEpkKey] = useState<boolean>(() => getStoredEpkKey() !== null);
+
+  // Handle OAuth redirect (popup callback)
+  useEffect(() => {
+    handleOAuthRedirect();
+  }, []);
+
+  // Refresh EPK state
+  useEffect(() => {
+    setHasEpkKey(getStoredEpkKey() !== null);
+  }, [walletConnection]);
+
+  const handleZkLogin = useCallback(async () => {
+    if (!walletConnection) {
+      setScreen('wallet');
+      return;
+    }
+    try {
+      const epk = await zkLoginFullFlow(walletConnection.walletName);
+      setHasEpkKey(true);
+      console.log('[App] zkLogin completed, EPK key for', epk.walletAddress);
+    } catch (e) {
+      console.error('[App] zkLogin failed:', e);
+      alert('Ошибка входа через Google: ' + (e instanceof Error ? e.message : 'Неизвестная ошибка'));
+    }
+  }, [walletConnection]);
 
   useEffect(() => {
     saveToStorage();
@@ -415,10 +442,9 @@ function AppInner() {
             onBack={() => setScreen('menu')}
             starterPackClaimed={starterPackClaimed}
             onClaimStarterPack={handleClaimStarterPack}
-            onReconnectWallet={() => {
-              // Переходим на экран кошелька для переподключения
-              setScreen('wallet');
-            }}
+            onReconnectWallet={() => setScreen('wallet')}
+            onZkLogin={handleZkLogin}
+            hasEpkKey={hasEpkKey}
           />
         </div>
       )}

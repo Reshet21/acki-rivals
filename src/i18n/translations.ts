@@ -530,7 +530,9 @@ const translations: Record<string, Record<string, string>> = {
     'shop.devModeWarning': '⚡ DEV MODE: Блокчейн-платёж недоступен. Паки выданы бесплатно.',
     'shop.factorExpired': '🔑 Срок действия ZKP-фактора истёк. Требуется повторный вход через AN Wallet.',
     'shop.reconnectWallet': '🔄 Переподключить кошелёк',
-    'shop.needReconnect': 'Сессия кошелька истекла. Нажмите «Переподключить кошелёк» и войдите заново.',
+    'shop.needReconnect': 'Сессия кошелька истекла. Нажмите «Войти через Google» и авторизуйтесь.',
+    'shop.zkLoginButton': '🔑 Войти через Google (zkLogin)',
+    'shop.noEpkKey': '🔑 Нужен вход через Google для оплаты',
     // PvpLobby
     'pvp.connecting': 'Подключение...',
     // PvpBattleScreen
@@ -1063,7 +1065,9 @@ const translations: Record<string, Record<string, string>> = {
     'shop.devModeWarning': '⚡ DEV MODE: Blockchain payment unavailable. Packs issued for free.',
     'shop.factorExpired': '🔑 ZKP factor expired. Reconnect AN Wallet required.',
     'shop.reconnectWallet': '🔄 Reconnect wallet',
-    'shop.needReconnect': 'Wallet session expired. Tap "Reconnect wallet" and login again.',
+    'shop.needReconnect': 'Wallet session expired. Tap "Login with Google" and authorize.',
+    'shop.zkLoginButton': '🔑 Login with Google (zkLogin)',
+    'shop.noEpkKey': '🔑 Need Google login for payment',
     // PvpLobby
     'pvp.connecting': 'Connecting...',
     // PvpBattleScreen

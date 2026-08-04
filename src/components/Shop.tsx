@@ -16,6 +16,8 @@ interface Props {
   starterPackClaimed: boolean;
   onClaimStarterPack: () => void;
   onReconnectWallet?: () => void;
+  onZkLogin?: () => void;
+  hasEpkKey?: boolean;
 }
 
 
@@ -43,7 +45,7 @@ const packVisuals: Record<string, { gradient: string; icon: string }> = {
   advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: '💎' },
 };
 
-export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack, onReconnectWallet }: Props) {
+export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack, onReconnectWallet, onZkLogin, hasEpkKey }: Props) {
   const { t, lang } = useI18n();
   const { impactOccurred } = useHaptic();
   const [phase, setPhase] = useState<Phase>('shop');
@@ -367,13 +369,25 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
         <div className="px-4 mb-3">
           <div className="px-3 py-2 rounded-lg text-xs text-center" style={{ background: needsReconnect ? 'rgba(255,180,0,0.08)' : 'rgba(255,60,60,0.1)', border: needsReconnect ? '1px solid rgba(255,180,0,0.2)' : '1px solid rgba(255,60,60,0.2)' }}>
             <span className={needsReconnect ? 'text-yellow-400' : 'text-red-400'}>{paymentError}</span>
-            {needsReconnect && onReconnectWallet && (
-              <button
-                onClick={() => { setNeedsReconnect(false); setPaymentError(null); onReconnectWallet?.(); }}
-                className="block mx-auto mt-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-yellow-600 to-orange-600 text-white active:scale-95 transition-all"
-              >
-                {t('shop.reconnectWallet')} 🔄
-              </button>
+            {needsReconnect && (
+              <div className="flex flex-col gap-2 mt-2">
+                {onZkLogin && !hasEpkKey && (
+                  <button
+                    onClick={() => { setNeedsReconnect(false); setPaymentError(null); onZkLogin?.(); }}
+                    className="px-4 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-white active:scale-95 transition-all animate-pulse-glow"
+                  >
+                    🔑 {t('shop.zkLoginButton')}
+                  </button>
+                )}
+                {onReconnectWallet && (
+                  <button
+                    onClick={() => { setNeedsReconnect(false); setPaymentError(null); onReconnectWallet?.(); }}
+                    className="px-4 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-yellow-600 to-orange-600 text-white active:scale-95 transition-all"
+                  >
+                    {t('shop.reconnectWallet')} 🔄
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -453,7 +467,9 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                           ? `${t('shop.buy')} — ${pack.nacklPrice} NACKL`
                           : '🎁 Забрать бесплатно'
                         : walletConnection
-                          ? t('shop.notEnough')
+                          ? !hasEpkKey && !IS_DEV_PAYMENT
+                            ? '🔑 Нужен вход через Google'
+                            : t('shop.notEnough')
                           : t('shop.noWallet')
                     }
                   </button>

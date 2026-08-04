@@ -5,24 +5,16 @@
  *
  * ⚠️ NACKL — нативный ECC токен Acki Nacki (индекс 1), НЕ TIP-3.
  *
- * Использует bee-sdk Wallet.send_tokens_direct с правильным API:
- *   - token_root = "1" (ECC индекс NACKL)
- *   - amount_raw (не amount!)
- *   - flags: 0
- *   - signer_keys: EPK ключи (из getSignerKeys)
+ * Использует bee-sdk Wallet.send_tokens_direct.
+ * Ключи подписи берутся из zkLogin-флоу (EPK-факторы), НЕ из gen_mining_keys.
  *
- * @see bee_wallet/src/adapters/wasm/dto/mod.rs — TSendTokensDirectReq
- * @see helpers.ts — getSignerKeys для получения EPK ключей
- *
- * Обработка ошибок:
- *   - ERR_FACTOR_EXPIRED (502) — ZKP-фактор протух или удалён → needsReconnect
- *   - Перед отправкой проверяем epk_expire_at через get_epk_expire_at
- *   - Минимальное время жизни фактора: MIN_EPK_LIFE_TIME_SEC = 300с
+ * @see ИНТЕГРАЦИЯ_кошелька_zkLogin.md — полный флоу zkLogin
  */
 
 import type { WalletConnection } from './beeEngine';
 import { ENDPOINTS, API_URL, APP_ID } from './beeEngine';
-import { getSignerKeys, toNano } from './helpers';
+import { getStoredEpkKey, clearEpkKey, verifyEpkFactor } from './zkLoginService';
+import { toNano } from './helpers';
 
 const DEVELOPER_WALLET = '0:d9ed11eaef8f0ec7b475fe29e293bb721cb6a64dfba3fd069b8e2f9303ff6b36';
 const NACKL_ECC_INDEX = '1';
@@ -36,12 +28,6 @@ export const ERROR_CODES = {
   ERR_NOT_IN_WHITELIST: 412 as const,
   ERR_BELOW_MIN_VALUE: 200 as const,
 };
-
-// Минимальное время жизни EPK-фактора: контракт требует ≥ 300 сек
-const MIN_EPK_LIFE_TIME_SEC = 300;
-
-// Запас безопасности: если фактор живёт меньше 10 минут — предупреждаем
-const EPK_SAFETY_MARGIN_SEC = 600;
 
 export interface PaymentResult {
   success: boolean;
@@ -76,25 +62,50 @@ async function getSdk(): Promise<any> {
 }
 
 /**
+ * Проверить, что у нас есть живой EPK-ключ для отправки транзакции.
+ * Если ключа нет или он протух — возвращает ошибку.
+ */
+async function ensureValidEpkKey(
+  walletAddress: string,
+): Promise<{ public: string; secret: string }> {
+  const epk = getStoredEpkKey();
+
+  if (!epk) {
+    throw Object.assign(
+      new Error('Нет зарегистрированного EPK-фактора. Выполните вход через Google (zkLogin).'),
+      { errorCode: 502, needsReconnect: true },
+    );
+  }
+
+  // Дополнительная проверка через блокчейн
+  const isValid = await verifyEpkFactor(walletAddress, epk.public);
+  if (!isValid) {
+    // Фактор протух — удаляем и требуем новый вход
+    clearEpkKey();
+    throw Object.assign(
+      new Error('EPK-фактор протух или не зарегистрирован. Выполните повторный вход через Google.'),
+      { errorCode: 502, needsReconnect: true },
+    );
+  }
+
+  return { public: epk.public, secret: epk.secret };
+}
+
+/**
  * Достать exit_code из вложенной структуры AppError.
- * bee-sdk ошибки приходят с полями tvm_error.data.node_error.extensions.details.exit_code.
  */
 function parseErrorCode(e: unknown): number | null {
   if (!e || typeof e !== 'object') return null;
   const err = e as Record<string, unknown>;
 
-  // Прямое поле error_code (строка) — простейший случай
   if (err.error_code && typeof err.error_code === 'string') {
     const code = parseInt(err.error_code, 10);
     if (!isNaN(code)) return code;
   }
 
-  // kind = 'tvm_exit' — поле tvm_error
   if (err.kind === 'tvm_exit') {
     return digExitCode(err);
   }
-
-  // Поле tvm_error без kind
   if (err.tvm_error && typeof err.tvm_error === 'object') {
     return digExitCode(err);
   }
@@ -102,7 +113,6 @@ function parseErrorCode(e: unknown): number | null {
   return null;
 }
 
-/** Раскопать exit_code из tvm_error.data.node_error.extensions.details  */
 function digExitCode(obj: Record<string, unknown>): number | null {
   try {
     const tvm = obj.tvm_error as Record<string, unknown> | undefined;
@@ -118,99 +128,16 @@ function digExitCode(obj: Record<string, unknown>): number | null {
     const exitCode = details.exit_code;
     if (exitCode !== undefined) return Number(exitCode);
   } catch {
-    // Игнорируем ошибки распаковки
+    // ignore
   }
   return null;
 }
 
 /**
- * Проверить EPK-фактор перед отправкой транзакции.
+ * Купить пак карт за NACKL.
  *
- * Дёргает get_epk_expire_at(epk) на контракте Multifactor и сравнивает
- * с текущим временем блокчейна (block.timestamp).
- *
- * @throws {Error} с errorCode=502 и needsReconnect=true если фактор протух
- */
-export async function checkFactorBeforeSend(
-  conn: WalletConnection,
-  signerPubKey: string,
-): Promise<void> {
-  const sdk = await getSdk();
-  const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
-
-  try {
-    // get_epk_expire_at(epk) — геттер контракта Multifactor
-    // Возвращает unix timestamp (сек) когда фактор протухает
-    let epkExpireAt: string | undefined;
-    try {
-      epkExpireAt = await wallet.get_epk_expire_at({
-        multifactor_address: conn.walletAddress,
-        epk: signerPubKey,
-      });
-    } catch (getterError) {
-      // Если геттер упал — это не обязательно проблема фактора,
-      // возможно сеть недоступна. Пропускаем проверку и даём шанс
-      // основной транзакции.
-      console.warn('[paymentService] get_epk_expire_at failed, skipping factor check:', getterError);
-      return;
-    }
-
-    const expireTs = parseInt(epkExpireAt ?? '', 10);
-
-    // 0 или NaN — фактор не зарегистрирован или удалён cleanExpiredZKPFactors
-    if (!epkExpireAt || isNaN(expireTs) || expireTs === 0) {
-      const err = new Error(
-        'ZKP-фактор не зарегистрирован или был удалён. ' +
-        'Требуется повторный вход через AN Wallet (переподключите кошелёк).'
-      );
-      (err as any).errorCode = 502;
-      (err as any).needsReconnect = true;
-      throw err;
-    }
-
-    const nowSeconds = Math.floor(Date.now() / 1000);
-
-    // epk_expire_at в прошлом — сессия истекла
-    if (expireTs <= nowSeconds) {
-      const err = new Error(
-        'Срок действия ZKP-фактора истёк. ' +
-        'Требуется повторный вход через AN Wallet (переподключите кошелёк).'
-      );
-      (err as any).errorCode = 502;
-      (err as any).needsReconnect = true;
-      throw err;
-    }
-
-    // Фактор живёт меньше MIN_EPK_LIFE_TIME — контракт не примет
-    const remaining = expireTs - nowSeconds;
-    if (remaining < MIN_EPK_LIFE_TIME_SEC) {
-      const err = new Error(
-        `ZKP-фактор скоро истекает (осталось ${remaining}с, минимум ${MIN_EPK_LIFE_TIME_SEC}с). ` +
-        'Требуется повторный вход через AN Wallet.'
-      );
-      (err as any).errorCode = 502;
-      (err as any).needsReconnect = true;
-      throw err;
-    }
-
-    // Предупреждаем, если осталось меньше запаса безопасности
-    if (remaining < EPK_SAFETY_MARGIN_SEC) {
-      console.warn(
-        `[paymentService] EPK factor expires soon: ${remaining}s remaining ` +
-        `(safety margin: ${EPK_SAFETY_MARGIN_SEC}s)`,
-      );
-    }
-  } finally {
-    wallet.free();
-  }
-}
-
-/**
- * Отправить NACKL с кошелька покупателя на кошелёк разработчика.
- *
- * Перед отправкой проверяет EPK-фактор (get_epk_expire_at).
- * Если фактор протух — возвращает PaymentResult с needsReconnect=true
- * и понятным сообщением вместо технической простыни AppError.
+ * Использует EPK-ключ из zkLogin для подписи транзакции.
+ * Если ключ протух — возвращает needsReconnect=true.
  */
 export async function buyPack(
   conn: WalletConnection,
@@ -218,31 +145,16 @@ export async function buyPack(
   _packType?: string,
 ): Promise<PaymentResult> {
   try {
-    // Получаем свежие signerKeys (всегда с forceRefresh = true)
+    // ⚡ Проверяем EPK-ключ перед отправкой
     let signerKeys: { public: string; secret: string };
     try {
-      signerKeys = await getSignerKeys(conn, true);
-    } catch (keysError) {
-      console.error('[paymentService] Failed to get signer keys:', keysError);
+      signerKeys = await ensureValidEpkKey(conn.walletAddress);
+    } catch (epkError) {
+      const fe = epkError as Record<string, unknown>;
       return {
         success: false,
-        error: 'Не удалось получить ключи подписи. Проверьте подключение к AN Wallet.',
-        needsReconnect: true,
-      };
-    }
-
-    // ⚡ Проверяем EPK-фактор ДО отправки транзакции
-    const factorCheck = await checkFactorBeforeSend(conn, signerKeys.public)
-      .then(() => null as { error: string } | null)
-      .catch((err: any) => ({
-        error: err.message || 'ZKP-фактор протух',
-      }));
-
-    if (factorCheck) {
-      return {
-        success: false,
-        error: factorCheck.error,
-        errorCode: 502,
+        error: String(fe.message || 'EPK-ключ не найден. Выполните вход через Google.'),
+        errorCode: (fe.errorCode as number) || 502,
         needsReconnect: true,
       };
     }
@@ -273,15 +185,15 @@ export async function buyPack(
   } catch (e) {
     console.error('[paymentService] Payment failed:', e);
 
-    // Пробуем извлечь код ошибки из AppError
     const errorCode = parseErrorCode(e);
     const msg = e instanceof Error ? e.message : 'Unknown payment error';
 
     // 502 — ERR_FACTOR_EXPIRED (протухший ZKP-фактор)
     if (errorCode === 502 || msg.includes('502') || msg.includes('ERR_FACTOR_EXPIRED')) {
+      clearEpkKey();
       return {
         success: false,
-        error: 'Срок действия ZKP-фактора истёк. Требуется повторный вход через AN Wallet.',
+        error: 'Срок действия EPK-фактора истёк. Требуется повторный вход через Google.',
         errorCode: 502,
         needsReconnect: true,
       };
@@ -314,7 +226,6 @@ export async function buyPack(
       };
     }
 
-    // Если есть код ошибки — показываем его
     if (errorCode) {
       return {
         success: false,
