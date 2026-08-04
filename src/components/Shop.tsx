@@ -15,12 +15,16 @@ interface Props {
   onBack: () => void;
   starterPackClaimed: boolean;
   onClaimStarterPack: () => void;
+  onReconnectWallet?: () => void;
 }
 
-// ═══ DEV MODE: если VITE_PAYMENT_MODE не задан или = 'dev',
-// блокчейн-платежи пропускаются, паки выдаются бесплатно.
-// Временное решение, пока AN Wallet не добавят token_transfer_request.
-const IS_DEV_PAYMENT = !import.meta.env.VITE_PAYMENT_MODE || import.meta.env.VITE_PAYMENT_MODE === 'dev';
+
+
+// ═══ PAYMENT MODE:
+// 'dev' = бесплатные паки (без блокчейна)
+// 'live' = реальные NACKL транзакции
+// Если не задан — безопасный режим (dev)
+const IS_DEV_PAYMENT = import.meta.env.VITE_PAYMENT_MODE !== 'live';
 
 const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; text: string; gradient: string }> = {
   common: { border: 'border-gray-400', bg: 'bg-gray-500/10', glow: '', text: 'text-gray-300', gradient: 'from-gray-600 to-gray-800' },
@@ -39,7 +43,7 @@ const packVisuals: Record<string, { gradient: string; icon: string }> = {
   advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: '💎' },
 };
 
-export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack }: Props) {
+export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack, onReconnectWallet }: Props) {
   const { t, lang } = useI18n();
   const { impactOccurred } = useHaptic();
   const [phase, setPhase] = useState<Phase>('shop');
@@ -47,6 +51,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [revealIndex, setRevealIndex] = useState(-1);
   const [buyingPackId, setBuyingPackId] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [needsReconnect, setNeedsReconnect] = useState(false);
 
   useEffect(() => {
     if (phase !== 'opening' || openedCards.length === 0) return;
@@ -89,6 +94,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     impactOccurred('medium');
     setBuyingPackId(packId);
     setPaymentError(null);
+    setNeedsReconnect(false);
 
     // Starter pack is free — skip blockchain payment
     if (packId === 'starter') {
@@ -116,7 +122,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
           setBuyingPackId(null);
           return;
         } else {
-          setPaymentError(result.error || t('shop.paymentError'));
+          // ⚡ Если фактор протух — показываем кнопку переподключения
+          if (result.needsReconnect) {
+            setNeedsReconnect(true);
+            setPaymentError(result.error || t('shop.factorExpired'));
+          } else {
+            setPaymentError(result.error || t('shop.paymentError'));
+          }
           setBuyingPackId(null);
           return;
         }
@@ -353,8 +365,16 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       {/* Payment error */}
       {paymentError && (
         <div className="px-4 mb-3">
-          <div className="px-3 py-2 rounded-lg text-xs text-center" style={{ background: 'rgba(255,60,60,0.1)', border: '1px solid rgba(255,60,60,0.2)' }}>
-            <span className="text-red-400">{paymentError}</span>
+          <div className="px-3 py-2 rounded-lg text-xs text-center" style={{ background: needsReconnect ? 'rgba(255,180,0,0.08)' : 'rgba(255,60,60,0.1)', border: needsReconnect ? '1px solid rgba(255,180,0,0.2)' : '1px solid rgba(255,60,60,0.2)' }}>
+            <span className={needsReconnect ? 'text-yellow-400' : 'text-red-400'}>{paymentError}</span>
+            {needsReconnect && onReconnectWallet && (
+              <button
+                onClick={() => { setNeedsReconnect(false); setPaymentError(null); onReconnectWallet?.(); }}
+                className="block mx-auto mt-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-yellow-600 to-orange-600 text-white active:scale-95 transition-all"
+              >
+                {t('shop.reconnectWallet')} 🔄
+              </button>
+            )}
           </div>
         </div>
       )}

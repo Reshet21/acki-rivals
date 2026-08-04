@@ -115,6 +115,10 @@ declare module '@teamgosh/bee-sdk' {
     get_multifactor_balances(config: {
       multifactor_address: string;
     }): Promise<{ ecc: Record<string, string> }>;
+    get_epk_expire_at(config: {
+      multifactor_address: string;
+      epk: string;
+    }): Promise<string>;
     free(): void;
   }
 }

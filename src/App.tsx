@@ -415,6 +415,10 @@ function AppInner() {
             onBack={() => setScreen('menu')}
             starterPackClaimed={starterPackClaimed}
             onClaimStarterPack={handleClaimStarterPack}
+            onReconnectWallet={() => {
+              // Переходим на экран кошелька для переподключения
+              setScreen('wallet');
+            }}
           />
         </div>
       )}

@@ -528,6 +528,9 @@ const translations: Record<string, Record<string, string>> = {
     'marketplace.pricePlaceholder': 'Цена в NACKL',
     // Shop
     'shop.devModeWarning': '⚡ DEV MODE: Блокчейн-платёж недоступен. Паки выданы бесплатно.',
+    'shop.factorExpired': '🔑 Срок действия ZKP-фактора истёк. Требуется повторный вход через AN Wallet.',
+    'shop.reconnectWallet': '🔄 Переподключить кошелёк',
+    'shop.needReconnect': 'Сессия кошелька истекла. Нажмите «Переподключить кошелёк» и войдите заново.',
     // PvpLobby
     'pvp.connecting': 'Подключение...',
     // PvpBattleScreen
@@ -1058,6 +1061,9 @@ const translations: Record<string, Record<string, string>> = {
     'marketplace.pricePlaceholder': 'Price in NACKL',
     // Shop
     'shop.devModeWarning': '⚡ DEV MODE: Blockchain payment unavailable. Packs issued for free.',
+    'shop.factorExpired': '🔑 ZKP factor expired. Reconnect AN Wallet required.',
+    'shop.reconnectWallet': '🔄 Reconnect wallet',
+    'shop.needReconnect': 'Wallet session expired. Tap "Reconnect wallet" and login again.',
     // PvpLobby
     'pvp.connecting': 'Connecting...',
     // PvpBattleScreen
