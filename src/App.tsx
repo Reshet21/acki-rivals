@@ -24,7 +24,7 @@ import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import type { Game } from './services/pvpService';
 import { updatePlayerStats } from './services/pvpService';
-import { getStoredEpkKey, zkLoginFullFlow, handleOAuthRedirect } from './services/zkLoginService';
+import { getStoredEpkKey, zkLoginFullFlow } from './services/zkLoginService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
@@ -85,11 +85,6 @@ function AppInner() {
     return localStorage.getItem('acki-starter-claimed') === 'true';
   });
   const [hasEpkKey, setHasEpkKey] = useState<boolean>(() => getStoredEpkKey() !== null);
-
-  // Handle OAuth redirect (popup callback)
-  useEffect(() => {
-    handleOAuthRedirect();
-  }, []);
 
   // Refresh EPK state
   useEffect(() => {

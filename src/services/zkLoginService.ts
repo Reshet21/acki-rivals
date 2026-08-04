@@ -16,8 +16,10 @@
 import { ENDPOINTS, API_URL, APP_ID } from './beeEngine';
 
 // Константы приложения (добыты из официального приложения Acki Nacki)
+// ⚠️ НЕ используем redirect_uri мобильного приложения Энтропии —
+// он открывает нативные приложения вместо веб-входа.
+// Вместо этого — Google Identity Services (GIS) с popup-входом.
 const CLIENT_ID = '222414061721-4tu2gsfms6rvagqvt4mp0mjmbom6flbl.apps.googleusercontent.com';
-const REDIRECT_URI = 'com.googleusercontent.apps.222414061721-4tu2gsfms6rvagqvt4mp0mjmbom6flbl:/oauth2redirect';
 const PROVER_URL = 'https://proover.ackinacki.org/v1';
 
 // Ключ для хранения EPK в localStorage
@@ -75,10 +77,11 @@ export function clearEpkKey(): void {
 }
 
 /**
- * Открыть Google OAuth в новом окне и получить id_token.
+ * Войти через Google с помощью Google Identity Services (GIS).
  *
- * Использует popup вместо редиректа, чтобы не терять состояние dApp.
- * После успешного входа id_token будет отправлен обратно через postMessage.
+ * GIS открывает popup/iframe на accounts.google.com и возвращает id_token
+ * напрямую через callback — БЕЗ redirect_uri. Это работает в любом браузере
+ * (мобильном и десктопном) и НЕ открывает нативные приложения.
  *
  * @returns {Promise<{ idToken: string; sub: string; aud: string; kid: string }>}
  */
@@ -88,150 +91,95 @@ export async function loginWithGoogle(): Promise<{
   aud: string;
   kid: string;
 }> {
-  // Генерируем code_verifier и code_challenge для PKCE
-  const codeVerifier = generateCodeVerifier();
-
-  // Сохраняем verifier для обмена code → token
-  sessionStorage.setItem('zklogin_code_verifier', codeVerifier);
-
-  // Строим URL Google OAuth
-  const state = crypto.randomUUID();
-  sessionStorage.setItem('zklogin_oauth_state', state);
-
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: REDIRECT_URI,
-    response_type: 'code',
-    scope: 'openid',
-    state,
-    code_challenge: codeChallenge,
-    code_challenge_method: 'S256',
-  });
-
-  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+  // Загружаем GIS SDK (если ещё не загружен)
+  await loadGisScript();
 
   return new Promise((resolve, reject) => {
-    // Открываем popup
-    const popup = window.open(
-      oauthUrl,
-      'google-login',
-      'width=600,height=700,popup=yes',
-    );
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Время ожидания входа через Google истекло (5 мин).'));
+    }, 5 * 60 * 1000);
 
-    if (!popup) {
-      reject(new Error('Pop-up заблокирован. Разрешите всплывающие окна для этого сайта.'));
+    const gis = (window as any).google?.accounts?.id;
+    if (!gis) {
+      clearTimeout(timeoutId);
+      reject(new Error('Google Identity Services не загрузился. Проверьте интернет.'));
       return;
     }
 
-    // Слушаем сообщение от popup (через redirect_uri)
-    const handleMessage = async (event: MessageEvent) => {
-      // Проверяем origin (redirect_uri)
-      if (event.origin !== window.location.origin) return;
-
-      const { type, code, error, state: returnedState } = event.data || {};
-
-      if (type === 'zklogin_oauth_code') {
-        window.removeEventListener('message', handleMessage);
-
-        if (error) {
-          reject(new Error(`Google OAuth error: ${error}`));
+    const callback = (response: any) => {
+      clearTimeout(timeoutId);
+      try {
+        if (response?.error) {
+          reject(new Error(`Google sign-in error: ${response.error}`));
           return;
         }
-
-        if (returnedState !== sessionStorage.getItem('zklogin_oauth_state')) {
-          reject(new Error('State mismatch — возможна CSRF-атака'));
+        const idToken: string = response?.credential;
+        if (!idToken) {
+          reject(new Error('Google не вернул id_token.'));
           return;
         }
-
-        // Обмениваем code на id_token
-        exchangeCodeForToken(code).then(resolve).catch(reject);
+        const payload = decodeJwtPayload(idToken);
+        const kid = decodeJwtHeader(idToken).kid;
+        resolve({
+          idToken,
+          sub: payload.sub,
+          aud: payload.aud,
+          kid,
+        });
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error('Не удалось обработать ответ Google.'));
       }
     };
 
-    window.addEventListener('message', handleMessage);
-
-    // Таймаут на 5 минут
-    setTimeout(() => {
-      window.removeEventListener('message', handleMessage);
-      popup.close();
-      reject(new Error('Время ожидания входа через Google истекло (5 мин).'));
-    }, 5 * 60 * 1000);
-  });
-}
-
-/**
- * Обменять authorization code на id_token.
- */
-async function exchangeCodeForToken(code: string): Promise<{
-  idToken: string;
-  sub: string;
-  aud: string;
-  kid: string;
-}> {
-  const savedVerifier = sessionStorage.getItem('zklogin_code_verifier');
-  if (!savedVerifier) {
-    throw new Error('Code verifier not found');
-  }
-
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
+    gis.initialize({
       client_id: CLIENT_ID,
-      redirect_uri: REDIRECT_URI,
-      grant_type: 'authorization_code',
-      code_verifier: savedVerifier,
-    }),
+      callback,
+      auto_select: false,
+      ux_mode: 'popup',
+    });
+
+    gis.prompt();
   });
-
-  if (!tokenResponse.ok) {
-    const errText = await tokenResponse.text();
-    throw new Error(`Token exchange failed: ${errText}`);
-  }
-
-  const tokenData = await tokenResponse.json();
-  const idToken: string = tokenData.id_token;
-
-  // Декодируем JWT (без проверки подписи — только читаем поля)
-  const jwtPayload = decodeJwtPayload(idToken);
-  const kid = decodeJwtHeader(idToken).kid;
-
-  return {
-    idToken,
-    sub: jwtPayload.sub,
-    aud: jwtPayload.aud,
-    kid,
-  };
 }
 
 /**
- * Создать popup-обработчик для редиректа OAuth.
- * Вызывается из App.tsx или WalletPanel.tsx при монтировании.
- * Если в URL есть code от Google — обрабатываем его.
+ * Динамически загрузить Google Identity Services SDK.
  */
-export function handleOAuthRedirect(): void {
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  const state = urlParams.get('state');
-  const error = urlParams.get('error');
-
-  if (code || error) {
-    // Очищаем URL от параметров
-    window.history.replaceState({}, '', window.location.pathname);
-
-    // Отправляем код обратно в открывшее окно
-    if (window.opener) {
-      window.opener.postMessage(
-        { type: 'zklogin_oauth_code', code, error, state },
-        window.location.origin,
-      );
-      window.close();
+function loadGisScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if ((window as any).google?.accounts?.id) {
+      resolve();
+      return;
     }
-  }
+
+    // Избегаем дубликатов
+    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+      // Ждём загрузку
+      const check = () => {
+        if ((window as any).google?.accounts?.id) {
+          resolve();
+        } else {
+          setTimeout(check, 100);
+        }
+      };
+      check();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Не удалось загрузить Google Identity Services.'));
+    document.head.appendChild(script);
+  });
 }
+
+/**
+ * Удалено: старый popup-флоу с redirect_uri Энтропии больше не нужен.
+ * GIS возвращает id_token через callback без редиректов.
+ */
 
 /**
  * Полный флоу zkLogin: вход через Google → регистрация EPK → возврат ключей.
@@ -338,34 +286,6 @@ async function getSdk(): Promise<any> {
 
   await sdkInitPromise;
   return sdkModule;
-}
-
-/**
- * Сгенерировать PKCE code_verifier.
- */
-function generateCodeVerifier(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return base64urlEncode(array);
-}
-
-/**
- * Сгенерировать PKCE code_challenge (S256).
- */
-function generateCodeChallenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  return crypto.subtle.digest('SHA-256', data).then((hash) => {
-    const array = new Uint8Array(hash);
-    return base64urlEncode(array);
-  });
-}
-
-function base64urlEncode(buffer: Uint8Array): string {
-  return btoa(String.fromCharCode(...buffer))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
 }
 
 /**
