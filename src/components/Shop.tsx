@@ -21,7 +21,7 @@ interface Props {
   starterPackClaimed: boolean;
   onClaimStarterPack: () => void;
   onReconnectWallet?: () => void;
-  onZkLogin?: () => void;
+  onZkLogin?: (provider: 'google' | 'telegram') => void;
   hasEpkKey?: boolean;
 }
 
@@ -422,12 +422,20 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
             {needsReconnect && (
               <div className="flex flex-col gap-2 mt-2">
                 {onZkLogin && !hasEpkKey && (
-                  <button
-                    onClick={() => { setNeedsReconnect(false); setPaymentError(null); onZkLogin?.(); }}
-                    className="px-4 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-white active:scale-95 transition-all animate-pulse-glow"
-                  >
-                    🔑 {t('shop.zkLoginButton')}
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => { setNeedsReconnect(false); setPaymentError(null); onZkLogin?.('google'); }}
+                      className="px-4 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-white active:scale-95 transition-all animate-pulse-glow"
+                    >
+                      🔑 {t('shop.zkLoginButton')}
+                    </button>
+                    <button
+                      onClick={() => { setNeedsReconnect(false); setPaymentError(null); onZkLogin?.('telegram'); }}
+                      className="px-4 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-sky-500 to-cyan-600 text-white active:scale-95 transition-all"
+                    >
+                      ✈️ {t('shop.zkLoginTelegramButton')}
+                    </button>
+                  </div>
                 )}
                 {onReconnectWallet && (
                   <button

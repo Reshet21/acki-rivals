@@ -72,7 +72,7 @@ async function ensureValidEpkKey(
 
   if (!epk) {
     throw Object.assign(
-      new Error('Нет зарегистрированного EPK-фактора. Выполните вход через Google (zkLogin).'),
+      new Error('Нет зарегистрированного EPK-фактора. Выполните вход через Google или Telegram (zkLogin).'),
       { errorCode: 502, needsReconnect: true },
     );
   }
@@ -83,7 +83,7 @@ async function ensureValidEpkKey(
     // Фактор протух — удаляем и требуем новый вход
     clearEpkKey();
     throw Object.assign(
-      new Error('EPK-фактор протух или не зарегистрирован. Выполните повторный вход через Google.'),
+      new Error('EPK-фактор протух или не зарегистрирован. Выполните повторный вход через Google или Telegram (zkLogin).'),
       { errorCode: 502, needsReconnect: true },
     );
   }

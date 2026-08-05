@@ -28,10 +28,10 @@ const CLIENT_ID = '222414061721-4tu2gsfms6rvagqvt4mp0mjmbom6flbl.apps.googleuser
 const PROVER_URL = 'https://proover.ackinacki.org/v1';
 
 // ── Telegram zkLogin (oauth.gosh.sh) — Фаза 2 ──
-// ⚠️ TODO: client_id выдаст @EugeneDAO при регистрации приложения.
-// Без него вход через Telegram выбросит ошибку (см. loginWithTelegram).
+// client_id выдаёт @EugeneDAO при регистрации приложения.
+// Задайте в .env: VITE_TELEGRAM_OAUTH_CLIENT_ID=...
 const TELEGRAM_OAUTH_URL = 'https://oauth.gosh.sh';
-const TELEGRAM_CLIENT_ID = '';
+const TELEGRAM_CLIENT_ID = import.meta.env.VITE_TELEGRAM_OAUTH_CLIENT_ID || '';
 
 // JWKS-эндпоинты провайдеров для получения modulus JWK по kid.
 // Для Telegram: TODO — уточнить у @EugeneDAO (скорее всего <oauth-хост>/jwks).
@@ -277,17 +277,19 @@ function loadGisScript(): Promise<void> {
  */
 
 /**
- * Полный флоу zkLogin: вход через Google → регистрация EPK → возврат ключей.
+ * Полный флоу zkLogin: вход через OAuth (Google/Telegram) → регистрация EPK → возврат ключей.
  *
  * @param walletName — имя кошелька (например, "v_o_g_e_l")
+ * @param provider — zkLogin-провайдер (по умолчанию Google)
  * @param password — пароль-соль кошелька (если не указан — генерируется)
  * @returns EPK-ключи для подписи транзакций
  */
 export async function zkLoginFullFlow(
   walletName: string,
+  provider: OAuthProvider = 'google',
   password?: string,
 ): Promise<EpkKeyPair> {
-  console.log('[zkLogin] Starting full zkLogin flow for wallet:', walletName);
+  console.log('[zkLogin] Starting full zkLogin flow for wallet:', walletName, 'provider:', provider);
 
   // 1. Загружаем SDK
   const sdk = await getSdk();
@@ -306,18 +308,18 @@ export async function zkLoginFullFlow(
     // Сохраняем nonce для OAuth
     sessionStorage.setItem('zklogin_nonce', prepareResult.nonce);
 
-    // 3. Вход через Google
-    console.log('[zkLogin] Step 2: Google OAuth login');
-    const googleResult = await loginWithGoogle();
+    // 3. Вход через OAuth-провайдера
+    console.log('[zkLogin] Step 2: OAuth login (' + provider + ')');
+    const oauthResult = await loginWithOAuth(provider, prepareResult.nonce);
 
     // 4. complete_zk_login_with_prover_v1
     console.log('[zkLogin] Step 3: complete_zk_login_with_prover_v1');
     const userPassword = password || generatePassword();
     const completeResult = await wallet.complete_zk_login_with_prover_v1({
       savedData,
-      jwt: googleResult.idToken,
-      jwtSub: googleResult.sub,
-      jwtAud: googleResult.aud,
+      jwt: oauthResult.idToken,
+      jwtSub: oauthResult.sub,
+      jwtAud: oauthResult.aud,
       userPassword,
       proverUrl: PROVER_URL,
     });
@@ -335,8 +337,8 @@ export async function zkLoginFullFlow(
       header_base_64: completeResult.header_base64,
       epk_expire_at: epkExpireAt,
       jwk_expires_at: jwkExpiresAt,
-      kid: googleResult.kid,
-      sub: googleResult.sub,
+      kid: oauthResult.kid,
+      sub: oauthResult.sub,
       password: userPassword,
       zkid: completeResult.zkid,
     });

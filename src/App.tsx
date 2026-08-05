@@ -24,7 +24,7 @@ import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import type { Game } from './services/pvpService';
 import { updatePlayerStats } from './services/pvpService';
-import { getStoredEpkKey, zkLoginFullFlow } from './services/zkLoginService';
+import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
@@ -91,18 +91,18 @@ function AppInner() {
     setHasEpkKey(getStoredEpkKey() !== null);
   }, [walletConnection]);
 
-  const handleZkLogin = useCallback(async () => {
+  const handleZkLogin = useCallback(async (provider: OAuthProvider = 'google') => {
     if (!walletConnection) {
       setScreen('wallet');
       return;
     }
     try {
-      const epk = await zkLoginFullFlow(walletConnection.walletName);
+      const epk = await zkLoginFullFlow(walletConnection.walletName, provider);
       setHasEpkKey(true);
       console.log('[App] zkLogin completed, EPK key for', epk.walletAddress);
     } catch (e) {
       console.error('[App] zkLogin failed:', e);
-      alert('Ошибка входа через Google: ' + (e instanceof Error ? e.message : 'Неизвестная ошибка'));
+      alert(`Ошибка входа (${provider}): ` + (e instanceof Error ? e.message : 'Неизвестная ошибка'));
     }
   }, [walletConnection]);
 

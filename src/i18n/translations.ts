@@ -532,6 +532,7 @@ const translations: Record<string, Record<string, string>> = {
     'shop.reconnectWallet': '🔄 Переподключить кошелёк',
     'shop.needReconnect': 'Сессия кошелька истекла. Нажмите «Войти через Google» и авторизуйтесь.',
     'shop.zkLoginButton': '🔑 Войти через Google (zkLogin)',
+    'shop.zkLoginTelegramButton': '✈️ Войти через Telegram (zkLogin)',
     'shop.noEpkKey': '🔑 Нужен вход через Google для оплаты',
     // PvpLobby
     'pvp.connecting': 'Подключение...',
@@ -1067,6 +1068,7 @@ const translations: Record<string, Record<string, string>> = {
     'shop.reconnectWallet': '🔄 Reconnect wallet',
     'shop.needReconnect': 'Wallet session expired. Tap "Login with Google" and authorize.',
     'shop.zkLoginButton': '🔑 Login with Google (zkLogin)',
+    'shop.zkLoginTelegramButton': '✈️ Login with Telegram (zkLogin)',
     'shop.noEpkKey': '🔑 Need Google login for payment',
     // PvpLobby
     'pvp.connecting': 'Connecting...',
