@@ -56,10 +56,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // ── 1. Найти платёж: сначала от игрового адреса, затем с любого кошелька ──
-    const amountNano = BigInt(nano(price));
-    const payment =
-      (await findPayment(player, amountNano, TREASURY_ADDR)) ||
-      (await findAnyPayment(amountNano, TREASURY_ADDR));
+    let payment: Awaited<ReturnType<typeof findPayment>> = null;
+    try {
+      const amountNano = BigInt(nano(price));
+      payment =
+        (await findPayment(player, amountNano, TREASURY_ADDR)) ||
+        (await findAnyPayment(amountNano, TREASURY_ADDR));
+    } catch (e) {
+      // сеть/GraphQL нестабильны (майнет отдаёт HTML/502) — клиент продолжит опрос
+      console.error('[shop/buy] GraphQL error:', e);
+      return res.status(202).json({ error: 'Сеть блокчейна временно недоступна, пробуем ещё раз', retryAfterMs: 5000 });
+    }
     if (!payment) {
       return res.status(202).json({ error: 'Платёж не найден или ещё не подтверждён', retryAfterMs: 5000 });
     }

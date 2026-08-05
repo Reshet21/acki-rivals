@@ -97,10 +97,10 @@ export async function requestAckr(
       if (res.status === 409) {
         return { success: false, error: json.error || 'Платёж уже обработан' };
       }
-      if (res.status === 400 || res.status === 500) {
-        return { success: false, error: json.error || 'Ошибка сервера казначейства' };
+      if (res.status === 400) {
+        return { success: false, error: json.error || 'Ошибка запроса' };
       }
-      // 202 — платёж ещё не найден на блокчейне
+      // 202 (платёж ещё не найден) и 500 (сеть блокчейна) — ждём и пробуем ещё
       retryAfterMs = json.retryAfterMs || retryAfterMs;
       await new Promise((r) => setTimeout(r, retryAfterMs));
     } catch {
@@ -141,10 +141,10 @@ export async function confirmPackPayment(
       if (res.status === 409) {
         return { success: false, error: json.error || 'Платёж уже обработан' };
       }
-      if (res.status === 400 || res.status === 500) {
-        return { success: false, error: json.error || 'Ошибка сервера' };
+      if (res.status === 400) {
+        return { success: false, error: json.error || 'Ошибка запроса' };
       }
-      // 202 — платёж ещё не найден на блокчейне
+      // 202 (платёж ещё не найден) и 500 (сеть блокчейна) — ждём и пробуем ещё
       retryAfterMs = json.retryAfterMs || retryAfterMs;
       await new Promise((r) => setTimeout(r, retryAfterMs));
     } catch {

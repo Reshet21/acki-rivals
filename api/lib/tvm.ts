@@ -114,17 +114,36 @@ export async function sendMessage(opts: {
   return { status: res.status, json };
 }
 
-export async function graphql(query: string): Promise<Record<string, unknown>> {
-  const res = await fetch(`${NETWORK}/graphql`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query }),
-  });
-  const json = (await res.json()) as Record<string, unknown>;
-  if (json.errors) {
-    throw new Error(`GraphQL error: ${JSON.stringify(json.errors).slice(0, 300)}`);
+export async function graphql(query: string, retries = 3): Promise<Record<string, unknown>> {
+  let lastErr: Error | null = null;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const res = await fetch(`${NETWORK}/graphql`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // майнет отдаёт HTML (403/502) запросам без User-Agent
+          'User-Agent': 'acki-rivals',
+        },
+        body: JSON.stringify({ query }),
+      });
+      const text = await res.text();
+      let json: Record<string, unknown>;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`GraphQL non-JSON response (HTTP ${res.status}): ${text.slice(0, 120)}`);
+      }
+      if (json.errors) {
+        throw new Error(`GraphQL error: ${JSON.stringify(json.errors).slice(0, 300)}`);
+      }
+      return json;
+    } catch (e) {
+      lastErr = e instanceof Error ? e : new Error(String(e));
+      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+    }
   }
-  return json;
+  throw lastErr || new Error('GraphQL request failed');
 }
 
 export { NETWORK, closeClient };
