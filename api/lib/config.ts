@@ -2,18 +2,11 @@
  * config.ts — адреса и параметры казначейства (Shellnet).
  * Все значения можно переопределить env-переменными на Vercel.
  */
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import rootAbi from './abi/RootToken.abi.json';
+import msigAbi from './abi/UpdateCustodianMultisigWallet.abi.json';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export function loadAbi(name: string): object {
-  return JSON.parse(readFileSync(path.join(__dirname, 'abi', name), 'utf8'));
-}
-
-export const ROOT_TOKEN_ABI = loadAbi('RootToken.abi.json');
-export const MSIG_ABI = loadAbi('UpdateCustodianMultisigWallet.abi.json');
+export const ROOT_TOKEN_ABI = rootAbi;
+export const MSIG_ABI = msigAbi;
 // TokenWallet ABI (deployTransaction/acceptTransaction) — временно лежит
 // только в /root/token-deploy; для сервера ABI кошелька зашит ниже по сигнатурам.
 export const TOKEN_WALLET_ABI = {
