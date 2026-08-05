@@ -7,8 +7,8 @@
  * NOTE: shellnet GraphQL ломается на selection-set из 3+ полей без alias
  * ("expected selection"), поэтому все поля псевдонимированы.
  */
-import { graphql } from './tvm';
-import { NACKL_ECC_INDEX } from './config';
+import { graphql } from './tvm.js';
+import { NACKL_ECC_INDEX } from './config.js';
 
 const FRESH_MS = 10 * 60 * 1000;
 

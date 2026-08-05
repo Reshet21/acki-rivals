@@ -3,10 +3,15 @@
  *
  * Полный флоу zkLogin для браузера:
  * 1. prepare_zk_login_v1() → nonce + эфемерный ключ
- * 2. Google OAuth (редирект) → id_token
+ * 2. OAuth (Google GIS / Telegram oauth.gosh.sh) → id_token
  * 3. complete_zk_login_with_prover_v1() → Groth16-доказательство
- * 4. add_zkp_factor() → регистрация EPK на контракте Multifactor
+ * 4. deploy_wallet() → создание собственного кошелька dApp (Multifactor)
+ *    или add_zkp_factor() → регистрация EPK на существующем AN Wallet
  * 5. Использование EPK-keypair для send_tokens_direct
+ *
+ * ⚠️ deploy_wallet — рабочий путь для платежей игры:
+ * add_zkp_factor на чужой AN Wallet падает с 502 ERR_FACTOR_EXPIRED
+ * (нет salt кошелька пользователя). Свой кошелёк решает проблему.
  *
  * Основано на документации интеграции zkLogin для Acki Nacki.
  *
@@ -21,6 +26,29 @@ import { ENDPOINTS, API_URL, APP_ID } from './beeEngine';
 // Вместо этого — Google Identity Services (GIS) с popup-входом.
 const CLIENT_ID = '222414061721-4tu2gsfms6rvagqvt4mp0mjmbom6flbl.apps.googleusercontent.com';
 const PROVER_URL = 'https://proover.ackinacki.org/v1';
+
+// ── Telegram zkLogin (oauth.gosh.sh) — Фаза 2 ──
+// ⚠️ TODO: client_id выдаст @EugeneDAO при регистрации приложения.
+// Без него вход через Telegram выбросит ошибку (см. loginWithTelegram).
+const TELEGRAM_OAUTH_URL = 'https://oauth.gosh.sh';
+const TELEGRAM_CLIENT_ID = '';
+
+// JWKS-эндпоинты провайдеров для получения modulus JWK по kid.
+// Для Telegram: TODO — уточнить у @EugeneDAO (скорее всего <oauth-хост>/jwks).
+const JWKS_URLS: Record<string, string> = {
+  'https://accounts.google.com': 'https://www.googleapis.com/oauth2/v3/certs',
+  'https://oauth.gosh.sh': `${TELEGRAM_OAUTH_URL}/jwks`,
+};
+
+export type OAuthProvider = 'google' | 'telegram';
+
+export interface OAuthIdToken {
+  idToken: string;
+  sub: string;
+  aud: string;
+  kid: string;
+  iss: string;
+}
 
 // Ключ для хранения EPK в localStorage
 const EPK_STORAGE_KEY = 'acki-rivals-epk-key';
@@ -140,6 +168,73 @@ export async function loginWithGoogle(): Promise<{
 
     gis.prompt();
   });
+}
+
+/**
+ * Войти через Telegram через официальный OAuth-прокси oauth.gosh.sh.
+ *
+ * Флоу: редирект на authorize → Telegram confirm → редирект обратно с id_token.
+ * ⚠️ TODO: точный формат authorize-URL и параметры уточнить у @EugeneDAO
+ * (client_id, redirect_uri, scope). Пока структура — стандартный OIDC.
+ *
+ * @param nonce — из prepare_zk_login_v1() (bind эфемерного ключа к JWT)
+ */
+export async function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
+  if (!TELEGRAM_CLIENT_ID) {
+    throw new Error(
+      'Telegram OAuth client_id ещё не настроен: получите его у @EugeneDAO (app_dapp_id) и укажите TELEGRAM_CLIENT_ID в zkLoginService.ts',
+    );
+  }
+
+  // Если мы только что вернулись с редиректа — id_token лежит в URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const idTokenFromUrl = urlParams.get('id_token') || urlHash.get('id_token');
+  if (idTokenFromUrl) {
+    const payload = decodeJwtPayload(idTokenFromUrl);
+    const kid = decodeJwtHeader(idTokenFromUrl).kid;
+    // TODO: уточнить issuer (iss) у @EugeneDAO
+    const iss = payload.iss ?? 'https://oauth.gosh.sh';
+    return {
+      idToken: idTokenFromUrl,
+      sub: payload.sub,
+      aud: payload.aud,
+      kid,
+      iss,
+    };
+  }
+
+  // TODO: точный путь/параметры authorize у oauth.gosh.sh
+  const redirectUri = window.location.origin + window.location.pathname;
+  const authorizeUrl =
+    `${TELEGRAM_OAUTH_URL}/authorize` +
+    `?client_id=${encodeURIComponent(TELEGRAM_CLIENT_ID)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=id_token` +
+    `&scope=${encodeURIComponent('openid')}` +
+    `&nonce=${encodeURIComponent(nonce)}`;
+
+  window.location.assign(authorizeUrl);
+
+  // Не достижимо: браузер уходит на authorize. Ждём возврата с id_token.
+  throw new Error('Ожидание редиректа oauth.gosh.sh...');
+}
+
+/**
+ * Единая точка входа OAuth для zkLogin.
+ */
+export async function loginWithOAuth(
+  provider: OAuthProvider,
+  nonce: string,
+): Promise<OAuthIdToken> {
+  if (provider === 'telegram') {
+    return loginWithTelegram(nonce);
+  }
+  const google = await loginWithGoogle();
+  return {
+    ...google,
+    iss: 'https://accounts.google.com',
+  };
 }
 
 /**
@@ -266,6 +361,127 @@ export async function zkLoginFullFlow(
 }
 
 // ─── Helpers ───
+
+/**
+ * Получить JWK modulus (n) провайдера по kid из его JWKS.
+ * jwk_modulus_expire_at — срок действия JWK (у Google в certs нет exp,
+ * берём запас от EPK-экспирации).
+ */
+async function fetchJwkModulus(
+  issuer: string,
+  kid: string,
+  epkExpireAt: number,
+): Promise<{ jwkModulus: string; jwkModulusExpireAt: number }> {
+  const jwksUrl = JWKS_URLS[issuer];
+  if (!jwksUrl) {
+    throw new Error(`Нет JWKS-эндпоинта для провайдера ${issuer} — уточнить у @EugeneDAO`);
+  }
+  const res = await fetch(jwksUrl);
+  if (!res.ok) {
+    throw new Error(`JWKS недоступен: ${jwksUrl} → ${res.status}`);
+  }
+  const jwks = (await res.json()) as { keys: Array<{ kid: string; n: string }> };
+  const key = jwks.keys.find((k) => k.kid === kid);
+  if (!key?.n) {
+    throw new Error(`JWK с kid=${kid} не найден в ${jwksUrl}`);
+  }
+  return {
+    jwkModulus: key.n,
+    // +24h запас, как в существующем флоу (jwk_expires_at)
+    jwkModulusExpireAt: epkExpireAt + 86400,
+  };
+}
+
+/**
+ * Полный флоу создания СОБСТВЕННОГО кошелька dApp: Telegram → deploy_wallet.
+ *
+ * Отличие от zkLoginFullFlow: вместо add_zkp_factor на существующий AN Wallet
+ * разворачивается новый Multifactor-контракт (deploy_wallet), который
+ * принадлежит приложению. Это решает 502 ERR_FACTOR_EXPIRED.
+ *
+ * @param walletName — имя кошелька (пользователь видит его в AN Wallet)
+ * @param provider — zkLogin-провайдер (по умолчанию Telegram)
+ * @param password — пароль-соль (если не указан — генерируется и сохраняется)
+ * @returns EPK-ключи + адрес нового кошелька
+ */
+export async function deployWalletFlow(
+  walletName: string,
+  provider: OAuthProvider = 'telegram',
+  password?: string,
+): Promise<EpkKeyPair> {
+  console.log('[zkLogin] deploy_wallet flow, provider:', provider, 'name:', walletName);
+
+  const sdk = await getSdk();
+  const wallet = new sdk.Wallet(ENDPOINTS, null, API_URL, APP_ID);
+
+  try {
+    // 1. prepare_zk_login_v1 — nonce + эфемерный ключ
+    const prepareResult = wallet.prepare_zk_login_v1();
+    const savedData = {
+      maxEpoch: Number(prepareResult.max_epoch),
+      randomness: prepareResult.randomness,
+      ephemeralPrivateKey: prepareResult.ephemeral_private_key,
+    };
+
+    // 2. OAuth-вход (Telegram oauth.gosh.sh / Google GIS)
+    const oauth = await loginWithOAuth(provider, prepareResult.nonce);
+
+    // 3. complete_zk_login_with_prover_v1 — Groth16-доказательство
+    const userPassword = password || generatePassword();
+    const completeResult = await wallet.complete_zk_login_with_prover_v1({
+      savedData,
+      jwt: oauth.idToken,
+      jwtSub: oauth.sub,
+      jwtAud: oauth.aud,
+      userPassword,
+      proverUrl: PROVER_URL,
+    });
+
+    // 4. JWK modulus провайдера (нужен deploy_wallet)
+    const epkExpireAt = Number(completeResult.max_epoch);
+    const { jwkModulus, jwkModulusExpireAt } = await fetchJwkModulus(
+      oauth.iss,
+      oauth.kid,
+      epkExpireAt,
+    );
+
+    // 5. deploy_wallet — создаём свой Multifactor-кошелёк
+    console.log('[zkLogin] deploy_wallet...');
+    const deployResult = await wallet.deploy_wallet({
+      wallet_name: walletName,
+      zkid: completeResult.zkid,
+      password: userPassword,
+      proof: completeResult.zk_proof_compressed,
+      epk: completeResult.ephemeral_public_key_in_hex,
+      esk: completeResult.ephemeral_secret_key_in_hex,
+      jwk_modulus: jwkModulus,
+      jwk_modulus_expire_at: jwkModulusExpireAt,
+      index_mod_4: completeResult.iss_base64_details.index_mod4,
+      iss_base_64: completeResult.iss_base64_details.value,
+      header_base_64: completeResult.header_base64,
+      epk_expire_at: epkExpireAt,
+      kid: oauth.kid,
+      sub: oauth.sub,
+    });
+
+    // 6. Сохраняем EPK-ключ
+    const epkKey: EpkKeyPair = {
+      public: deployResult.signing_keys.public,
+      secret: deployResult.signing_keys.secret,
+      walletName: deployResult.name,
+      walletAddress: deployResult.address,
+      expiresAt: epkExpireAt,
+      savedAt: Math.floor(Date.now() / 1000),
+    };
+
+    storeEpkKey(epkKey);
+    console.log('[zkLogin] Wallet deployed:', deployResult.address);
+
+    return epkKey;
+  } finally {
+    wallet.free();
+  }
+}
 
 let sdkModule: any = null;
 let sdkInitPromise: Promise<void> | null = null;

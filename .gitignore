@@ -3,3 +3,6 @@ dist/
 acki-rivals.zip
 *.log
 .env
+
+api/lib/eversdk-wasm-b64.ts
+dist-api/

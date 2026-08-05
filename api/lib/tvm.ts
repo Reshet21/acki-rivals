@@ -2,17 +2,16 @@
  * tvm.ts — eversdk glue for Vercel serverless (Node ESM).
  *
  * - loads @eversdk/lib-web with a precompiled WebAssembly.Module
- *   (fs.readFileSync + WebAssembly.compile — no fetch/http servers),
+ *   (embedded as base64 ESM module — see scripts/embed-wasm.mjs,
+ *   ships via npm postinstall so nft never has to trace the .wasm),
  * - provides encodeMessage / sendMessage (POST /v2/messages) / GraphQL helpers
  *   for the Acki Nacki Shellnet relay.
  *
  * Requires scripts/patch-eversdk.mjs to have run (npm postinstall).
  */
-import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { TonClient } from '@eversdk/core';
+import wasmBase64 from './eversdk-wasm-b64.js';
 
 const nodeRequire = createRequire(import.meta.url);
 (globalThis as unknown as { __tvmRequire: (n: string) => unknown }).__tvmRequire = (name: string) => nodeRequire(name);
@@ -21,21 +20,17 @@ const libWebMod = nodeRequire('@eversdk/lib-web') as {
   libWebSetup: (opts: { disableSeparateWorker?: boolean; binaryURL?: string }) => void;
 };
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WASM_FILE = path.resolve(__dirname, '../../node_modules/@eversdk/lib-web/eversdk.wasm');
 const NETWORK = process.env.TREASURY_NETWORK || 'https://shellnet.ackinacki.org';
 
 let _client: TonClient | null = null;
 
 function getClient(): TonClient {
   if (_client) return _client;
-  const wasmBinary = readFileSync(WASM_FILE);
   // NOTE: options.loadModule сломан в lib-web 1.48 (init вызывается до объявления);
   // binaryURL через data: URL работает и не требует http-сервер (Vercel-совместимо).
-  const b64 = wasmBinary.toString('base64');
   libWebMod.libWebSetup({
     disableSeparateWorker: true,
-    binaryURL: `data:application/wasm;base64,${b64}`,
+    binaryURL: `data:application/wasm;base64,${wasmBase64}`,
   });
   TonClient.useBinaryLibrary(libWebMod.libWeb as unknown as (() => Promise<import('@eversdk/core/dist/bin').BinaryLibrary>));
   _client = new TonClient({ abi: { message_expiration_timeout: 120000 } });

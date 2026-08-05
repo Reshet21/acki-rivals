@@ -10,7 +10,7 @@
     "lint": "tsc --noEmit",
     "lint:api": "tsc --noEmit -p tsconfig.api.json",
     "test": "vitest run",
-    "postinstall": "node scripts/patch-eversdk.mjs"
+    "postinstall": "node scripts/patch-eversdk.mjs && node scripts/embed-wasm.mjs"
   },
   "dependencies": {
     "@eversdk/core": "^1.48.0",

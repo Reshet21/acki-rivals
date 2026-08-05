@@ -2,8 +2,8 @@
  * config.ts — адреса и параметры казначейства (Shellnet).
  * Все значения можно переопределить env-переменными на Vercel.
  */
-import rootAbi from './abi/RootToken.abi.json';
-import msigAbi from './abi/UpdateCustodianMultisigWallet.abi.json';
+import rootAbi from './abi/root-token.abi.js';
+import msigAbi from './abi/msig.abi.js';
 
 export const ROOT_TOKEN_ABI = rootAbi;
 export const MSIG_ABI = msigAbi;

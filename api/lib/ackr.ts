@@ -10,8 +10,8 @@
  *     → списание ACKR с C, авто-деплой TIP-3 кошелька игрока
  *     (50 VMSHELL) + acceptTransfer; T самоуничтожается (flag 161)
  */
-import { TOKEN_WALLET_ABI, MSIG_ABI, OWNER_WALLET_ADDR, TREASURY_ADDR, ownerKeys, isDev } from './config';
-import { encodeMessage, sendMessage, graphql, NETWORK } from './tvm';
+import { TOKEN_WALLET_ABI, MSIG_ABI, OWNER_WALLET_ADDR, TREASURY_ADDR, ownerKeys, isDev } from './config.js';
+import { encodeMessage, sendMessage, graphql, NETWORK } from './tvm.js';
 
 export const EMPTY_CELL = 'te6ccgEBAQEAAgAAAA==';
 export const TRANSFER = 1;
