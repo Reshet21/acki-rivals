@@ -4,6 +4,7 @@ import type { Card } from '../types';
 import { useI18n } from '../i18n';
 import { getCardName, getAbilityName, getStatLabel, getRarityLabel } from '../i18n/cardTranslations';
 import CardDetailPopup from './CardDetailPopup';
+import CardArt from './CardArt';
 import { abilityInfo } from '../data/abilityVisuals';
 import { cardArt } from '../data/cardArt';
 import { useHaptic } from '../hooks/useHaptic';
@@ -111,7 +112,7 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
   const inner = (
     <>
       <div style={S.imgBox}>
-        {img ? <img src={img} alt="" style={S.img} /> : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:C?28:44,opacity:0.15}}>🃏</div>}
+        {img ? <CardArt src={img} boxRatio={C ? 3 / 4 : 2 / 3} mode={C ? 'fixed' : 'auto'} minH={C ? 120 : 200} maxH={C ? 180 : 280} /> : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:C?28:44,opacity:0.15}}>🃏</div>}
         <div style={S.grad} />
         <div style={S.gem} />
         <div style={S.badge}>{rl}</div>
@@ -162,13 +163,15 @@ export default function CardComponent({ card, isSelected, onClick, compact, hand
           <div
             onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
             className="active:scale-90 transition-all"
+            title="Инфо о карте"
             style={{
               position: 'absolute', bottom: C ? 6 : 8, right: C ? 6 : 8,
-              width: compact ? 18 : 20, height: compact ? 18 : 20, borderRadius: '50%',
-              background: 'rgba(0,0,0,0.75)', border: `1px solid ${r.bc}40`,
+              width: C ? 22 : 26, height: C ? 22 : 26, borderRadius: '50%',
+              background: 'rgba(10,8,4,0.92)',
+              border: '1.5px solid rgba(255,215,0,0.85)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: compact ? 9 : 10, color: r.bc, cursor: 'pointer', zIndex: 10,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              fontSize: C ? 11 : 13, fontWeight: 900, color: '#FFD700', cursor: 'pointer', zIndex: 10,
+              boxShadow: '0 0 12px rgba(255,215,0,0.45), 0 2px 8px rgba(0,0,0,0.5)',
             }}
           >ⓘ</div>
         )}

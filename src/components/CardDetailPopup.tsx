@@ -5,6 +5,7 @@ import { getCardName, getAbilityName, getClanName, getRarityLabel, getAbilityDes
 import { clanBonuses, comboAbilities } from '../data/cards';
 import { abilityInfo } from '../data/abilityVisuals';
 import { cardArt } from '../data/cardArt';
+import CardArt from './CardArt';
 import { useHaptic } from '../hooks/useHaptic';
 
 const rarityColor: Record<string, string> = {
@@ -78,18 +79,14 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
           ✕
         </button>
 
-        {/* Card image — compact */}
+        {/* Card image — full art, natural proportions, never cropped */}
         <div style={{
           position: 'relative', width: '100%', minHeight: 160,
-          maxHeight: 200, overflow: 'hidden', background: '#080503',
+          maxHeight: '44vh', overflow: 'hidden', background: '#080503',
           flexShrink: 0,
         }}>
           {cardArt[card.id] ? (
-            <img src={cardArt[card.id]} alt="" style={{
-              width: '100%', height: '100%', minHeight: 160,
-              objectFit: 'cover', objectPosition: 'center center',
-              display: 'block',
-            }} />
+            <CardArt src={cardArt[card.id]} mode="auto" fallbackRatio={2 / 3} minH={160} maxH="44vh" />
           ) : (
             <div style={{ width: '100%', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, opacity: 0.2 }}>🃏</div>
           )}

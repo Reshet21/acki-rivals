@@ -4,6 +4,8 @@ import type { WalletConnection } from '../services/beeEngine';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
+import { RarityChips, SearchField } from './CardFilters';
+import type { Rarity } from '../types';
 import {
   getListings,
   getMyListings,
@@ -46,6 +48,29 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
   const [pickerOpen, setPickerOpen] = useState(false);
   const [status, setStatus] = useState<StatusMsg | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [buySearch, setBuySearch] = useState('');
+  const [buyRarity, setBuyRarity] = useState<Rarity | 'all'>('all');
+  const [pickSearch, setPickSearch] = useState('');
+  const [pickRarity, setPickRarity] = useState<Rarity | 'all'>('all');
+
+  const matchCard = (card: Card, search: string, rarity: Rarity | 'all') => {
+    if (rarity !== 'all' && card.rarity !== rarity) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return card.name.toLowerCase().includes(q) || card.clan.toLowerCase().includes(q);
+    }
+    return true;
+  };
+
+  const buyListings = useMemo(() => {
+    return allListings
+      .filter((l) => l.seller_id !== walletAddress && matchCard(l.card, buySearch, buyRarity))
+      .sort((a, b) => {
+        const rarityDiff = (rarityOrder[b.card.rarity] ?? 0) - (rarityOrder[a.card.rarity] ?? 0);
+        if (rarityDiff !== 0) return rarityDiff;
+        return a.price_nackl - b.price_nackl;
+      });
+  }, [allListings, walletAddress, buySearch, buyRarity]);
 
   // Refresh listings when tab changes or after actions
   const refreshListings = useCallback(async () => {
@@ -73,6 +98,10 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     const listedUids = new Set(myActiveListings.map((l) => l.card.uid));
     return collection.filter((c) => c.uid && !listedUids.has(c.uid));
   }, [collection, myActiveListings]);
+
+  const filteredSellable = useMemo(() => {
+    return sellableCards.filter((c) => matchCard(c, pickSearch, pickRarity));
+  }, [sellableCards, pickSearch, pickRarity]);
 
   const handleList = useCallback(async () => {
     if (!selectedCard || !selectedCard.uid) return;
@@ -230,18 +259,23 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
               </div>
             ) : (
               <>
+                {/* Search + rarity filters */}
+                <div className="space-y-2 mb-3">
+                  <SearchField value={buySearch} onChange={setBuySearch} placeholder={t('deck.search')} />
+                  <RarityChips value={buyRarity} onChange={(v) => { selectionChanged(); setBuyRarity(v); }} />
+                </div>
+                {buyListings.length === 0 ? (
+                  <div className="text-center py-10">
+                    <div className="text-3xl mb-2">🔍</div>
+                    <div className="text-white/40 text-sm">{t('deck.noCards')}</div>
+                  </div>
+                ) : (
+                  <>
                 {/* Sort info */}
                 <div className="text-[10px] text-white/20 uppercase tracking-wider mb-1">
-                  {allListings.length} {allListings.length === 1 ? 'листинг' : 'листингов'} доступно
+                  {buyListings.length} {buyListings.length === 1 ? 'листинг' : 'листингов'} доступно
                 </div>
-                {allListings
-                  .filter((l) => l.seller_id !== walletAddress)
-                  .sort((a, b) => {
-                    const rarityDiff = (rarityOrder[b.card.rarity] ?? 0) - (rarityOrder[a.card.rarity] ?? 0);
-                    if (rarityDiff !== 0) return rarityDiff;
-                    return a.price_nackl - b.price_nackl;
-                  })
-                  .map((listing) => (
+                {buyListings.map((listing) => (
                   <div key={listing.id}
                     className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden transition-all hover:bg-white/[0.05] active:scale-[0.99]">
                     <div className="flex items-center gap-3 p-3">
@@ -278,6 +312,8 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                     </div>
                   </div>
                 ))}
+                  </>
+                )}
               </>
             )}
           </div>
@@ -440,21 +476,33 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { impactOccurred('soft'); setPickerOpen(false); }} />
           <div className="relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-t-3xl overflow-hidden animate-slide-up" style={{ background: '#0A0A10', border: '1px solid rgba(255,215,0,0.15)', borderBottom: 'none', boxShadow: '0 -8px 40px rgba(0,0,0,0.6)' }}>
             {/* Sheet header */}
-            <div className="shrink-0 px-4 pt-3 pb-2 flex items-center justify-between border-b border-white/[0.06]">
-              <div>
-                <div className="text-sm font-bold text-white">{t('marketplace.selectCard')}</div>
-                <div className="text-[10px] text-white/40 mt-0.5">{sellableCards.length} {t('marketplace.available')}</div>
+            <div className="shrink-0 px-4 pt-3 pb-2 border-b border-white/[0.06]">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-sm font-bold text-white">{t('marketplace.selectCard')}</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">{sellableCards.length} {t('marketplace.available')}</div>
+                </div>
+                <button
+                  onClick={() => { impactOccurred('soft'); setPickerOpen(false); }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => { impactOccurred('soft'); setPickerOpen(false); }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                ✕
-              </button>
+              <div className="space-y-2">
+                <SearchField value={pickSearch} onChange={setPickSearch} placeholder={t('deck.search')} />
+                <RarityChips value={pickRarity} onChange={(v) => { selectionChanged(); setPickRarity(v); }} />
+              </div>
             </div>
             {/* Cards grid (own scroll — panel never hides cards) */}
             <div className="flex-1 min-h-0 overflow-y-auto p-4">
+              {filteredSellable.length === 0 ? (
+                <div className="text-center py-10">
+                  <div className="text-3xl mb-2">🔍</div>
+                  <div className="text-white/40 text-sm">{t('deck.noCards')}</div>
+                </div>
+              ) : (
               <div className="grid grid-cols-3 gap-2">
-                {sellableCards.map((card) => (
+                {filteredSellable.map((card) => (
                   <div key={card.uid}
                     className={`relative cursor-pointer transition-all rounded-xl ${
                       selectedCard?.uid === card.uid
@@ -469,6 +517,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                   </div>
                 ))}
               </div>
+              )}
             </div>
           </div>
         </div>

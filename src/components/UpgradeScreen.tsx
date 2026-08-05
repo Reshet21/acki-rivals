@@ -3,6 +3,8 @@ import type { Card } from '../types';
 import { useI18n } from '../i18n';
 import { useHaptic } from '../hooks/useHaptic';
 import CardComponent from './CardComponent';
+import { RarityChips, SearchField } from './CardFilters';
+import type { Rarity } from '../types';
 
 interface Props {
   collection: Card[];
@@ -17,6 +19,8 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
   const { notificationOccurred, selectionChanged, impactOccurred } = useHaptic();
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [search, setSearch] = useState('');
+  const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
 
   // Group cards by id, count duplicates and take the highest-starred base
   const cardGroups = useMemo(() => {
@@ -55,8 +59,17 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
     });
   }, [collection]);
 
-  const ready = cardGroups.filter((g) => g.canUpgrade);
-  const notReady = cardGroups.filter((g) => !g.canUpgrade);
+  const matches = (card: Card) => {
+    if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return card.name.toLowerCase().includes(q) || card.clan.toLowerCase().includes(q);
+    }
+    return true;
+  };
+
+  const ready = cardGroups.filter((g) => g.canUpgrade && matches(g.base));
+  const notReady = cardGroups.filter((g) => !g.canUpgrade && matches(g.base));
   const selGroup = cardGroups.find((g) => g.base.uid === selectedUid);
 
   const handleUpgrade = () => {
@@ -111,6 +124,12 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
         >
           {t('deck.back')}
         </button>
+      </div>
+
+      {/* Search + rarity filters */}
+      <div className="shrink-0 px-4 py-2 space-y-2 border-b border-white/10 bg-black/40 backdrop-blur-md">
+        <SearchField value={search} onChange={setSearch} placeholder={t('deck.search')} />
+        <RarityChips value={rarityFilter} onChange={(v) => { selectionChanged(); setRarityFilter(v); }} />
       </div>
 
       {/* Message */}

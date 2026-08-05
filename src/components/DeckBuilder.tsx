@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { Card, Rarity } from '../types';
 import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
+import { RarityChips, SearchField } from './CardFilters';
 import { useHaptic } from '../hooks/useHaptic';
 
 interface Props {
@@ -10,15 +11,6 @@ interface Props {
   onToggleDeck: (card: Card) => void;
   onBack: () => void;
 }
-
-const RARITY_FILTERS: { value: Rarity | 'all'; labelKey: string; color: string }[] = [
-  { value: 'all', labelKey: 'deck.filterAll', color: 'text-white' },
-  { value: 'common', labelKey: 'deck.filterCommon', color: 'text-gray-400' },
-  { value: 'uncommon', labelKey: 'deck.filterUncommon', color: 'text-green-400' },
-  { value: 'rare', labelKey: 'deck.filterRare', color: 'text-blue-400' },
-  { value: 'epic', labelKey: 'deck.filterEpic', color: 'text-purple-400' },
-  { value: 'legendary', labelKey: 'deck.filterLegendary', color: 'text-yellow-400' },
-];
 
 export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: Props) {
   const { t } = useI18n();
@@ -59,37 +51,12 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
         </div>
 
         {/* Search */}
-        <div className="relative mb-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('deck.search')}
-            className="w-full px-4 py-2.5 pl-10 rounded-xl text-sm text-white placeholder-white/30 focus:outline-none"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-          />
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(255,255,255,0.3)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+        <div className="mb-3">
+          <SearchField value={search} onChange={setSearch} placeholder={t('deck.search')} />
         </div>
 
         {/* Rarity Filters */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-          {RARITY_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => { selectionChanged(); setRarityFilter(f.value); }}
-              className="px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all active:scale-95"
-              style={{
-                background: rarityFilter === f.value ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${rarityFilter === f.value ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
-                color: rarityFilter === f.value ? '#FFD700' : 'rgba(255,255,255,0.4)',
-              }}
-            >
-              {t(f.labelKey)}
-            </button>
-          ))}
-        </div>
+        <RarityChips value={rarityFilter} onChange={(v) => { selectionChanged(); setRarityFilter(v); }} />
       </div>
 
       {/* Cards Grid */}

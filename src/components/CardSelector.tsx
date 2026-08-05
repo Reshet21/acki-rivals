@@ -2,6 +2,9 @@ import { useState, useMemo } from 'react';
 import type { Card } from '../types';
 import { abilityIcons, abilityColors, abilityNames } from '../data/abilityVisuals';
 import { cardArt } from '../data/cardArt';
+import CardArt from './CardArt';
+import { RarityChips, SearchField } from './CardFilters';
+import type { Rarity } from '../types';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 
@@ -29,7 +32,20 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
   const { t } = useI18n();
   const [sel, setSel] = useState<Card | null>(null);
   const [pillz, setPillz] = useState(0);
+  const [search, setSearch] = useState('');
+  const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
   const preview = useMemo(() => sel ? estimateAttack(sel.power, pillz) : null, [sel, pillz]);
+
+  const filteredCards = useMemo(() => {
+    return cards.filter((card) => {
+      if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return card.name.toLowerCase().includes(q) || card.clan.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [cards, search, rarityFilter]);
 
   const go = () => {
     if (!sel) return;
@@ -105,8 +121,12 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
 
       {/* Card grid */}
       <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-1">
+        <div className="pt-1.5 pb-2 space-y-1.5">
+          <SearchField value={search} onChange={setSearch} placeholder={t('deck.search')} />
+          <RarityChips value={rarityFilter} onChange={(v) => { selectionChanged(); setRarityFilter(v); }} />
+        </div>
         <div className="grid grid-cols-4 gap-1.5">
-          {cards.map((card) => {
+          {filteredCards.map((card) => {
             const isSel = sel?.uid === card.uid;
             const rc = rarityColor[card.rarity || 'common'];
             return (
@@ -125,7 +145,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
                 {/* Image — full-bleed like Urban Rivals */}
                 <div style={{ width: '100%', aspectRatio: '3/4', overflow: 'hidden', background: '#080503', position: 'relative' }}>
                   {cardArt[card.id] ? (
-                    <img src={cardArt[card.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', opacity: 1 }} />
+                    <CardArt src={cardArt[card.id]} mode="fixed" boxRatio={3 / 4} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, opacity: 0.2 }}>🃏</div>
                   )}
