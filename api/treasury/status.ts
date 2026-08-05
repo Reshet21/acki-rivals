@@ -11,15 +11,6 @@ const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL ||
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    return await handle(req, res);
-  } catch (e) {
-    const err = e as Error;
-    return res.status(500).json({ error: `DIAG ${err?.name}: ${err?.message}`, stack: err?.stack });
-  }
-}
-
-async function handle(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
