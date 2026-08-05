@@ -36,9 +36,15 @@ async function messageInfo(hash: string): Promise<{ src: string; dst: string; va
 }
 
 /**
- * Найти свежий NACKL-платёж от player на M.
+ * Сканировать свежие входящие транзакции счёта на предмет NACKL-переводов
+ * >= amountNano. Если srcFilter задан — учитывать только платежи от этого
+ * отправителя, иначе — любой отправитель.
  */
-export async function findPayment(player: string, amountNano: bigint, treasuryAccount: string): Promise<Payment | null> {
+async function scanPayments(
+  amountNano: bigint,
+  treasuryAccount: string,
+  srcFilter?: string,
+): Promise<Payment | null> {
   const accountId = treasuryAccount.split(':').pop()!;
   const q = `query { blockchain { account(account_id: "${accountId}", dapp_id: "${accountId}") { transactions { edges { node { a: now b: aborted c: in_msg } } } } } }`;
   const json = (await graphql(q)) as any;
@@ -50,9 +56,11 @@ export async function findPayment(player: string, amountNano: bigint, treasuryAc
     if (!node?.c || node.b) continue;
     const info = await messageInfo(node.c);
     if (!info) continue;
-    const srcHex = info.src.split(':').pop()?.toLowerCase();
-    const playerHex = player.split(':').pop()?.toLowerCase();
-    if (!srcHex || srcHex !== playerHex) continue;
+    if (srcFilter) {
+      const srcHex = info.src.split(':').pop()?.toLowerCase();
+      const filterHex = srcFilter.split(':').pop()?.toLowerCase();
+      if (!srcHex || srcHex !== filterHex) continue;
+    }
 
     const nackl = info.valueOther[NACKL_ECC_INDEX];
     if (!nackl) continue;
@@ -65,4 +73,19 @@ export async function findPayment(player: string, amountNano: bigint, treasuryAc
     return { msgHash: node.c, amountNano: amount, src: info.src, now: t };
   }
   return null;
+}
+
+/**
+ * Найти свежий NACKL-платёж от player на M.
+ */
+export async function findPayment(player: string, amountNano: bigint, treasuryAccount: string): Promise<Payment | null> {
+  return scanPayments(amountNano, treasuryAccount, player);
+}
+
+/**
+ * Найти свежий NACKL-платёж на M от ЛЮБОГО отправителя
+ * (игрок может платить с любого своего кошелька).
+ */
+export async function findAnyPayment(amountNano: bigint, treasuryAccount: string): Promise<Payment | null> {
+  return scanPayments(amountNano, treasuryAccount);
 }

@@ -6,11 +6,12 @@ import CardComponent from './CardComponent';
 import { getRarityLabel, getPackName } from '../i18n/cardTranslations';
 import { useHaptic } from '../hooks/useHaptic';
 import type { WalletConnection } from '../services/beeEngine';
-import { buyPack as buyPackWithNackl } from '../services/paymentService';
 import {
   payNacklToTreasury,
   requestAckr,
   getTreasurySignerKeys,
+  confirmPackPayment,
+  TREASURY_ADDRESS,
 } from '../services/treasuryService';
 
 interface Props {
@@ -63,6 +64,9 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [exchanging, setExchanging] = useState(false);
   const [exchangeMsg, setExchangeMsg] = useState<string | null>(null);
   const [exchangeOk, setExchangeOk] = useState(false);
+  const [awaitingPackId, setAwaitingPackId] = useState<string | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [payNote, setPayNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (phase !== 'opening' || openedCards.length === 0) return;
@@ -91,16 +95,10 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     }
 
     // Starter pack is free — skip NACKL check
-    // Dev mode — тоже пропускаем balance check (бесплатно)
-    if (packId !== 'starter' && !IS_DEV_PAYMENT) {
-      const balance = parseFloat(nacklBalance || '0');
-      if (balance < pack.nacklPrice) {
-        setPaymentError(t('shop.notEnoughNackl'));
-        return;
-      }
+    if (packId !== 'starter' && !IS_DEV_PAYMENT && !walletConnection) {
+      setPaymentError(t('shop.connectWalletError'));
+      return;
     }
-
-
 
     impactOccurred('medium');
     setBuyingPackId(packId);
@@ -120,34 +118,12 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     }
 
     if (!IS_DEV_PAYMENT) {
-      // ─── PRODUCTION: реальная блокчейн-транзакция ───
-      try {
-        const result = await buyPackWithNackl(walletConnection!, pack.nacklPrice);
-
-        if (result.success) {
-          const cards = onBuyPack(packId);
-          if (!cards || cards.length === 0) return;
-          setOpenedCards(cards);
-          setRevealIndex(-1);
-          setPhase('opening');
-          setBuyingPackId(null);
-          return;
-        } else {
-          // ⚡ Если фактор протух — показываем кнопку переподключения
-          if (result.needsReconnect) {
-            setNeedsReconnect(true);
-            setPaymentError(result.error || t('shop.factorExpired'));
-          } else {
-            setPaymentError(result.error || t('shop.paymentError'));
-          }
-          setBuyingPackId(null);
-          return;
-        }
-      } catch (e) {
-        setPaymentError(t('shop.networkError'));
-        setBuyingPackId(null);
-        return;
-      }
+      // ─── PRODUCTION: прямой перевод NACKL на казначейство ───
+      // Игрок отправляет NACKL со своего кошелька (любого, где есть NACKL)
+      // на адрес казначейства, затем подтверждает платёж.
+      setAwaitingPackId(packId);
+      setPayNote(null);
+      return;
     }
 
     // ─── DEV MODE: бесплатная выдача (блокчейн отключён) ───
@@ -163,6 +139,52 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     if (isPaymentAttempted) {
       setPaymentError(t('shop.devModeWarning'));
     }
+  };
+
+  const copyTreasuryAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(TREASURY_ADDRESS);
+      setPayNote('Адрес скопирован ✔');
+    } catch {
+      setPayNote(`Адрес казначейства: ${TREASURY_ADDRESS}`);
+    }
+  };
+
+  const handleVerifyPayment = async () => {
+    if (!awaitingPackId || !walletConnection) return;
+    const pack = getPackById(awaitingPackId);
+    if (!pack) return;
+
+    impactOccurred('medium');
+    setCheckingPayment(true);
+    setPayNote(null);
+    try {
+      const result = await confirmPackPayment(walletConnection.walletAddress, pack.nacklPrice, awaitingPackId);
+      if (result.success) {
+        const cards = onBuyPack(awaitingPackId);
+        setAwaitingPackId(null);
+        if (!cards || cards.length === 0) {
+          setPayNote('Платёж подтверждён, но паки не выданы — обратитесь к разработчику.');
+          return;
+        }
+        setOpenedCards(cards);
+        setRevealIndex(-1);
+        setPhase('opening');
+      } else {
+        setPayNote(result.error || 'Платёж не найден. Проверьте сумму и адрес.');
+      }
+    } catch {
+      setPayNote('Ошибка проверки платежа. Попробуйте ещё раз.');
+    } finally {
+      setCheckingPayment(false);
+      setBuyingPackId(null);
+    }
+  };
+
+  const cancelAwaitingPayment = () => {
+    setAwaitingPackId(null);
+    setPayNote(null);
+    setBuyingPackId(null);
   };
 
   const handleCollect = () => {
@@ -222,9 +244,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     }
     // Dev mode — кнопка всегда активна (бесплатно)
     if (IS_DEV_PAYMENT) return true;
-    if (!walletConnection) return false;
-    const balance = parseFloat(nacklBalance || '0');
-    return balance >= pack.nacklPrice;
+    // Live mode — нужен кошелёк (NACKL отправляются с любого своего кошелька)
+    return !!walletConnection;
   };
 
   // ═══ Pack opening animation ═══
@@ -454,6 +475,62 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       {/* Packs */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4 relative z-10">
         <div className="flex flex-col gap-4">
+          {awaitingPackId && (
+            <div className="rounded-2xl border border-neon-blue/30 bg-white/[0.04] overflow-hidden"
+              style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+              <div className="bg-gradient-to-r from-neon-blue to-neon-purple p-4 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute w-24 h-24 rounded-full bg-white/10 -top-8 -right-8" />
+                </div>
+                <div className="relative z-10 flex items-center gap-3">
+                  <div className="text-3xl">💸</div>
+                  <div className="flex-1">
+                    <div className="text-lg font-black text-white">Оплата заказа</div>
+                    <div className="text-[10px] text-white/70">
+                      {getPackName(lang, awaitingPackId)} · {getPackById(awaitingPackId)?.nacklPrice} NACKL
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="px-4 py-4 flex flex-col gap-3">
+                <div className="text-[12px] text-white/80">
+                  1. Отправьте <span className="font-bold text-neon-blue">{getPackById(awaitingPackId)?.nacklPrice} NACKL</span> обычным переводом со своего кошелька (подойдёт любой, где есть NACKL):
+                </div>
+                <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-[10px] font-mono text-white/70 break-all select-all">
+                  {TREASURY_ADDRESS}
+                </div>
+                <button
+                  onClick={copyTreasuryAddress}
+                  className="w-full py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/10 text-white active:scale-95 transition-all"
+                >
+                  📋 Скопировать адрес
+                </button>
+                <div className="text-[12px] text-white/80">
+                  2. Нажмите «Я оплатил» — приложение проверит платёж в блокчейне и откроет паки.
+                </div>
+                <button
+                  onClick={handleVerifyPayment}
+                  disabled={checkingPayment}
+                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                    checkingPayment
+                      ? 'bg-white/5 text-white/20 border border-white/5 cursor-wait'
+                      : 'bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.2)]'
+                  }`}
+                >
+                  {checkingPayment ? 'Проверяем платёж…' : '✅ Я оплатил — проверить'}
+                </button>
+                {payNote && (
+                  <div className="text-[11px] text-center text-yellow-400/90">{payNote}</div>
+                )}
+                <button
+                  onClick={cancelAwaitingPayment}
+                  className="w-full py-2 rounded-lg text-xs font-bold bg-white/5 border border-white/10 text-white/50 active:bg-white/10 active:scale-[0.98] transition-all"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          )}
           {PACKS.map((pack) => {
             const canBuy = canBuyPack(pack.id);
             const isBuying = buyingPackId === pack.id;
@@ -525,9 +602,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                           ? `${t('shop.buy')} — ${pack.nacklPrice} NACKL`
                           : '🎁 Забрать бесплатно'
                         : walletConnection
-                          ? !hasEpkKey && !IS_DEV_PAYMENT
-                            ? '🔑 Нужен вход через Google'
-                            : t('shop.notEnough')
+                          ? t('shop.notEnough')
                           : t('shop.noWallet')
                     }
                   </button>

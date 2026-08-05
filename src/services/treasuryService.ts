@@ -112,6 +112,50 @@ export async function requestAckr(
 }
 
 /**
+ * Подтвердить покупку пака: сервер ищет входящий NACKL-платёж на казначейство
+ * и возвращает 200, когда платёж найден. Платёж идёт несколько секунд —
+ * ретраим по retryAfterMs.
+ */
+export async function confirmPackPayment(
+  player: string,
+  nacklAmount: number,
+  packId: string,
+  maxRetries = 24,
+): Promise<BuyResult> {
+  let attempt = 0;
+  let retryAfterMs = 5000;
+
+  while (attempt < maxRetries) {
+    attempt += 1;
+    try {
+      const res = await fetch('/api/shop/buy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player, nacklAmount, packId }),
+      });
+      const json = (await res.json()) as BuyResult;
+
+      if (res.ok && json.success) {
+        return { success: true };
+      }
+      if (res.status === 409) {
+        return { success: false, error: json.error || 'Платёж уже обработан' };
+      }
+      if (res.status === 400 || res.status === 500) {
+        return { success: false, error: json.error || 'Ошибка сервера' };
+      }
+      // 202 — платёж ещё не найден на блокчейне
+      retryAfterMs = json.retryAfterMs || retryAfterMs;
+      await new Promise((r) => setTimeout(r, retryAfterMs));
+    } catch {
+      // сеть — ждём и пробуем ещё
+      await new Promise((r) => setTimeout(r, retryAfterMs));
+    }
+  }
+  return { success: false, error: 'Таймаут подтверждения платежа' };
+}
+
+/**
  * EPK-ключ для подписи NACKL-перевода (тот же флоу, что в paymentService).
  */
 export function getTreasurySignerKeys(): { public: string; secret: string } | null {
