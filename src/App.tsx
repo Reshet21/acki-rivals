@@ -23,7 +23,7 @@ import Marketplace from './components/Marketplace';
 import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import type { Game } from './services/pvpService';
-import { updatePlayerStats } from './services/pvpService';
+import { updatePlayerStats, mergePlayerRows } from './services/pvpService';
 import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
@@ -177,7 +177,16 @@ function AppInner() {
   const handleWalletConnected = useCallback((conn: WalletConnection) => {
     setWalletConnection(conn);
     setWalletAddress(conn.walletAddress);
-  }, [setWalletAddress]);
+    // Склеить анонимную статистику (старый p_xxx id) с кошельком
+    mergePlayerRows(anonId, conn.walletAddress).catch(() => {});
+  }, [setWalletAddress, anonId]);
+
+  // Однократная миграция статистики при старте с уже подключённым кошельком
+  useEffect(() => {
+    if (walletConnection && anonId !== walletConnection.walletAddress) {
+      mergePlayerRows(anonId, walletConnection.walletAddress).catch(() => {});
+    }
+  }, [walletConnection, anonId]);
 
   const handleWalletDisconnect = useCallback(() => {
     // Just disconnect wallet session — game progress stays saved

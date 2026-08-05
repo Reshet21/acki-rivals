@@ -298,6 +298,63 @@ export async function getLeaderboard(limit = 50): Promise<PlayerEntry[]> {
   return data || [];
 }
 
+/**
+ * Склеить анонимную запись игрока (device-bound p_xxx id) с его кошельком.
+ *
+ * Раньше player_id хранился в localStorage и мог дублироваться при сбросе;
+ * теперь с кошельком id = адрес кошелька. При подключении переносим
+ * старую статистику на адрес: если запись под адресом уже есть —
+ * суммируем и удаляем анонимную.
+ */
+export async function mergePlayerRows(
+  anonId: string,
+  walletAddress: string,
+): Promise<void> {
+  if (!anonId || !walletAddress || anonId === walletAddress) return;
+  const client = getClient();
+  if (!client) return;
+
+  try {
+    const { data: anonRow } = await client
+      .from('players')
+      .select('wins,losses,rating')
+      .eq('player_id', anonId)
+      .maybeSingle();
+
+    if (!anonRow) return;
+
+    const { data: walletRow } = await client
+      .from('players')
+      .select('wins,losses,rating')
+      .eq('player_id', walletAddress)
+      .maybeSingle();
+
+    if (walletRow) {
+      // Оба существуют — суммируем в запись кошелька, анонимную удаляем
+      await client.from('players')
+        .update({
+          wins: walletRow.wins + anonRow.wins,
+          losses: walletRow.losses + anonRow.losses,
+          rating: walletRow.rating + anonRow.rating,
+          last_active: new Date().toISOString(),
+        })
+        .eq('player_id', walletAddress);
+      await client.from('players').delete().eq('player_id', anonId);
+    } else {
+      // Переносим анонимную запись на адрес кошелька
+      await client.from('players')
+        .update({
+          player_id: walletAddress,
+          last_active: new Date().toISOString(),
+        })
+        .eq('player_id', anonId);
+    }
+    console.log('[pvpService] merged player rows:', anonId, '->', walletAddress);
+  } catch (e) {
+    console.warn('[pvpService] mergePlayerRows failed:', e);
+  }
+}
+
 // ─── Real-time subscriptions ─────────────────────────────
 
 export function subscribeToGame(
