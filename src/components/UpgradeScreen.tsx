@@ -12,7 +12,8 @@ interface Props {
   onBack: () => void;
 }
 
-const MAX_STARS = 5;
+const MAX_STARS = 6;
+const NEEDED_PER_MERGE = 2;
 
 export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) {
   const { t } = useI18n();
@@ -22,33 +23,36 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
 
-  // Group cards by id, count duplicates and take the highest-starred base
+  // Group cards by id. For each group: base = highest-starred card.
+  // To upgrade ★N → ★(N+1) you need TWO cards with ★N.
   const cardGroups = useMemo(() => {
-    const groups = new Map<number, { base: Card; copies: Card[]; stars: number }>();
+    const groups = new Map<number, { base: Card; stars: number; sameLevel: number }>();
 
     for (const card of collection) {
       const existing = groups.get(card.id);
-      if (existing) {
-        existing.copies.push(card);
-        if ((card.stars ?? 0) > existing.stars) {
-          existing.stars = card.stars ?? 0;
-          existing.base = card;
-        }
-      } else {
+      if (!existing) {
         groups.set(card.id, {
           base: card,
-          copies: [card],
           stars: card.stars ?? 0,
+          sameLevel: 1,
         });
+        continue;
+      }
+      const s = card.stars ?? 0;
+      if (s === existing.stars) {
+        existing.sameLevel += 1;
+      }
+      if (s > existing.stars) {
+        existing.stars = s;
+        existing.base = card;
+        existing.sameLevel = 1;
       }
     }
 
     const enriched = Array.from(groups.values()).map((g) => {
-      const copies = g.copies.length - 1;
-      const needed = g.stars === 0 ? 1 : g.stars;
       const isMax = g.stars >= MAX_STARS;
-      const canUpgrade = !isMax && copies >= needed;
-      return { ...g, copies, needed, isMax, canUpgrade };
+      const canUpgrade = !isMax && g.sameLevel >= NEEDED_PER_MERGE;
+      return { ...g, isMax, canUpgrade };
     });
 
     // Sort: ready cards first, then by stars/rarity
@@ -103,7 +107,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             : 'bg-black/90 text-white/50 border-white/20'
         }`}
       >
-        {g.isMax ? 'MAX' : `${g.copies}/${g.needed}`}
+        {g.isMax ? 'MAX' : `${g.sameLevel}/${NEEDED_PER_MERGE}`}
       </div>
     </div>
   );
@@ -204,25 +208,32 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
           )}
 
           <div className="w-full max-w-xs mb-4 bg-black/40 p-4 rounded-xl border border-white/5">
-            <div className="flex justify-between text-xs font-bold mb-2">
-              <span className="text-white/60">{t('upgrade.copies')}</span>
+            <div className="flex justify-between text-xs font-bold mb-1">
+              <span className="text-yellow-400">{NEEDED_PER_MERGE} × ★{selGroup.stars} → ★{selGroup.stars + 1}</span>
               <span
                 className={
                   selGroup.isMax ? 'text-yellow-400' : selGroup.canUpgrade ? 'text-neon-green' : 'text-red-400'
                 }
               >
-                {selGroup.isMax ? 'MAX LEVEL' : `${selGroup.copies} / ${selGroup.needed}`}
+                {selGroup.isMax ? 'MAX' : `${selGroup.sameLevel} / ${NEEDED_PER_MERGE}`}
               </span>
             </div>
             {!selGroup.isMax && (
-              <div className="h-2.5 bg-white/10 rounded-full overflow-hidden shadow-inner">
-                <div
-                  className={`h-full transition-all duration-500 rounded-full ${
-                    selGroup.canUpgrade ? 'bg-neon-green shadow-[0_0_10px_#10b981]' : 'bg-neon-blue'
-                  }`}
-                  style={{ width: `${Math.min(100, (selGroup.copies / selGroup.needed) * 100)}%` }}
-                />
-              </div>
+              <>
+                <div className="h-2.5 bg-white/10 rounded-full overflow-hidden shadow-inner">
+                  <div
+                    className={`h-full transition-all duration-500 rounded-full ${
+                      selGroup.canUpgrade ? 'bg-neon-green shadow-[0_0_10px_#10b981]' : 'bg-neon-blue'
+                    }`}
+                    style={{ width: `${Math.min(100, (selGroup.sameLevel / NEEDED_PER_MERGE) * 100)}%` }}
+                  />
+                </div>
+                <div className="text-[10px] text-white/40 mt-2">
+                  {selGroup.canUpgrade
+                    ? t('upgrade.ready') || 'Ready to merge'
+                    : t('upgrade.needSameStar') || `Need ${NEEDED_PER_MERGE - selGroup.sameLevel} more ★${selGroup.stars} card(s)`}
+                </div>
+              </>
             )}
           </div>
 

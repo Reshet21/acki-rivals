@@ -178,17 +178,18 @@ function CardsSection() {
 
       <Section title={t('info.upgradeSectionTitle')} accent="#fbbf24">
         <p>{t('info.upgradeSectionDesc')}</p>
-        <div className="grid grid-cols-5 gap-1 mt-2">
+        <div className="grid grid-cols-6 gap-1 mt-2">
           {[
-            { lv: '★0→1', copies: 1 },
-            { lv: '★1→2', copies: 1 },
-            { lv: '★2→3', copies: 2 },
-            { lv: '★3→4', copies: 3 },
-            { lv: '★4→5', copies: 4 },
-          ].map(({ lv, copies }) => (
+            { lv: '★0→1', need: '2×★0' },
+            { lv: '★1→2', need: '2×★1' },
+            { lv: '★2→3', need: '2×★2' },
+            { lv: '★3→4', need: '2×★3' },
+            { lv: '★4→5', need: '2×★4' },
+            { lv: '★5→6', need: '2×★5' },
+          ].map(({ lv, need }) => (
             <div key={lv} className="text-center p-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
               <div className="text-[9px] font-bold" style={{ color: '#fbbf24' }}>{lv}</div>
-              <div className="text-[8px] text-white/40">{copies} {t('info.copiesShort')}</div>
+              <div className="text-[8px] text-white/40">{need}</div>
             </div>
           ))}
         </div>

@@ -3,7 +3,7 @@ import type { Card } from '../types';
 
 
 const STORAGE_KEY = 'acki-rivals-save';
-const MAX_STARS = 5;
+const MAX_STARS = 6;
 
 interface GameState {
   collection: Card[];
@@ -170,8 +170,8 @@ export function useGameState(initialWalletAddress?: string | null) {
   }, []);
 
   /**
-   * Upgrade a card by consuming duplicates.
-   * Cost: N copies needed to go from star N-1 to star N.
+   * Upgrade a card by merging it with ANOTHER card of the SAME star level.
+   * Rule: 2 cards ★N → 1 card ★(N+1). Max ★MAX_STARS.
    * Each star gives +1 power and +1 damage.
    */
   const upgradeCard = useCallback((cardUid: string, t?: (key: string) => string): { success: boolean; message: string } => {
@@ -183,37 +183,38 @@ export function useGameState(initialWalletAddress?: string | null) {
       return { success: false, message: t ? t('game.maxStars') : 'Max star level reached' };
     }
 
-    const copiesNeeded = currentStars === 0 ? 1 : currentStars;
-    const duplicates = collection.filter(
-      (c) => c.id === card.id && c.uid !== card.uid
+    // Need a second card with the same id AND the same star level
+    const partner = collection.find(
+      (c) => c.id === card.id && c.uid !== card.uid && (c.stars ?? 0) === currentStars
     );
 
-    if (duplicates.length < copiesNeeded) {
+    if (!partner) {
       return {
         success: false,
-        message: t ? t('game.needCopies') : `Need ${copiesNeeded} copies, have ${duplicates.length}`,
+        message: t ? t('game.needCopies') : `Need 2 cards ★${currentStars}, have 1`,
       };
     }
 
-    // Remove duplicates from collection
-    const uidsToRemove = new Set(duplicates.slice(0, copiesNeeded).map((c) => c.uid));
-
+    // Remove the partner card, bump the base card's stars
     setCollection((prev) => {
-      const newCollection = prev.filter((c) => !uidsToRemove.has(c.uid));
-      return newCollection.map((c) =>
-        c.uid === cardUid
-          ? { ...c, stars: currentStars + 1, power: c.power + 1, damage: c.damage + 1 }
-          : c
-      );
+      return prev
+        .filter((c) => c.uid !== partner.uid)
+        .map((c) =>
+          c.uid === cardUid
+            ? { ...c, stars: currentStars + 1, power: c.power + 1, damage: c.damage + 1 }
+            : c
+        );
     });
 
-    // Update deck if card is there
+    // Update deck if card is there (remove merged partner, bump base)
     setDeck((prev) =>
-      prev.map((c) =>
-        c.uid === cardUid
-          ? { ...c, stars: currentStars + 1, power: c.power + 1, damage: c.damage + 1 }
-          : c
-      )
+      prev
+        .filter((c) => c.uid !== partner.uid)
+        .map((c) =>
+          c.uid === cardUid
+            ? { ...c, stars: currentStars + 1, power: c.power + 1, damage: c.damage + 1 }
+            : c
+        )
     );
 
     return { success: true, message: t ? t('game.starUpgraded') : 'Star upgraded' };
