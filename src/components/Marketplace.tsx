@@ -43,6 +43,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
   const [myActiveListings, setMyActiveListings] = useState<Listing[]>([]);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [sellPrice, setSellPrice] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [status, setStatus] = useState<StatusMsg | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -319,35 +320,43 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
         {/* ═══ SELL TAB ═══ */}
         {tab === 'sell' && (
           <div>
-            {/* Card selection */}
-            <div className="mb-4">
-              <div className="text-xs text-white/40 mb-2 uppercase tracking-wider">
-                {t('marketplace.selectCard')} ({sellableCards.length} {t('marketplace.available')})
+            {/* Selected card summary */}
+            {sellableCards.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-3xl mb-2">🃏</div>
+                <div className="text-white/40 text-sm">{t('marketplace.noCardsToSell')}</div>
+                <div className="text-white/20 text-[10px] mt-1">{t('marketplace.noCardsHint')}</div>
               </div>
-              {sellableCards.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-3xl mb-2">🃏</div>
-                  <div className="text-white/40 text-sm">{t('marketplace.noCardsToSell')}</div>
-                  <div className="text-white/20 text-[10px] mt-1">{t('marketplace.noCardsHint')}</div>
+            ) : selectedCard ? (
+              <div className="rounded-2xl border border-an-gold/25 bg-an-gold/[0.05] p-3 flex items-center gap-3">
+                <div className="w-14 shrink-0">
+                  <CardComponent card={selectedCard} compact />
                 </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {sellableCards.map((card) => (
-                    <div key={card.uid}
-                      className={`relative cursor-pointer transition-all rounded-xl ${
-                        selectedCard?.uid === card.uid
-                          ? 'ring-2 ring-an-gold scale-105'
-                          : 'hover:ring-1 hover:ring-white/20'
-                      }`}
-                      onClick={() => { selectionChanged(); setSelectedCard(card); setSellPrice(''); }}>
-                      <CardComponent card={card} compact />
-                    </div>
-                  ))}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-white truncate">{selectedCard.name}</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">{selectedCard.clan} · {selectedCard.rarity}</div>
+                  <div className="text-[9px] text-white/25 mt-0.5">💪{selectedCard.power + (selectedCard.stars ?? 0)} 🗡️{selectedCard.damage + (selectedCard.stars ?? 0)}</div>
                 </div>
-              )}
-            </div>
-
-            {/* Price input — moved to fixed bottom panel (no scrolling needed) */}
+                <button
+                  onClick={() => { setSelectedCard(null); setSellPrice(''); selectionChanged(); }}
+                  className="shrink-0 px-3 py-2 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 active:scale-90 transition-all">
+                  🔄 {t('marketplace.changeCard') || 'Сменить'}
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <div className="text-3xl mb-2">🃏</div>
+                <div className="text-white/40 text-sm">{t('marketplace.selectCard')}</div>
+                <div className="text-white/20 text-[10px] mt-1">
+                  {sellableCards.length} {t('marketplace.available')}
+                </div>
+                <button
+                  onClick={() => { impactOccurred('medium'); setPickerOpen(true); }}
+                  className="mt-4 px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-an-gold to-an-orange text-an-dark active:scale-95 transition-all shadow-[0_0_16px_rgba(255,215,0,0.25)]">
+                  + {t('marketplace.pickCard') || 'Выбрать карту'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -424,6 +433,46 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
           {t('deck.back') || 'Назад'}
         </button>
       </div>
+
+      {/* ═══ CARD PICKER SHEET (fullscreen overlay) ═══ */}
+      {pickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { impactOccurred('soft'); setPickerOpen(false); }} />
+          <div className="relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-t-3xl overflow-hidden animate-slide-up" style={{ background: '#0A0A10', border: '1px solid rgba(255,215,0,0.15)', borderBottom: 'none', boxShadow: '0 -8px 40px rgba(0,0,0,0.6)' }}>
+            {/* Sheet header */}
+            <div className="shrink-0 px-4 pt-3 pb-2 flex items-center justify-between border-b border-white/[0.06]">
+              <div>
+                <div className="text-sm font-bold text-white">{t('marketplace.selectCard')}</div>
+                <div className="text-[10px] text-white/40 mt-0.5">{sellableCards.length} {t('marketplace.available')}</div>
+              </div>
+              <button
+                onClick={() => { impactOccurred('soft'); setPickerOpen(false); }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                ✕
+              </button>
+            </div>
+            {/* Cards grid (own scroll — panel never hides cards) */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-4">
+              <div className="grid grid-cols-3 gap-2">
+                {sellableCards.map((card) => (
+                  <div key={card.uid}
+                    className={`relative cursor-pointer transition-all rounded-xl ${
+                      selectedCard?.uid === card.uid
+                        ? 'ring-2 ring-an-gold scale-105'
+                        : 'hover:ring-1 hover:ring-white/20'
+                    }`}
+                    onClick={() => { selectionChanged(); setSelectedCard(card); setSellPrice(''); setPickerOpen(false); }}>
+                    <CardComponent card={card} compact />
+                    {selectedCard?.uid === card.uid && (
+                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-an-gold text-an-dark text-[10px] font-black flex items-center justify-center">✓</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
