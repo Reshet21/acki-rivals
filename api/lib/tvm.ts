@@ -15,19 +15,25 @@ import wasmBase64 from './eversdk-wasm-b64.js';
 
 const nodeRequire = createRequire(import.meta.url);
 (globalThis as unknown as { __tvmRequire: (n: string) => unknown }).__tvmRequire = (name: string) => nodeRequire(name);
-const libWebMod = nodeRequire('@eversdk/lib-web') as {
-  libWeb: unknown;
-  libWebSetup: (opts: { disableSeparateWorker?: boolean; binaryURL?: string }) => void;
-};
 
 const NETWORK = process.env.TREASURY_NETWORK || 'https://shellnet.ackinacki.org';
 
 let _client: TonClient | null = null;
 
+type LibWebMod = {
+  libWeb: unknown;
+  libWebSetup: (opts: { disableSeparateWorker?: boolean; binaryURL?: string }) => void;
+};
+
+function getLibWeb(): LibWebMod {
+  return nodeRequire('@eversdk/lib-web') as LibWebMod;
+}
+
 function getClient(): TonClient {
   if (_client) return _client;
   // NOTE: options.loadModule сломан в lib-web 1.48 (init вызывается до объявления);
   // binaryURL через data: URL работает и не требует http-сервер (Vercel-совместимо).
+  const libWebMod = getLibWeb();
   libWebMod.libWebSetup({
     disableSeparateWorker: true,
     binaryURL: `data:application/wasm;base64,${wasmBase64}`,
