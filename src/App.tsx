@@ -54,13 +54,17 @@ function AppInner() {
     setWalletAddress,
   } = useGameState(walletAddress);
 
-  const [playerId] = useState(() => {
+  const [anonId] = useState(() => {
     const stored = localStorage.getItem('pvp_player_id');
     if (stored) return stored;
     const newId = 'p_' + crypto.randomUUID().slice(0, 8);
     localStorage.setItem('pvp_player_id', newId);
     return newId;
   });
+
+  // Стабильный игровой id: с кошельком — его адрес (уникален, одинаков
+  // на всех устройствах), без кошелька — анонимный id из localStorage.
+  const playerId = walletAddress ?? anonId;
 
   const [screen, setScreen] = useState<Screen>('menu');
 
