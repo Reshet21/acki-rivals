@@ -20,13 +20,14 @@ import InfoScreen from './components/InfoScreen';
 import Leaderboard from './components/Leaderboard';
 import SettingsScreen from './components/SettingsScreen';
 import Marketplace from './components/Marketplace';
+import ExchangeScreen from './components/ExchangeScreen';
 import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import type { Game } from './services/pvpService';
 import { updatePlayerStats, mergePlayerRows } from './services/pvpService';
 import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
+type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'exchange' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
 function AppInner() {
   const { haptic } = useTelegram();
@@ -389,7 +390,7 @@ function AppInner() {
               </div>
 
               {/* Tertiary Actions - Minimal */}
-              <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+              <div className="w-full max-w-xs grid grid-cols-4 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
                 <button onClick={() => { selectionChanged(); setScreen('upgrade'); }}
                   className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -407,6 +408,12 @@ function AppInner() {
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <span className="text-base">⛏️</span>
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.mining')}</span>
+                </button>
+                <button onClick={() => { selectionChanged(); setScreen('exchange'); }}
+                  className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="text-base">💱</span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.exchange') || 'Обмен'}</span>
                 </button>
               </div>
             </div>
@@ -465,6 +472,19 @@ function AppInner() {
             collection={collection}
             onAddCard={addCard}
             onRemoveCard={removeCard}
+            onBack={() => setScreen('menu')}
+          />
+        </div>
+      )}
+
+      {screen === 'exchange' && (
+        <div key="exchange" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
+          <ExchangeScreen
+            walletConnection={walletConnection}
+            nacklBalance={nacklBalance}
+            onReconnectWallet={() => setScreen('wallet')}
+            onZkLogin={handleZkLogin}
+            hasEpkKey={hasEpkKey}
             onBack={() => setScreen('menu')}
           />
         </div>
