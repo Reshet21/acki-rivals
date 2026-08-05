@@ -339,7 +339,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                           ? 'ring-2 ring-an-gold scale-105'
                           : 'hover:ring-1 hover:ring-white/20'
                       }`}
-                      onClick={() => { selectionChanged(); setSelectedCard(card); }}>
+                      onClick={() => { selectionChanged(); setSelectedCard(card); setSellPrice(''); }}>
                       <CardComponent card={card} compact />
                     </div>
                   ))}
@@ -347,55 +347,75 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
               )}
             </div>
 
-            {/* Price input */}
-            {selectedCard && (
-              <div className="space-y-3 animate-fade-in">
-                <div className="text-xs text-white/40 uppercase tracking-wider">
-                  {selectedCard.name} — {selectedCard.clan} · {selectedCard.rarity}
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.1"
-                    value={sellPrice}
-                    onChange={(e) => setSellPrice(e.target.value)}
-                    placeholder="Цена в NACKL"
-                    className="flex-1 px-4 py-3 rounded-xl text-sm text-white bg-white/[0.03] border border-white/[0.06] placeholder-white/20 focus:outline-none focus:border-an-gold/30 transition-all"
-                  />
-                  <span className="text-sm text-neon-blue font-bold">NACKL</span>
-                </div>
-
-                {/* Quick price presets */}
-                <div className="flex gap-2">
-                  {[5, 10, 25, 50, 100].map((preset) => (
-                    <button key={preset}
-                      onClick={() => { setSellPrice(String(preset)); selectionChanged(); }}
-                      className="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-white/5 text-white/40 border border-white/5 active:scale-90 transition-all hover:bg-white/10">
-                      {preset}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={handleList}
-                  disabled={!canSell}
-                  className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all ${
-                    canSell
-                      ? 'bg-gradient-to-r from-an-gold to-an-orange text-an-dark active:scale-95 shadow-[0_0_20px_rgba(255,215,0,0.2)]'
-                      : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
-                  }`}>
-                  💰 {t('marketplace.sellButton')}
-                </button>
-
-                <div className="text-[10px] text-white/20 text-center">
-                  Карта будет убрана из твоей коллекции и появится в листингах маркетплейса
-                </div>
-              </div>
-            )}
+            {/* Price input — moved to fixed bottom panel (no scrolling needed) */}
           </div>
         )}
       </div>
+
+      {/* ═══ SELL PRICE PANEL (fixed, always visible) ═══ */}
+      {tab === 'sell' && selectedCard && (
+        <div className="shrink-0 px-4 pb-2 relative z-20 animate-slide-up" style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,215,0,0.12)' }}>
+          <div className="space-y-2 pt-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-9 shrink-0">
+                  <CardComponent card={selectedCard} compact />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white truncate">{selectedCard.name}</div>
+                  <div className="text-[9px] text-white/40 truncate">{selectedCard.clan} · {selectedCard.rarity}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => { setSelectedCard(null); setSellPrice(''); selectionChanged(); }}
+                className="shrink-0 w-7 h-7 rounded-lg text-xs bg-white/5 text-white/40 hover:bg-white/10 active:scale-90 transition-all"
+                aria-label="Снять выбор"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                step="0.1"
+                value={sellPrice}
+                onChange={(e) => setSellPrice(e.target.value)}
+                placeholder="Цена в NACKL"
+                autoFocus
+                className="flex-1 px-3.5 py-2.5 rounded-xl text-sm text-white bg-white/[0.04] border border-white/[0.08] placeholder-white/20 focus:outline-none focus:border-an-gold/40 transition-all"
+              />
+              <span className="text-xs text-neon-blue font-bold shrink-0">NACKL</span>
+              <button
+                onClick={handleList}
+                disabled={!canSell}
+                className={`shrink-0 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  canSell
+                    ? 'bg-gradient-to-r from-an-gold to-an-orange text-an-dark active:scale-95 shadow-[0_0_16px_rgba(255,215,0,0.25)]'
+                    : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
+                }`}>
+                💰 {t('marketplace.sellButton')}
+              </button>
+            </div>
+
+            {/* Quick price presets */}
+            <div className="flex gap-1.5">
+              {[5, 10, 25, 50, 100].map((preset) => (
+                <button key={preset}
+                  onClick={() => { setSellPrice(String(preset)); selectionChanged(); }}
+                  className={`flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all active:scale-90 ${
+                    sellPrice === String(preset)
+                      ? 'bg-an-gold/15 text-an-gold border-an-gold/30'
+                      : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10'
+                  }`}>
+                  {preset}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom bar */}
       <div className="shrink-0 px-4 py-3 relative z-10 border-t border-white/[0.03]" style={{ background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
