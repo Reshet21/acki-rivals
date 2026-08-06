@@ -80,7 +80,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(202).json({ error: 'Сеть блокчейна временно недоступна, пробуем ещё раз', retryAfterMs: 5000 });
     }
     if (!payment) {
-      return res.status(202).json({ error: 'Платёж не найден или ещё не подтверждён', retryAfterMs: 5000 });
+      return res.status(202).json({
+        error: 'Платёж не найден или ещё не подтверждён',
+        retryAfterMs: 5000,
+        ...(txHash ? { debug: { network: process.env.TREASURY_NETWORK || 'default', txHash } } : {}),
+      });
     }
 
     // ── 2. Анти-повтор ──
