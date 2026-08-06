@@ -22,12 +22,14 @@
   "functions": {
     "api/shop/buy.ts": {
       "regions": [
-        "fra1"
+        "hkg1",
+        "sin1"
       ]
     },
     "api/treasury/*.ts": {
       "regions": [
-        "fra1"
+        "hkg1",
+        "sin1"
       ]
     }
   }
