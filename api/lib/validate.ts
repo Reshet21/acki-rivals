@@ -2,18 +2,14 @@
  * validatePayment.ts — поиск и проверка NACKL-платежа игрока на казначейство M.
  *
  * Ищем входящее сообщение на M от player с ecc idx 1 >= amountNano
- * среди последних транзакций M (fresh = last 10 min, aborted=false).
+ * среди транзакций M (безлимитное окно: любой платёж от player,
+ * защита от повтора — уникальный msg_hash в БД treasury_orders).
  *
  * NOTE: shellnet GraphQL ломается на selection-set из 3+ полей без alias
  * ("expected selection"), поэтому все поля псевдонимированы.
  */
 import { graphql } from './tvm.js';
 import { NACKL_ECC_INDEX, TREASURY_DAPP_ID } from './config.js';
-
-const FRESH_MS = 7 * 24 * 60 * 60 * 1000;
-/** Для верификации по хешу из кошелька: хеш одноразовый (анти-повтор в БД),
- *  поэтому свежесть не критична — пользователь может вставить хеш позже */
-const FRESH_TX_HASH_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface Payment {
   msgHash: string;
@@ -83,7 +79,6 @@ async function scanPayments(
     await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
   const edges = json?.data?.blockchain?.account?.transactions?.edges || [];
-  const now = Date.now();
 
   // edges идут от старых к свежим — идём с конца, чтобы первым подобрался
   // самый свежий подходящий платёж.
@@ -107,10 +102,7 @@ async function scanPayments(
     const amount = BigInt(nackl);
     if (amount < amountNano) continue;
 
-    const t = Number(node.a) * 1000;
-    if (now - t > FRESH_MS) continue;
-
-    return { msgHash: node.c, amountNano: amount, src: info.src, now: t };
+    return { msgHash: node.c, amountNano: amount, src: info.src, now: Number(node.a) * 1000 };
   }
   return null;
 }
@@ -152,7 +144,6 @@ export async function findPaymentByTxHash(
   }
   if (!tx || tx.b) return null;
   const outMsgs: string[] = tx.c || [];
-  const now = Date.now();
 
   for (const msgHash of outMsgs) {
     if (!/^[0-9a-fA-F]{64}$/.test(msgHash)) continue;
@@ -164,10 +155,7 @@ export async function findPaymentByTxHash(
     const amount = BigInt(nackl);
     if (amount < amountNano) continue;
 
-    const t = Number(tx.a) * 1000;
-    if (now - t > FRESH_TX_HASH_MS) continue;
-
-    return { msgHash, amountNano: amount, src: info.src, now: t };
+    return { msgHash, amountNano: amount, src: info.src, now: Number(tx.a) * 1000 };
   }
   return null;
 }
