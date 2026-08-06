@@ -28,12 +28,18 @@ export function isValidAddress(addr: string): boolean {
 
 async function messageInfo(hash: string): Promise<{ src: string; dst: string; valueOther: Record<string, string> } | null> {
   const q = `query { blockchain { message(hash: "${hash}") { a: src b: dst c: value_other { value currency } d: status } } }`;
-  // Майнет периодически отвечает валидным JSON, но с message:null — ретраим,
-  // чтобы отличать «индекс не отдал» от «сообщения нет».
+  // Майнет периодически отвечает валидным JSON, но с message:null, либо
+  // отдаёт 502/HTML — ретраим, чтобы отличать «индекс не отдал» от
+  // «сообщения нет».
   let last: Record<string, unknown> | null = null;
   for (let attempt = 0; attempt < 5; attempt++) {
-    const json = (await graphql(q)) as any;
-    const m = json?.data?.blockchain?.message;
+    let json: Record<string, unknown> | null = null;
+    try {
+      json = (await graphql(q)) as any;
+    } catch (e) {
+      last = { error: e instanceof Error ? e.message : String(e) };
+    }
+    const m = (json as any)?.data?.blockchain?.message;
     if (m) {
       const valueOther: Record<string, string> = {};
       for (const c of m.c || []) {
@@ -41,7 +47,6 @@ async function messageInfo(hash: string): Promise<{ src: string; dst: string; va
       }
       return { src: m.a, dst: m.b, valueOther };
     }
-    last = json;
     await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
   return null;
@@ -68,7 +73,11 @@ async function scanPayments(
   // чтобы отличать «не отдал» от «платежей нет».
   let json: any = null;
   for (let attempt = 0; attempt < 5; attempt++) {
-    json = (await graphql(q)) as any;
+    try {
+      json = (await graphql(q)) as any;
+    } catch (e) {
+      json = null;
+    }
     const acc = json?.data?.blockchain?.account;
     if (acc) break;
     await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
@@ -78,9 +87,13 @@ async function scanPayments(
 
   // edges идут от старых к свежим — идём с конца, чтобы первым подобрался
   // самый свежий подходящий платёж.
+  // ⚠️ НЕ отбрасываем aborted=true: на майнете все NACKL-переводы проходят
+  //    aborted-транзакцией (контракт кидает исключение на currency-перевод,
+  //    но NACKL доставляется, сообщение имеет статус processed). Проверяем
+  //    само сообщение (value_other + src).
   for (const e of edges.slice().reverse()) {
     const node = e?.node;
-    if (!node?.c || node.b) continue;
+    if (!node?.c) continue;
     const info = await messageInfo(node.c);
     if (!info) continue;
     if (srcFilter) {
