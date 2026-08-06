@@ -179,13 +179,15 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   // ═══ Fallback: ручной перевод NACKL + серверная проверка ═══
   // Показывается, если автоплатёж из кошелька невозможен (например,
   // OAuth/EPK-фактор недоступен). Платёж находится сервером автоматически,
-  // вводить хеш не нужно.
+  // вводить хеш не нужно. Переводы проходят ПО НИКУ кошелька, а не по адресу
+  // (по адресу AN Wallet просит dapp id) — поэтому копируем walletName.
+  const payTargetName = walletConnection?.walletName?.trim() || TREASURY_ADDRESS;
   const copyTreasuryAddress = async () => {
     try {
-      await navigator.clipboard.writeText(TREASURY_ADDRESS);
-      setFallbackNote('Адрес скопирован ✔');
+      await navigator.clipboard.writeText(payTargetName);
+      setFallbackNote(`Скопировано: ${payTargetName} ✔`);
     } catch {
-      setFallbackNote(`Адрес казначейства: ${TREASURY_ADDRESS}`);
+      setFallbackNote(`Переведите на ник: ${payTargetName}`);
     }
   };
 
@@ -526,17 +528,20 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
               <div className="px-4 py-4 flex flex-col gap-3">
                 <div className="text-[12px] text-white/80">
                   Автоплатёж из кошелька недоступен (нужен вход через Google/Telegram). Переведите{' '}
-                  <span className="font-bold text-neon-blue">{getPackById(fallbackPackId)?.nacklPrice} NACKL</span> со своего кошелька на адрес ниже, затем нажмите «Я оплатил»:
+                  <span className="font-bold text-neon-blue">{getPackById(fallbackPackId)?.nacklPrice} NACKL</span> со своего кошелька на <span className="font-bold text-white">ник: {payTargetName}</span>, затем нажмите «Я оплатил»:
                 </div>
-                <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-[10px] font-mono text-white/70 break-all select-all">
-                  {TREASURY_ADDRESS}
+                <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-[11px] font-mono text-white/80 break-all select-all">
+                  {payTargetName}
                 </div>
                 <button
                   onClick={copyTreasuryAddress}
                   className="w-full py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/10 text-white active:scale-95 transition-all"
                 >
-                  📋 Скопировать адрес
+                  📋 Скопировать ник
                 </button>
+                <div className="text-[9px] text-white/30 text-center break-all">
+                  адрес казначейства: {TREASURY_ADDRESS}
+                </div>
                 <button
                   onClick={handleFallbackVerify}
                   disabled={checkingFallback}

@@ -35,8 +35,8 @@ const PROVER_URL = 'https://proover.ackinacki.org/v1';
 const TELEGRAM_OAUTH_URL = 'https://oauth.gosh.sh';
 const TELEGRAM_CLIENT_ID =
   import.meta.env.VITE_TELEGRAM_OAUTH_CLIENT_ID || APP_ID;
-/** Telegram-бот (username без @) для Login Widget — бот Acki Nacki */
-const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'ackinacki_bot';
+/** Telegram-бот (username без @) для Login Widget — из env (VITE_TELEGRAM_BOT_NAME) */
+const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || '';
 
 // JWKS-эндпоинты провайдеров для получения modulus JWK по kid.
 // Для Telegram: TODO — уточнить у @EugeneDAO (скорее всего <oauth-хост>/jwks).
