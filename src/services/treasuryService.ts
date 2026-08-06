@@ -14,6 +14,8 @@ import { toNano } from './helpers';
 export const TREASURY_ADDRESS =
   import.meta.env.VITE_TREASURY_ADDRESS ||
   '0:badc33121c6284f5dbf1ec829edbd1d97f5fc7fae5f15461acdd74d77c341d85';
+/** Ник владельца казначейства — по нему проходят переводы (по адресу AN Wallet просит app id) */
+export const TREASURY_NAME = import.meta.env.VITE_TREASURY_NAME || '';
 const NACKL_ECC_INDEX = '1';
 
 export interface BuyResult {

@@ -12,6 +12,7 @@ import {
   getTreasurySignerKeys,
   confirmPackPayment,
   TREASURY_ADDRESS,
+  TREASURY_NAME,
 } from '../services/treasuryService';
 import { buyPack as buyPackWithNackl } from '../services/paymentService';
 
@@ -179,9 +180,10 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   // ═══ Fallback: ручной перевод NACKL + серверная проверка ═══
   // Показывается, если автоплатёж из кошелька невозможен (например,
   // OAuth/EPK-фактор недоступен). Платёж находится сервером автоматически,
-  // вводить хеш не нужно. Переводы проходят ПО НИКУ кошелька, а не по адресу
-  // (по адресу AN Wallet просит dapp id) — поэтому копируем walletName.
-  const payTargetName = walletConnection?.walletName?.trim() || TREASURY_ADDRESS;
+  // вводить хеш не нужно. Переводы идут ПО НИКУ ВЛАДЕЛЬЦА казначейства,
+  // а не по нику текущего игрока (ник игрока — его собственный, он перевёл
+  // бы сам себе, и платёж бы не нашёлся).
+  const payTargetName = TREASURY_NAME || TREASURY_ADDRESS;
   const copyTreasuryAddress = async () => {
     try {
       await navigator.clipboard.writeText(payTargetName);
@@ -537,7 +539,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                   onClick={copyTreasuryAddress}
                   className="w-full py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/10 text-white active:scale-95 transition-all"
                 >
-                  📋 Скопировать ник
+                  📋 Скопировать {TREASURY_NAME ? 'ник' : 'адрес'}
                 </button>
                 <div className="text-[9px] text-white/30 text-center break-all">
                   адрес казначейства: {TREASURY_ADDRESS}
