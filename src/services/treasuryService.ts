@@ -114,35 +114,48 @@ export async function requestAckr(
 }
 
 /**
- * Подтвердить покупку пака: сервер ищет входящий NACKL-платёж на казначейство
- * и возвращает 200, когда платёж найден. Платёж идёт несколько секунд —
- * ретраим по retryAfterMs.
+ * EPK-ключ для подписи NACKL-перевода (тот же флоу, что в paymentService).
  */
-export async function confirmPackPayment(
+export function getTreasurySignerKeys(): { public: string; secret: string } | null {
+  const epk = getStoredEpkKey();
+  if (!epk) return null;
+  return { public: epk.public, secret: epk.secret };
+}
+
+/**
+ * Пополнить игровой баланс: сервер сканирует блокчейн на ВСЕ платежи игрока
+ * на казначейство и зачисляет их (анти-повтор по msg_hash в БД).
+ * Платёж идёт несколько секунд — ретраим по retryAfterMs.
+ */
+export async function depositNackl(
   player: string,
-  nacklAmount: number,
-  packId: string,
-  txHash?: string,
   maxRetries = 24,
-): Promise<BuyResult> {
+): Promise<{ success: boolean; depositedNackl?: number; balanceNackl?: number; error?: string }> {
   let attempt = 0;
   let retryAfterMs = 5000;
 
   while (attempt < maxRetries) {
     attempt += 1;
     try {
-      const res = await fetch('/api/shop/buy', {
+      const res = await fetch('/api/balance/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player, nacklAmount, packId, txHash: txHash?.trim() || undefined }),
+        body: JSON.stringify({ player }),
       });
-      const json = (await res.json()) as BuyResult;
+      const json = (await res.json()) as {
+        success: boolean;
+        depositedNano?: string;
+        balanceNano?: string;
+        error?: string;
+        retryAfterMs?: number;
+      };
 
       if (res.ok && json.success) {
-        return { success: true };
-      }
-      if (res.status === 409) {
-        return { success: false, error: json.error || 'Платёж уже обработан' };
+        return {
+          success: true,
+          depositedNackl: json.depositedNano ? Number(json.depositedNano) / 1e9 : 0,
+          balanceNackl: json.balanceNano ? Number(json.balanceNano) / 1e9 : 0,
+        };
       }
       if (res.status === 400) {
         return { success: false, error: json.error || 'Ошибка запроса' };
@@ -151,20 +164,51 @@ export async function confirmPackPayment(
       retryAfterMs = json.retryAfterMs || retryAfterMs;
       await new Promise((r) => setTimeout(r, retryAfterMs));
     } catch {
-      // сеть — ждём и пробуем ещё
       await new Promise((r) => setTimeout(r, retryAfterMs));
     }
   }
-  return { success: false, error: 'Таймаут подтверждения платежа' };
+  return { success: false, error: 'Таймаут: платёж не найден' };
 }
 
 /**
- * EPK-ключ для подписи NACKL-перевода (тот же флоу, что в paymentService).
+ * Текущий игровой баланс в NACKL (0 при ошибке).
  */
-export function getTreasurySignerKeys(): { public: string; secret: string } | null {
-  const epk = getStoredEpkKey();
-  if (!epk) return null;
-  return { public: epk.public, secret: epk.secret };
+export async function getPlayerBalance(player: string): Promise<number> {
+  try {
+    const res = await fetch(`/api/balance?player=${encodeURIComponent(player)}`);
+    const json = (await res.json()) as { success?: boolean; balanceNackl?: number };
+    return json?.balanceNackl || 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Купить пак за игровой баланс: сервер атомарно списывает цену
+ * (серверная цена пака, клиент не передаёт сумму).
+ */
+export async function buyWithBalance(
+  player: string,
+  packId: string,
+): Promise<{ success: boolean; balanceNackl?: number; error?: string }> {
+  try {
+    const res = await fetch('/api/shop/buy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player, packId }),
+    });
+    const json = (await res.json()) as {
+      success: boolean;
+      balanceNano?: string;
+      error?: string;
+    };
+    if (res.ok && json.success) {
+      return { success: true, balanceNackl: json.balanceNano ? Number(json.balanceNano) / 1e9 : undefined };
+    }
+    return { success: false, error: json.error || 'Покупка не удалась' };
+  } catch {
+    return { success: false, error: 'Сеть недоступна' };
+  }
 }
 
 /** Статус/история заказов игрока (для UI «получить ACKR») */

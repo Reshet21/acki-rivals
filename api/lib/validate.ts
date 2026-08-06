@@ -108,18 +108,55 @@ async function scanPayments(
 }
 
 /**
+ * Все NACKL-платежи от srcFilter на казначейство, >= amountNano.
+ * Нужен для депозитов: за один вызов начисляем ВСЕ необработанные платежи.
+ */
+export async function scanAllPayments(
+  amountNano: bigint,
+  treasuryAccount: string,
+  srcFilter: string,
+): Promise<Payment[]> {
+  const accountId = treasuryAccount.split(':').pop()!;
+  const dappId = TREASURY_DAPP_ID || accountId;
+  const q = `query { blockchain { account(account_id: "${accountId}", dapp_id: "${dappId}") { transactions { edges { node { a: now b: aborted c: in_msg } } } } } }`;
+  let json: any = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      json = (await graphql(q)) as any;
+    } catch (e) {
+      json = null;
+    }
+    const acc = json?.data?.blockchain?.account;
+    if (acc) break;
+    await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+  }
+  const edges = json?.data?.blockchain?.account?.transactions?.edges || [];
+
+  const found: Payment[] = [];
+  for (const e of edges.slice().reverse()) {
+    const node = e?.node;
+    if (!node?.c) continue;
+    const info = await messageInfo(node.c);
+    if (!info) continue;
+    const srcHex = info.src.split(':').pop()?.toLowerCase();
+    const filterHex = srcFilter.split(':').pop()?.toLowerCase();
+    if (!srcHex || srcHex !== filterHex) continue;
+
+    const nackl = info.valueOther[NACKL_ECC_INDEX];
+    if (!nackl) continue;
+    const amount = BigInt(nackl);
+    if (amount < amountNano) continue;
+
+    found.push({ msgHash: node.c, amountNano: amount, src: info.src, now: Number(node.a) * 1000 });
+  }
+  return found;
+}
+
+/**
  * Найти свежий NACKL-платёж от player на M.
  */
 export async function findPayment(player: string, amountNano: bigint, treasuryAccount: string): Promise<Payment | null> {
   return scanPayments(amountNano, treasuryAccount, player);
-}
-
-/**
- * Найти свежий NACKL-платёж на M от ЛЮБОГО отправителя
- * (игрок может платить с любого своего кошелька).
- */
-export async function findAnyPayment(amountNano: bigint, treasuryAccount: string): Promise<Payment | null> {
-  return scanPayments(amountNano, treasuryAccount);
 }
 
 /**

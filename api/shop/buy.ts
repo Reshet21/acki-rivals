@@ -1,23 +1,25 @@
 /**
- * api/shop/buy.ts — POST: подтверждение покупки пака за NACKL прямым переводом.
+ * api/shop/buy.ts — POST: покупка пака за игровой баланс (NACKL).
  *
- * Body: { player: "0:hex64", nacklAmount: number, packId: string }
+ * Body: { player: "0:hex64", packId: "basic|standard|advanced" }
  *
- * Игрок отправляет NACKL обычным переводом на казначейство M со своего
- * кошелька (не обязательно игрового — подходит любой, где есть NACKL),
- * затем клиент опрашивает этот эндпоинт:
+ * Пополнение баланса — отдельно: api/balance/deposit.ts (блокчейн-перевод
+ * на казначейство). Здесь — атомарное списание с баланса игрока
+ * (debit_balance RPC: списывает только если средств хватает).
+ * Цена берётся СЕРВЕРНАЯ (не доверяем клиенту).
+ * Паки открывает клиент — сервер только списывает и подтверждает.
  *
- * 1) ищется свежий входящий NACKL-платёж на M:
- *    сначала от игрового адреса (player), затем любой (по сумме+времени);
- * 2) анти-повтор через Supabase (treasury_orders, msgHash UNIQUE);
- * 3) паки открывает клиент — сервер только подтверждает платёж.
- *
- * Ответ 202 — платёж ещё не найден на блокчейне (клиент ретраит).
+ * Ответ:
+ *   200 — { success: true, packId, priceNano, balanceNano }
+ *   400 — невалидные параметры
+ *   402 — недостаточно средств на балансе
+ *   500 — ошибка БД
  */
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { TREASURY_ADDR, isDev } from '../lib/config.js';
-import { findPayment, findPaymentByTxHash, isValidAddress, matchesSender } from '../lib/validate.js';
+import { isDev } from '../lib/config.js';
+import { isValidAddress } from '../lib/validate.js';
+import { debitSpend, getBalance } from '../lib/balance.js';
 
 /** Цены паков в NACKL (дублируются из src/data/packs.ts) */
 const PACK_PRICES: Record<string, number> = {
@@ -29,8 +31,8 @@ const PACK_PRICES: Record<string, number> = {
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
-function nano(value: number): string {
-  return BigInt(Math.round(value * 1e9)).toString();
+function nano(value: number): bigint {
+  return BigInt(Math.round(value * 1e9));
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -40,9 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const body = req.body || {};
   const player = String(body.player || '').trim();
-  const nacklAmount = Number(body.nacklAmount);
   const packId = String(body.packId || '').trim();
-  const txHash = String(body.txHash || '').trim().toLowerCase();
 
   const price = PACK_PRICES[packId];
   if (!price) {
@@ -51,63 +51,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!isValidAddress(player)) {
     return res.status(400).json({ error: 'player: ожидается "0:" + 64 hex' });
   }
-  if (!Number.isFinite(nacklAmount) || nacklAmount < price) {
-    return res.status(400).json({ error: `nacklAmount: не менее ${price} NACKL` });
-  }
-  if (txHash && !/^[0-9a-f]{64}$/.test(txHash)) {
-    return res.status(400).json({ error: 'txHash: ожидается 64 hex' });
-  }
 
   try {
-    // ── 1. Найти платёж ──
-    //    Приоритет: хеш транзакции из кошелька (надёжно даже при нестабильном
-    //    account.transactions), затем авто-поиск — строго от игрового адреса.
-    //    НИКАКИХ fallback'ов «с любого кошелька»: при нескольких игроках
-    //    чужая оплата той же суммы засчиталась бы тому, кто первый нажал
-    //    «Я оплатил» (критическая ошибка).
-    let payment: Awaited<ReturnType<typeof findPayment>> = null;
-    try {
-      const amountNano = BigInt(nano(price));
-      if (txHash) {
-        payment = await findPaymentByTxHash(txHash, amountNano, TREASURY_ADDR);
-        if (payment && !matchesSender(payment.src, player)) {
-          // Хеш чужого платежа (или платёж не с игрового адреса) — не засчитываем.
-          payment = null;
-        }
-      }
-      if (!payment) {
-        payment = await findPayment(player, amountNano, TREASURY_ADDR);
-      }
-    } catch (e) {
-      // сеть/GraphQL нестабильны (майнет отдаёт HTML/502) — клиент продолжит опрос
-      console.error('[shop/buy] GraphQL error:', e);
-      return res.status(202).json({ error: 'Сеть блокчейна временно недоступна, пробуем ещё раз', retryAfterMs: 5000 });
-    }
-    if (!payment) {
-      return res.status(202).json({ error: 'Платёж не найден или ещё не подтверждён', retryAfterMs: 5000 });
-    }
-
-    // ── 2. Анти-повтор ──
     const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
-    if (supabase) {
-      const { error } = await supabase
-        .from('treasury_orders')
-        .insert({ msg_hash: payment.msgHash, player, nackl_amount: payment.amountNano.toString(), ackr_amount: 0, status: 'done' })
-        .select('id')
-        .single();
-      if (error && String(error.message || error.code || '').toLowerCase().includes('duplicate')) {
-        return res.status(409).json({ error: 'Платёж уже обработан' });
+    if (!supabase) {
+      if (isDev) {
+        // dev: без БД считаем покупку успешной (анти-повтор не нужен)
+        return res.status(200).json({ success: true, packId, priceNano: nano(price).toString(), balanceNano: '0' });
       }
-      if (error) {
-        return res.status(500).json({ error: `supabase: ${error.message}` });
-      }
-    } else if (!isDev) {
-      return res.status(500).json({ error: 'Анти-повтор не настроен (SUPABASE_* env)' });
+      return res.status(500).json({ error: 'База не настроена (SUPABASE_* env)' });
     }
 
-    return res.status(200).json({ success: true, packId, price });
+    // ── 1. Атомарное списание с баланса ──
+    const debit = await debitSpend(supabase, player, nano(price), packId);
+    if (!debit.success) {
+      return res.status(402).json({ error: 'Недостаточно NACKL на игровом балансе', balanceNano: debit.balanceNano.toString() });
+    }
+
+    return res.status(200).json({ success: true, packId, priceNano: nano(price).toString(), balanceNano: debit.balanceNano.toString() });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Internal error';
+    console.error('[shop/buy]', msg);
     return res.status(500).json({ error: msg });
   }
 }
