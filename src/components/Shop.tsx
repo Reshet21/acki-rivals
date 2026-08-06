@@ -11,6 +11,7 @@ import {
   requestAckr,
   getTreasurySignerKeys,
   confirmPackPayment,
+  TREASURY_ADDRESS,
   TREASURY_NAME,
 } from '../services/treasuryService';
 import { buyPack as buyPackWithNackl } from '../services/paymentService';
