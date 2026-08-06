@@ -71,6 +71,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [fallbackNote, setFallbackNote] = useState<string | null>(null);
   const [checkingFallback, setCheckingFallback] = useState(false);
   const [gameBalance, setGameBalance] = useState<number | null>(null);
+  const [showDeposit, setShowDeposit] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<number>(10);
 
   // Игровой баланс (депозиты NACKL на казначейство)
   useEffect(() => {
@@ -86,6 +88,53 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       cancelled = true;
     };
   }, [walletConnection]);
+
+  // Автопополнение: пока панель пополнения открыта, каждые 15с проверяем
+  // новые платежи игрока; зачислили — обновляем баланс, при наличии
+  // fallbackPackId сразу покупаем пак (без повторных подтверждений).
+  useEffect(() => {
+    if (!walletConnection || (!showDeposit && !fallbackPackId)) return;
+    if (checkingFallback) return;
+    const player = walletConnection.walletAddress;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const check = async () => {
+      const dep = await depositNackl(player, 1);
+      if (cancelled) return;
+      if (dep.success && (dep.depositedNackl || 0) > 0) {
+        if (dep.balanceNackl !== undefined) setGameBalance(dep.balanceNackl);
+        setFallbackNote((prev) =>
+          prev === null ? `Зачислено ${dep.depositedNackl} NACKL. Баланс: ${dep.balanceNackl?.toFixed(2)} NACKL` : prev,
+        );
+        if (fallbackPackId) {
+          setCheckingFallback(true);
+          setFallbackNote(`Зачислено ${dep.depositedNackl} NACKL. Покупаем пак…`);
+          const buy = await buyWithBalance(player, fallbackPackId);
+          if (cancelled) return;
+          setCheckingFallback(false);
+          if (buy.success) {
+            if (buy.balanceNackl !== undefined) setGameBalance(buy.balanceNackl);
+            const cards = onBuyPack(fallbackPackId);
+            setFallbackPackId(null);
+            setShowDeposit(false);
+            if (cards && cards.length > 0) {
+              setOpenedCards(cards);
+              setRevealIndex(-1);
+              setPhase('opening');
+            }
+          } else {
+            setFallbackNote(buy.error || 'Недостаточно средств на балансе.');
+          }
+        }
+      }
+    };
+    timer = setInterval(check, 15000);
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [walletConnection, showDeposit, fallbackPackId, checkingFallback, onBuyPack]);
 
   useEffect(() => {
     if (phase !== 'opening' || openedCards.length === 0) return;
@@ -184,12 +233,10 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     setRevealIndex(-1);
   };
 
-  // ═══ Fallback: ручной перевод NACKL + серверная проверка ═══
-  // Показывается, если автоплатёж из кошелька невозможен (например,
-  // OAuth/EPK-фактор недоступен). Платёж находится сервером автоматически,
-  // вводить хеш не нужно. Переводы идут ПО НИКУ ВЛАДЕЛЬЦА казначейства,
-  // а не по нику текущего игрока (ник игрока — его собственный, он перевёл
-  // бы сам себе, и платёж бы не нашёлся).
+  // ═══ Пополнение игрового баланса ═══
+  // Игрок вводит сумму, переводит NACKL на ник владельца казначейства,
+  // сервер зачисляет ВСЕ его платежи на игровой баланс (анти-повтор по
+  // msg_hash). Покупка паков идёт сразу с баланса, без подтверждений.
   const payTargetName = TREASURY_NAME || TREASURY_ADDRESS;
   const copyTreasuryAddress = async () => {
     try {
@@ -200,10 +247,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     }
   };
 
-  const handleFallbackVerify = async () => {
-    if (!fallbackPackId || !walletConnection) return;
-    const pack = getPackById(fallbackPackId);
-    if (!pack) return;
+  const handleDepositNow = async (buyPackAfter: string | null) => {
+    if (!walletConnection) return;
     const player = walletConnection.walletAddress;
 
     impactOccurred('medium');
@@ -223,21 +268,24 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
           : `Баланс: ${dep.balanceNackl?.toFixed(2)} NACKL`,
       );
 
-      // 2. Покупаем пак с баланса
-      const buy = await buyWithBalance(player, fallbackPackId);
-      if (buy.success) {
-        if (buy.balanceNackl !== undefined) setGameBalance(buy.balanceNackl);
-        const cards = onBuyPack(fallbackPackId);
-        setFallbackPackId(null);
-        if (!cards || cards.length === 0) {
-          setFallbackNote('Платёж зачислен, но паки не выданы — обратитесь к разработчику.');
-          return;
+      // 2. Если покупаем пак — списываем с баланса
+      if (buyPackAfter) {
+        const buy = await buyWithBalance(player, buyPackAfter);
+        if (buy.success) {
+          if (buy.balanceNackl !== undefined) setGameBalance(buy.balanceNackl);
+          const cards = onBuyPack(buyPackAfter);
+          setFallbackPackId(null);
+          setShowDeposit(false);
+          if (!cards || cards.length === 0) {
+            setFallbackNote('Платёж зачислен, но паки не выданы — обратитесь к разработчику.');
+            return;
+          }
+          setOpenedCards(cards);
+          setRevealIndex(-1);
+          setPhase('opening');
+        } else {
+          setFallbackNote(buy.error || 'Недостаточно средств на балансе.');
         }
-        setOpenedCards(cards);
-        setRevealIndex(-1);
-        setPhase('opening');
-      } else {
-        setFallbackNote(buy.error || 'Недостаточно средств на балансе.');
       }
     } catch {
       setFallbackNote('Ошибка проверки платежа. Попробуйте ещё раз.');
@@ -249,6 +297,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
 
   const cancelFallback = () => {
     setFallbackPackId(null);
+    setShowDeposit(false);
     setFallbackNote(null);
     setBuyingPackId(null);
   };
@@ -477,22 +526,30 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-3 shrink-0 relative z-10">
         <div className="text-lg font-bold text-white">{t('shop.title')}</div>
-        <div className="flex items-center gap-1.5">
-          {gameBalance !== null && (
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full"
-              style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)' }}>
-              <span className="text-sm font-bold" style={{ color: 'rgba(255,215,0,0.95)' }}>
-                🎮 {gameBalance.toFixed(2)} NACKL
+          <div className="flex items-center gap-1.5">
+            {gameBalance !== null && (
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full"
+                style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)' }}>
+                <span className="text-sm font-bold" style={{ color: 'rgba(255,215,0,0.95)' }}>
+                  🎮 {gameBalance.toFixed(2)} NACKL
+                </span>
+              </div>
+            )}
+            {walletConnection && (
+              <button
+                onClick={() => { setShowDeposit(true); setFallbackPackId(null); setPaymentError(null); }}
+                className="px-2.5 py-1.5 rounded-full text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all"
+              >
+                ➕ Пополнить
+              </button>
+            )}
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full animate-counter-glow"
+              style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
+              <span className="text-sm text-neon-blue font-bold">
+                {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
               </span>
             </div>
-          )}
-          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full animate-counter-glow"
-            style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
-            <span className="text-sm text-neon-blue font-bold">
-              {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
-            </span>
           </div>
-        </div>
       </div>
 
       {/* Wallet warning */}
@@ -544,24 +601,39 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       {/* Packs */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4 relative z-10">
         <div className="flex flex-col gap-4">
-          {fallbackPackId && (
+          {(fallbackPackId || showDeposit) && walletConnection && (
             <div className="rounded-2xl border border-neon-blue/30 bg-white/[0.04] overflow-hidden"
               style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <div className="bg-gradient-to-r from-neon-blue to-neon-purple p-4 relative overflow-hidden">
                 <div className="relative z-10 flex items-center gap-3">
                   <div className="text-3xl">💸</div>
                   <div className="flex-1">
-                    <div className="text-lg font-black text-white">Пополните игровой баланс</div>
+                    <div className="text-lg font-black text-white">Пополнить игровой баланс</div>
                     <div className="text-[10px] text-white/70">
-                      {getPackName(lang, fallbackPackId)} · {getPackById(fallbackPackId)?.nacklPrice} NACKL
+                      {fallbackPackId
+                        ? `${getPackName(lang, fallbackPackId)} · ${getPackById(fallbackPackId)?.nacklPrice} NACKL`
+                        : 'Переводы на ник казначейства'}
                     </div>
                   </div>
                 </div>
               </div>
               <div className="px-4 py-4 flex flex-col gap-3">
                 <div className="text-[12px] text-white/80">
-                  На балансе недостаточно NACKL. Переведите{' '}
-                  <span className="font-bold text-neon-blue">{getPackById(fallbackPackId)?.nacklPrice}+ NACKL</span> со своего кошелька на <span className="font-bold text-white">ник: {payTargetName}</span>, затем нажмите «Я пополнил»:
+                  Введите сумму пополнения и переведите её в AN Wallet на{' '}
+                  <span className="font-bold text-white">ник: {payTargetName}</span>. Баланс пополнится автоматически:
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    step="any"
+                    inputMode="decimal"
+                    value={Number.isFinite(depositAmount) ? String(depositAmount) : ''}
+                    onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
+                    className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-black/40 border border-white/15 text-white text-sm font-bold outline-none focus:border-neon-blue"
+                    placeholder="Сумма NACKL"
+                  />
+                  <span className="text-white/60 text-sm font-bold shrink-0">NACKL</span>
                 </div>
                 <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-[11px] font-mono text-white/80 break-all select-all">
                   {payTargetName}
@@ -572,8 +644,11 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                 >
                   📋 Скопировать ник
                 </button>
+                <div className="text-[10px] text-white/50 text-center">
+                  Баланс проверяется автоматически каждые 15 секунд — ничего нажимать не нужно
+                </div>
                 <button
-                  onClick={handleFallbackVerify}
+                  onClick={() => handleDepositNow(fallbackPackId)}
                   disabled={checkingFallback}
                   className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
                     checkingFallback
