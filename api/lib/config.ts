@@ -42,6 +42,10 @@ export const TREASURY_ADDR =
 
 export const NACKL_ECC_INDEX = '1';
 
+/** dapp приложения (app id от AN, hex без 0x). Пусто = self (account_id).
+ *  В этом dapp ищем входящие платежи на казначейство. */
+export const TREASURY_DAPP_ID = (process.env.TREASURY_DAPP_ID || '').replace(/^0x/i, '').toLowerCase();
+
 /** Сколько ACKR выдаём за 1 NACKL (nano = ACKR * 1e9) */
 export const ACKR_PER_NACKL = Number(process.env.TREASURY_ACKR_PER_NACKL || 1);
 /** Минимальный платёж в NACKL */

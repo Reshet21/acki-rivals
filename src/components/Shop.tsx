@@ -512,12 +512,12 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                   2. Нажмите «Я оплатил» — приложение проверит платёж в блокчейне и откроет паки.
                 </div>
                 <div className="text-[11px] text-white/50">
-                  Необязательно, но надёжнее: вставьте хеш транзакции, который кошелёк показал при отправке — проверка пройдёт мгновенно.
+                  Хеш вставлять не нужно — платёж найдётся автоматически. Поле — для ускоренной проверки.
                 </div>
                 <input
                   value={paymentTxHash}
                   onChange={(e) => setPaymentTxHash(e.target.value.trim())}
-                  placeholder="например, 1173243698db83…"
+                  placeholder="хеш транзакции (необязательно)"
                   spellCheck={false}
                   className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-[11px] font-mono text-white/80 placeholder-white/30 focus:outline-none focus:border-neon-blue/50 transition-all"
                 />

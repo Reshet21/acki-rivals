@@ -8,9 +8,9 @@
  * ("expected selection"), поэтому все поля псевдонимированы.
  */
 import { graphql } from './tvm.js';
-import { NACKL_ECC_INDEX } from './config.js';
+import { NACKL_ECC_INDEX, TREASURY_DAPP_ID } from './config.js';
 
-const FRESH_MS = 10 * 60 * 1000;
+const FRESH_MS = 7 * 24 * 60 * 60 * 1000;
 /** Для верификации по хешу из кошелька: хеш одноразовый (анти-повтор в БД),
  *  поэтому свежесть не критична — пользователь может вставить хеш позже */
 const FRESH_TX_HASH_MS = 7 * 24 * 60 * 60 * 1000;
@@ -51,6 +51,10 @@ async function messageInfo(hash: string): Promise<{ src: string; dst: string; va
  * Сканировать свежие входящие транзакции счёта на предмет NACKL-переводов
  * >= amountNano. Если srcFilter задан — учитывать только платежи от этого
  * отправителя, иначе — любой отправитель.
+ *
+ * dapp_id: контекст приложения (TREASURY_DAPP_ID из env); пусто = self-вью.
+ * Майнет отдаёт одну и ту же ленту для self и app-контекста, но приложение
+ * регистрирует свои платежи в своём dapp — поэтому приоритет у app id.
  */
 async function scanPayments(
   amountNano: bigint,
@@ -58,12 +62,23 @@ async function scanPayments(
   srcFilter?: string,
 ): Promise<Payment | null> {
   const accountId = treasuryAccount.split(':').pop()!;
-  const q = `query { blockchain { account(account_id: "${accountId}", dapp_id: "${accountId}") { transactions { edges { node { a: now b: aborted c: in_msg } } } } } }`;
-  const json = (await graphql(q)) as any;
+  const dappId = TREASURY_DAPP_ID || accountId;
+  const q = `query { blockchain { account(account_id: "${accountId}", dapp_id: "${dappId}") { transactions { edges { node { a: now b: aborted c: in_msg } } } } } }`;
+  // Майнет периодически отвечает валидным JSON с account:null — ретраим,
+  // чтобы отличать «не отдал» от «платежей нет».
+  let json: any = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    json = (await graphql(q)) as any;
+    const acc = json?.data?.blockchain?.account;
+    if (acc) break;
+    await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+  }
   const edges = json?.data?.blockchain?.account?.transactions?.edges || [];
   const now = Date.now();
 
-  for (const e of edges) {
+  // edges идут от старых к свежим — идём с конца, чтобы первым подобрался
+  // самый свежий подходящий платёж.
+  for (const e of edges.slice().reverse()) {
     const node = e?.node;
     if (!node?.c || node.b) continue;
     const info = await messageInfo(node.c);
