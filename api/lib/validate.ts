@@ -108,13 +108,14 @@ async function scanPayments(
 }
 
 /**
- * Все NACKL-платежи от srcFilter на казначейство, >= amountNano.
- * Нужен для депозитов: за один вызов начисляем ВСЕ необработанные платежи.
+ * Все NACKL-платежи на казначейство РОВНО amountNano (без фильтра по src:
+ * на майнете у ВСЕХ переводов на казначейство src = адрес казначейства,
+ * отправителя по src не отличить). Идентификация игрока — точная сумма
+ * заявки + первый незачисленный платёж (msg_hash UNIQUE в ledger).
  */
 export async function scanAllPayments(
   amountNano: bigint,
   treasuryAccount: string,
-  srcFilter: string,
 ): Promise<Payment[]> {
   const accountId = treasuryAccount.split(':').pop()!;
   const dappId = TREASURY_DAPP_ID || accountId;
@@ -138,14 +139,11 @@ export async function scanAllPayments(
     if (!node?.c) continue;
     const info = await messageInfo(node.c);
     if (!info) continue;
-    const srcHex = info.src.split(':').pop()?.toLowerCase();
-    const filterHex = srcFilter.split(':').pop()?.toLowerCase();
-    if (!srcHex || srcHex !== filterHex) continue;
 
     const nackl = info.valueOther[NACKL_ECC_INDEX];
     if (!nackl) continue;
     const amount = BigInt(nackl);
-    if (amount < amountNano) continue;
+    if (amount !== amountNano) continue;
 
     found.push({ msgHash: node.c, amountNano: amount, src: info.src, now: Number(node.a) * 1000 });
   }

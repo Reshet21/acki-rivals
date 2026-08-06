@@ -123,16 +123,19 @@ export function getTreasurySignerKeys(): { public: string; secret: string } | nu
 }
 
 /**
- * Пополнить игровой баланс: сервер сканирует блокчейн на ВСЕ платежи игрока
- * на казначейство и зачисляет их (анти-повтор по msg_hash в БД).
+ * Пополнить игровой баланс: сервер ищет в ленте казначейства незачисленный
+ * платёж РОВНО amountNackl (отправителя по src не отличить — у всех
+ * переводов src = казначейство, поэтому сумма заявки = идентификатор).
  * Платёж идёт несколько секунд — ретраим по retryAfterMs.
  */
 export async function depositNackl(
   player: string,
+  amountNackl: number,
   maxRetries = 24,
 ): Promise<{ success: boolean; depositedNackl?: number; balanceNackl?: number; error?: string }> {
   let attempt = 0;
   let retryAfterMs = 5000;
+  const expectedNano = BigInt(Math.round(amountNackl * 1e9)).toString();
 
   while (attempt < maxRetries) {
     attempt += 1;
@@ -140,7 +143,7 @@ export async function depositNackl(
       const res = await fetch('/api/balance/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player }),
+        body: JSON.stringify({ player, expectedNano }),
       });
       const json = (await res.json()) as {
         success: boolean;

@@ -100,7 +100,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
     const check = async () => {
-      const dep = await depositNackl(player, 1);
+      const dep = await depositNackl(player, depositAmount, 1);
       if (cancelled) return;
       if (dep.success && (dep.depositedNackl || 0) > 0) {
         if (dep.balanceNackl !== undefined) setGameBalance(dep.balanceNackl);
@@ -134,7 +134,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       cancelled = true;
       if (timer) clearInterval(timer);
     };
-  }, [walletConnection, showDeposit, fallbackPackId, checkingFallback, onBuyPack]);
+  }, [walletConnection, showDeposit, fallbackPackId, checkingFallback, depositAmount, onBuyPack]);
 
   useEffect(() => {
     if (phase !== 'opening' || openedCards.length === 0) return;
@@ -203,8 +203,10 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
         return;
       } else {
         // 402 (недостаточно средств) или ошибка — панель пополнения
+        // с суммой = цена пака (сумма заявки = идентификатор платежа)
         setPaymentError(result.error || t('shop.paymentError'));
         setFallbackPackId(packId);
+        setDepositAmount(pack.nacklPrice);
         setFallbackNote(null);
         setBuyingPackId(null);
         return;
@@ -256,7 +258,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     setFallbackNote(null);
     try {
       // 1. Сканируем блокчейн: зачисляем на игровой баланс все платежи игрока
-      const dep = await depositNackl(player);
+      const dep = await depositNackl(player, depositAmount);
       if (!dep.success) {
         setFallbackNote(dep.error || 'Платёж не найден. Проверьте сумму и ник.');
         return;
