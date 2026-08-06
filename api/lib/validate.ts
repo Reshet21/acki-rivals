@@ -159,3 +159,12 @@ export async function findPaymentByTxHash(
   }
   return null;
 }
+
+/**
+ * Совпадает ли отправитель платежа с адресом игрока.
+ * Критично для мультипользователя: платёж засчитывается ТОЛЬКО тому,
+ * кто его реально отправил, иначе игрок A получит пак за счёт перевода игрока B.
+ */
+export function matchesSender(src: string, player: string): boolean {
+  return typeof src === 'string' && typeof player === 'string' && src.toLowerCase() === player.toLowerCase();
+}

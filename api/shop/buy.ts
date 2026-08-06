@@ -17,7 +17,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { TREASURY_ADDR, isDev } from '../lib/config.js';
-import { findAnyPayment, findPayment, findPaymentByTxHash, isValidAddress } from '../lib/validate.js';
+import { findPayment, findPaymentByTxHash, isValidAddress, matchesSender } from '../lib/validate.js';
 
 /** Цены паков в NACKL (дублируются из src/data/packs.ts) */
 const PACK_PRICES: Record<string, number> = {
@@ -61,18 +61,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ── 1. Найти платёж ──
     //    Приоритет: хеш транзакции из кошелька (надёжно даже при нестабильном
-    //    account.transactions), затем авто-поиск: сначала от игрового адреса,
-    //    затем с любого кошелька.
+    //    account.transactions), затем авто-поиск — строго от игрового адреса.
+    //    НИКАКИХ fallback'ов «с любого кошелька»: при нескольких игроках
+    //    чужая оплата той же суммы засчиталась бы тому, кто первый нажал
+    //    «Я оплатил» (критическая ошибка).
     let payment: Awaited<ReturnType<typeof findPayment>> = null;
     try {
       const amountNano = BigInt(nano(price));
       if (txHash) {
         payment = await findPaymentByTxHash(txHash, amountNano, TREASURY_ADDR);
+        if (payment && !matchesSender(payment.src, player)) {
+          // Хеш чужого платежа (или платёж не с игрового адреса) — не засчитываем.
+          payment = null;
+        }
       }
       if (!payment) {
-        payment =
-          (await findPayment(player, amountNano, TREASURY_ADDR)) ||
-          (await findAnyPayment(amountNano, TREASURY_ADDR));
+        payment = await findPayment(player, amountNano, TREASURY_ADDR);
       }
     } catch (e) {
       // сеть/GraphQL нестабильны (майнет отдаёт HTML/502) — клиент продолжит опрос
