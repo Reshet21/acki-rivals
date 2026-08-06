@@ -260,7 +260,7 @@ export function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
         if (!idToken) {
           throw new Error(`Telegram OAuth: нет id_token в ответе: ${JSON.stringify(json).slice(0, 200)}`);
         }
-        const payload = decodeJwtPayload(idToken);
+        const payload = decodeJwtPayload(idToken) as Record<string, string>;
         const kid = decodeJwtHeader(idToken).kid;
         resolve({
           idToken,
@@ -284,7 +284,7 @@ export function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
     container.appendChild(w);
 
     const tryRender = () => {
-      const global = window as unknown as { Telegram?: { Login: { init: (opts: object, onAuth: unknown) => void } } };
+      const global = window as unknown as { Telegram?: { Login: { init: (opts: object, onAuth: (user: Record<string, unknown> | null) => void) => void } } };
       if (!global.Telegram?.Login?.init) {
         setTimeout(tryRender, 300);
         return;
@@ -295,9 +295,9 @@ export function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
           origin: window.location.origin,
           request_access: true,
         },
-        (user: Record<string, unknown> | null) => {
+        (user) => {
           if (user) {
-            (window as unknown as Record<string, unknown>).onTelegramAuth?.(user);
+            (window as unknown as { onTelegramAuth?: (u: typeof user) => void }).onTelegramAuth?.(user);
           } else {
             reject(new Error('Вход в Telegram отменён'));
           }
