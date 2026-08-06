@@ -10,7 +10,7 @@
 
 const ENDPOINTS = ['https://mainnet.ackinacki.org'];
 const API_URL = 'https://app-backend-dev.ackinacki.org/api';
-const APP_ID = '0x0000000000000000000000000000000000000000000000000000000000000000';
+const APP_ID = '0x0000000000000000000000000000000000000000000000000000000000000026';
 
 export interface WalletConnection {
   walletName: string;
