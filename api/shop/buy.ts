@@ -17,6 +17,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { TREASURY_ADDR, isDev } from '../lib/config.js';
+import { graphql } from '../lib/tvm.js';
 import { findAnyPayment, findPayment, findPaymentByTxHash, isValidAddress } from '../lib/validate.js';
 
 /** Цены паков в NACKL (дублируются из src/data/packs.ts) */
