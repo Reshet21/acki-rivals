@@ -253,10 +253,10 @@ export function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
         }
         // Ответ вида { data: "<jwt>" } или { data: { id_token: "<jwt>" } }
         const raw = json.data as string | Record<string, unknown> | null;
-        const idToken =
+        const idToken: string =
           typeof raw === 'string'
             ? raw
-            : (raw as Record<string, unknown>)?.id_token || '';
+            : String((raw as Record<string, unknown>)?.id_token ?? '');
         if (!idToken) {
           throw new Error(`Telegram OAuth: нет id_token в ответе: ${JSON.stringify(json).slice(0, 200)}`);
         }
