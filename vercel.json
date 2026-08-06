@@ -18,5 +18,17 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/shop/buy.ts": {
+      "regions": [
+        "fra1"
+      ]
+    },
+    "api/treasury/*.ts": {
+      "regions": [
+        "fra1"
+      ]
+    }
+  }
 }
