@@ -114,7 +114,7 @@ export async function sendMessage(opts: {
   return { status: res.status, json };
 }
 
-export async function graphql(query: string, retries = 3): Promise<Record<string, unknown>> {
+export async function graphql(query: string, retries = 5): Promise<Record<string, unknown>> {
   let lastErr: Error | null = null;
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
@@ -137,10 +137,19 @@ export async function graphql(query: string, retries = 3): Promise<Record<string
       if (json.errors) {
         throw new Error(`GraphQL error: ${JSON.stringify(json.errors).slice(0, 300)}`);
       }
+      const data = json.data as Record<string, unknown> | null;
+      if (!data) {
+        throw new Error('GraphQL empty response');
+      }
+      // Майнет периодически отвечает {"data":{"blockchain":null}} вместо данных —
+      // это не ошибка по протоколу, но и не данные: ретраим.
+      if (Object.values(data).every((v) => v === null)) {
+        throw new Error('GraphQL empty data (retry)');
+      }
       return json;
     } catch (e) {
       lastErr = e instanceof Error ? e : new Error(String(e));
-      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
     }
   }
   throw lastErr || new Error('GraphQL request failed');
