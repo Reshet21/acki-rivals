@@ -97,7 +97,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (e) {
       // сеть/GraphQL нестабильны (майнет отдаёт HTML/502) — клиент продолжит опрос
       console.error('[shop/buy] GraphQL error:', e);
-      return res.status(202).json({ error: 'Сеть блокчейна временно недоступна, пробуем ещё раз', retryAfterMs: 5000 });
+      return res.status(202).json({
+        error: 'Сеть блокчейна временно недоступна, пробуем ещё раз',
+        retryAfterMs: 5000,
+        ...(txHash ? { debug: { network: process.env.TREASURY_NETWORK || 'default', txHash, err: e instanceof Error ? e.message.slice(0, 200) : String(e) } } : {}),
+      });
     }
     if (!payment) {
       return res.status(202).json({
