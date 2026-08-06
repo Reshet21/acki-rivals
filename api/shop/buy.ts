@@ -64,10 +64,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     //    account.transactions), затем авто-поиск: сначала от игрового адреса,
     //    затем с любого кошелька.
     let payment: Awaited<ReturnType<typeof findPayment>> = null;
+    let debug: Record<string, unknown> | null = null;
     try {
       const amountNano = BigInt(nano(price));
       if (txHash) {
-        payment = await findPaymentByTxHash(txHash, amountNano, TREASURY_ADDR);
+        // TEMP DEBUG
+        debug = { tx: 'null', outMsgs: [], msg: [] };
+        const tq = `query { blockchain { transaction(hash: "${txHash}") { a: now b: aborted c: out_msgs } } }`;
+        const tj = (await graphql(tq)) as any;
+        const tx = tj?.data?.blockchain?.transaction;
+        debug.tx = tx ? (tx.b ? 'aborted' : 'found') : 'null';
+        if (tx) {
+          debug.outMsgs = tx.c || [];
+          for (const mh of tx.c || []) {
+            const mq = `query { blockchain { message(hash: "${mh}") { a: src b: dst c: value_other { value currency } d: status } } }`;
+            const mj = (await graphql(mq)) as any;
+            const msg = mj?.data?.blockchain?.message;
+            (debug.msg as unknown[]).push({
+              h: String(mh).slice(0, 12),
+              found: !!msg,
+              vo: msg ? (msg.c || null) : null,
+            });
+          }
+        }
+        payment = null;
       }
       if (!payment) {
         payment =
@@ -83,7 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(202).json({
         error: 'Платёж не найден или ещё не подтверждён',
         retryAfterMs: 5000,
-        ...(txHash ? { debug: { network: process.env.TREASURY_NETWORK || 'default', txHash } } : {}),
+        ...(txHash ? { debug: { network: process.env.TREASURY_NETWORK || 'default', txHash, ...(debug || {}) } } : {}),
       });
     }
 
