@@ -65,6 +65,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [exchangeMsg, setExchangeMsg] = useState<string | null>(null);
   const [exchangeOk, setExchangeOk] = useState(false);
   const [awaitingPackId, setAwaitingPackId] = useState<string | null>(null);
+  const [paymentTxHash, setPaymentTxHash] = useState('');
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [payNote, setPayNote] = useState<string | null>(null);
 
@@ -159,10 +160,11 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     setCheckingPayment(true);
     setPayNote(null);
     try {
-      const result = await confirmPackPayment(walletConnection.walletAddress, pack.nacklPrice, awaitingPackId);
+      const result = await confirmPackPayment(walletConnection.walletAddress, pack.nacklPrice, awaitingPackId, paymentTxHash);
       if (result.success) {
         const cards = onBuyPack(awaitingPackId);
         setAwaitingPackId(null);
+        setPaymentTxHash('');
         if (!cards || cards.length === 0) {
           setPayNote('Платёж подтверждён, но паки не выданы — обратитесь к разработчику.');
           return;
@@ -185,6 +187,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     setAwaitingPackId(null);
     setPayNote(null);
     setBuyingPackId(null);
+    setPaymentTxHash('');
   };
 
   const handleCollect = () => {
@@ -508,6 +511,16 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                 <div className="text-[12px] text-white/80">
                   2. Нажмите «Я оплатил» — приложение проверит платёж в блокчейне и откроет паки.
                 </div>
+                <div className="text-[11px] text-white/50">
+                  Необязательно, но надёжнее: вставьте хеш транзакции, который кошелёк показал при отправке — проверка пройдёт мгновенно.
+                </div>
+                <input
+                  value={paymentTxHash}
+                  onChange={(e) => setPaymentTxHash(e.target.value.trim())}
+                  placeholder="например, 1173243698db83…"
+                  spellCheck={false}
+                  className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-[11px] font-mono text-white/80 placeholder-white/30 focus:outline-none focus:border-neon-blue/50 transition-all"
+                />
                 <button
                   onClick={handleVerifyPayment}
                   disabled={checkingPayment}

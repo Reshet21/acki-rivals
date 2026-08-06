@@ -11,6 +11,8 @@ import { graphql } from './tvm.js';
 import { NACKL_ECC_INDEX } from './config.js';
 
 const FRESH_MS = 10 * 60 * 1000;
+/** Для верификации по хешу из кошелька — у пользователя есть время вставить хеш */
+const FRESH_TX_HASH_MS = 60 * 60 * 1000;
 
 export interface Payment {
   msgHash: string;
@@ -88,4 +90,42 @@ export async function findPayment(player: string, amountNano: bigint, treasuryAc
  */
 export async function findAnyPayment(amountNano: bigint, treasuryAccount: string): Promise<Payment | null> {
   return scanPayments(amountNano, treasuryAccount);
+}
+
+/**
+ * Верификация платежа по хешу ТРАНЗАКЦИИ, который показывает кошелёк
+ * при отправке перевода (AN Wallet показывает хеш газовой/анкерной
+ * транзакции, а сам NACKL лежит в её out_msgs).
+ *
+ * Работает даже когда тяжёлый запрос account.transactions нестабилен —
+ * точечные transaction(hash)/message(hash) майнет отдаёт охотнее.
+ */
+export async function findPaymentByTxHash(
+  txHash: string,
+  amountNano: bigint,
+  treasuryAccount: string,
+): Promise<Payment | null> {
+  const q = `query { blockchain { transaction(hash: "${txHash}") { a: now b: aborted c: out_msgs } } }`;
+  const json = (await graphql(q)) as any;
+  const tx = json?.data?.blockchain?.transaction;
+  if (!tx || tx.b) return null;
+  const outMsgs: string[] = tx.c || [];
+  const now = Date.now();
+
+  for (const msgHash of outMsgs) {
+    if (!/^[0-9a-fA-F]{64}$/.test(msgHash)) continue;
+    const info = await messageInfo(msgHash);
+    if (!info) continue;
+
+    const nackl = info.valueOther[NACKL_ECC_INDEX];
+    if (!nackl) continue;
+    const amount = BigInt(nackl);
+    if (amount < amountNano) continue;
+
+    const t = Number(tx.a) * 1000;
+    if (now - t > FRESH_TX_HASH_MS) continue;
+
+    return { msgHash, amountNano: amount, src: info.src, now: t };
+  }
+  return null;
 }

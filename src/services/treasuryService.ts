@@ -120,6 +120,7 @@ export async function confirmPackPayment(
   player: string,
   nacklAmount: number,
   packId: string,
+  txHash?: string,
   maxRetries = 24,
 ): Promise<BuyResult> {
   let attempt = 0;
@@ -131,7 +132,7 @@ export async function confirmPackPayment(
       const res = await fetch('/api/shop/buy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player, nacklAmount, packId }),
+        body: JSON.stringify({ player, nacklAmount, packId, txHash: txHash?.trim() || undefined }),
       });
       const json = (await res.json()) as BuyResult;
 

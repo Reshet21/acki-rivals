@@ -17,7 +17,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { TREASURY_ADDR, isDev } from '../lib/config.js';
-import { findAnyPayment, findPayment, isValidAddress } from '../lib/validate.js';
+import { findAnyPayment, findPayment, findPaymentByTxHash, isValidAddress } from '../lib/validate.js';
 
 /** Цены паков в NACKL (дублируются из src/data/packs.ts) */
 const PACK_PRICES: Record<string, number> = {
@@ -42,6 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const player = String(body.player || '').trim();
   const nacklAmount = Number(body.nacklAmount);
   const packId = String(body.packId || '').trim();
+  const txHash = String(body.txHash || '').trim().toLowerCase();
 
   const price = PACK_PRICES[packId];
   if (!price) {
@@ -53,15 +54,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!Number.isFinite(nacklAmount) || nacklAmount < price) {
     return res.status(400).json({ error: `nacklAmount: не менее ${price} NACKL` });
   }
+  if (txHash && !/^[0-9a-f]{64}$/.test(txHash)) {
+    return res.status(400).json({ error: 'txHash: ожидается 64 hex' });
+  }
 
   try {
-    // ── 1. Найти платёж: сначала от игрового адреса, затем с любого кошелька ──
+    // ── 1. Найти платёж ──
+    //    Приоритет: хеш транзакции из кошелька (надёжно даже при нестабильном
+    //    account.transactions), затем авто-поиск: сначала от игрового адреса,
+    //    затем с любого кошелька.
     let payment: Awaited<ReturnType<typeof findPayment>> = null;
     try {
       const amountNano = BigInt(nano(price));
-      payment =
-        (await findPayment(player, amountNano, TREASURY_ADDR)) ||
-        (await findAnyPayment(amountNano, TREASURY_ADDR));
+      if (txHash) {
+        payment = await findPaymentByTxHash(txHash, amountNano, TREASURY_ADDR);
+      }
+      if (!payment) {
+        payment =
+          (await findPayment(player, amountNano, TREASURY_ADDR)) ||
+          (await findAnyPayment(amountNano, TREASURY_ADDR));
+      }
     } catch (e) {
       // сеть/GraphQL нестабильны (майнет отдаёт HTML/502) — клиент продолжит опрос
       console.error('[shop/buy] GraphQL error:', e);
