@@ -11,8 +11,9 @@ import { graphql } from './tvm.js';
 import { NACKL_ECC_INDEX } from './config.js';
 
 const FRESH_MS = 10 * 60 * 1000;
-/** Для верификации по хешу из кошелька — у пользователя есть время вставить хеш */
-const FRESH_TX_HASH_MS = 60 * 60 * 1000;
+/** Для верификации по хешу из кошелька: хеш одноразовый (анти-повтор в БД),
+ *  поэтому свежесть не критична — пользователь может вставить хеш позже */
+const FRESH_TX_HASH_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface Payment {
   msgHash: string;
