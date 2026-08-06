@@ -27,14 +27,23 @@ export function isValidAddress(addr: string): boolean {
 
 async function messageInfo(hash: string): Promise<{ src: string; dst: string; valueOther: Record<string, string> } | null> {
   const q = `query { blockchain { message(hash: "${hash}") { a: src b: dst c: value_other { value currency } d: status } } }`;
-  const json = (await graphql(q)) as any;
-  const m = json?.data?.blockchain?.message;
-  if (!m) return null;
-  const valueOther: Record<string, string> = {};
-  for (const c of m.c || []) {
-    valueOther[c.currency] = c.value;
+  // Майнет периодически отвечает валидным JSON, но с message:null — ретраим,
+  // чтобы отличать «индекс не отдал» от «сообщения нет».
+  let last: Record<string, unknown> | null = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const json = (await graphql(q)) as any;
+    const m = json?.data?.blockchain?.message;
+    if (m) {
+      const valueOther: Record<string, string> = {};
+      for (const c of m.c || []) {
+        valueOther[String(c.currency)] = String(c.value);
+      }
+      return { src: m.a, dst: m.b, valueOther };
+    }
+    last = json;
+    await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
-  return { src: m.a, dst: m.b, valueOther };
+  return null;
 }
 
 /**
@@ -106,8 +115,12 @@ export async function findPaymentByTxHash(
   treasuryAccount: string,
 ): Promise<Payment | null> {
   const q = `query { blockchain { transaction(hash: "${txHash}") { a: now b: aborted c: out_msgs } } }`;
-  const json = (await graphql(q)) as any;
-  const tx = json?.data?.blockchain?.transaction;
+  let tx: any = null;
+  for (let attempt = 0; attempt < 5 && !tx; attempt++) {
+    const json = (await graphql(q)) as any;
+    tx = json?.data?.blockchain?.transaction;
+    if (!tx) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+  }
   if (!tx || tx.b) return null;
   const outMsgs: string[] = tx.c || [];
   const now = Date.now();
