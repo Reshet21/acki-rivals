@@ -11,7 +11,6 @@ import {
   requestAckr,
   getTreasurySignerKeys,
   confirmPackPayment,
-  TREASURY_ADDRESS,
   TREASURY_NAME,
 } from '../services/treasuryService';
 import { buyPack as buyPackWithNackl } from '../services/paymentService';
@@ -539,11 +538,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                   onClick={copyTreasuryAddress}
                   className="w-full py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/10 text-white active:scale-95 transition-all"
                 >
-                  📋 Скопировать {TREASURY_NAME ? 'ник' : 'адрес'}
+                  📋 Скопировать ник
                 </button>
-                <div className="text-[9px] text-white/30 text-center break-all">
-                  адрес казначейства: {TREASURY_ADDRESS}
-                </div>
                 <button
                   onClick={handleFallbackVerify}
                   disabled={checkingFallback}
