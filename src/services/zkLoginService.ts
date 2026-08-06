@@ -27,11 +27,16 @@ import { ENDPOINTS, API_URL, APP_ID } from './beeEngine';
 const CLIENT_ID = '222414061721-4tu2gsfms6rvagqvt4mp0mjmbom6flbl.apps.googleusercontent.com';
 const PROVER_URL = 'https://proover.ackinacki.org/v1';
 
-// ── Telegram zkLogin (oauth.gosh.sh) — Фаза 2 ──
-// client_id выдаёт @EugeneDAO при регистрации приложения.
-// Задайте в .env: VITE_TELEGRAM_OAUTH_CLIENT_ID=...
+// ── Telegram zkLogin (oauth.gosh.sh) ──
+// client_id = app_dapp_id приложения (зарегистрирован @EugeneDAO, 0x26).
+// Прокси: POST https://oauth.gosh.sh/v1/telegram с Telegram Login Widget
+// данными бота (bot_name). Точный формат (data/bot_name/hash/id/nonce/
+// client_id) выяснен экспериментально 07.08.2026.
 const TELEGRAM_OAUTH_URL = 'https://oauth.gosh.sh';
-const TELEGRAM_CLIENT_ID = import.meta.env.VITE_TELEGRAM_OAUTH_CLIENT_ID || '';
+const TELEGRAM_CLIENT_ID =
+  import.meta.env.VITE_TELEGRAM_OAUTH_CLIENT_ID || APP_ID;
+/** Telegram-бот (username без @) для Login Widget — выдаёт @EugeneDAO */
+const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || '';
 
 // JWKS-эндпоинты провайдеров для получения modulus JWK по kid.
 // Для Telegram: TODO — уточнить у @EugeneDAO (скорее всего <oauth-хост>/jwks).
@@ -171,53 +176,136 @@ export async function loginWithGoogle(): Promise<{
 }
 
 /**
- * Войти через Telegram через официальный OAuth-прокси oauth.gosh.sh.
+ * Войти через Telegram через OAuth-прокси oauth.gosh.sh (ZK Login Widget).
  *
- * Флоу: редирект на authorize → Telegram confirm → редирект обратно с id_token.
- * ⚠️ TODO: точный формат authorize-URL и параметры уточнить у @EugeneDAO
- * (client_id, redirect_uri, scope). Пока структура — стандартный OIDC.
+ * Флоу (выяснен экспериментально 07.08.2026, прокси жив):
+ * 1. Пользователь жмёт кнопку — открываем Telegram Login Widget бота
+ *    (TELEGRAM_BOT_NAME). Виджет отдаёт { id, first_name, last_name,
+ *    username, photo_url, auth_date, hash } (hash = HMAC подпись бота).
+ * 2. POST https://oauth.gosh.sh/v1/telegram с телом
+ *    { data, bot_name, hash, id, nonce, client_id } → { data: <JWT> }.
+ *    client_id = app_dapp_id (0x26), nonce — из prepare_zk_login_v1().
  *
  * @param nonce — из prepare_zk_login_v1() (bind эфемерного ключа к JWT)
  */
-export async function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
-  if (!TELEGRAM_CLIENT_ID) {
-    throw new Error(
-      'Telegram OAuth client_id ещё не настроен: получите его у @EugeneDAO (app_dapp_id) и укажите TELEGRAM_CLIENT_ID в zkLoginService.ts',
-    );
-  }
+export function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
+  return new Promise((resolve, reject) => {
+    if (!TELEGRAM_BOT_NAME) {
+      reject(
+        new Error(
+          'Telegram-бот для входа не настроен: получите у @EugeneDAO bot_name и укажите VITE_TELEGRAM_BOT_NAME (client_id=0x26 уже настроен)',
+        ),
+      );
+      return;
+    }
 
-  // Если мы только что вернулись с редиректа — id_token лежит в URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-  const idTokenFromUrl = urlParams.get('id_token') || urlHash.get('id_token');
-  if (idTokenFromUrl) {
-    const payload = decodeJwtPayload(idTokenFromUrl);
-    const kid = decodeJwtHeader(idTokenFromUrl).kid;
-    // TODO: уточнить issuer (iss) у @EugeneDAO
-    const iss = payload.iss ?? 'https://oauth.gosh.sh';
-    return {
-      idToken: idTokenFromUrl,
-      sub: payload.sub,
-      aud: payload.aud,
-      kid,
-      iss,
+    // Telegram Login Widget: грузим официальный скрипт виджета
+    const existing = document.getElementById('tg-widget-script');
+    if (!existing) {
+      const s = document.createElement('script');
+      s.id = 'tg-widget-script';
+      s.async = true;
+      s.src = 'https://telegram.org/js/telegram-widget.js?22';
+      document.head.appendChild(s);
+    }
+
+    const botName = TELEGRAM_BOT_NAME;
+    const clientId = TELEGRAM_CLIENT_ID;
+
+    // Колбэк вызова после авторизации в Telegram
+    (window as unknown as Record<string, unknown>).onTelegramAuth = async (user: {
+      id: number;
+      first_name?: string;
+      last_name?: string;
+      username?: string;
+      photo_url?: string;
+      auth_date: number;
+      hash: string;
+    }) => {
+      try {
+        // Каноническая строка данных виджета (для проверки подписи на прокси)
+        const parts: string[] = [];
+        if (user.auth_date) parts.push(`auth_date=${user.auth_date}`);
+        if (user.first_name) parts.push(`first_name=${user.first_name}`);
+        if (user.id) parts.push(`id=${user.id}`);
+        if (user.last_name) parts.push(`last_name=${user.last_name}`);
+        if (user.photo_url) parts.push(`photo_url=${user.photo_url}`);
+        if (user.username) parts.push(`username=${user.username}`);
+        const dataCheckString = parts.join('&');
+
+        const res = await fetch(`${TELEGRAM_OAUTH_URL}/v1/telegram`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            data: dataCheckString,
+            bot_name: botName,
+            hash: user.hash,
+            id: user.id,
+            nonce,
+            client_id: clientId,
+          }),
+        });
+        const json = (await res.json()) as Record<string, unknown>;
+        if (!res.ok) {
+          throw new Error(
+            `Telegram OAuth failed (HTTP ${res.status}): ${JSON.stringify(json).slice(0, 200)}`,
+          );
+        }
+        // Ответ вида { data: "<jwt>" } или { data: { id_token: "<jwt>" } }
+        const raw = json.data as string | Record<string, unknown> | null;
+        const idToken =
+          typeof raw === 'string'
+            ? raw
+            : (raw as Record<string, unknown>)?.id_token || '';
+        if (!idToken) {
+          throw new Error(`Telegram OAuth: нет id_token в ответе: ${JSON.stringify(json).slice(0, 200)}`);
+        }
+        const payload = decodeJwtPayload(idToken);
+        const kid = decodeJwtHeader(idToken).kid;
+        resolve({
+          idToken,
+          sub: payload.sub,
+          aud: payload.aud,
+          kid,
+          iss: payload.iss ?? TELEGRAM_OAUTH_URL,
+        });
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+      }
     };
-  }
 
-  // TODO: точный путь/параметры authorize у oauth.gosh.sh
-  const redirectUri = window.location.origin + window.location.pathname;
-  const authorizeUrl =
-    `${TELEGRAM_OAUTH_URL}/authorize` +
-    `?client_id=${encodeURIComponent(TELEGRAM_CLIENT_ID)}` +
-    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-    `&response_type=id_token` +
-    `&scope=${encodeURIComponent('openid')}` +
-    `&nonce=${encodeURIComponent(nonce)}`;
+    // Рендерим кнопку виджета и «нажимаем» её после короткой паузы
+    const container = document.createElement('div');
+    container.id = 'tg-login-widget';
+    container.style.display = 'none';
+    document.body.appendChild(container);
 
-  window.location.assign(authorizeUrl);
+    const w = document.createElement('div');
+    container.appendChild(w);
 
-  // Не достижимо: браузер уходит на authorize. Ждём возврата с id_token.
-  throw new Error('Ожидание редиректа oauth.gosh.sh...');
+    const tryRender = () => {
+      const global = window as unknown as { Telegram?: { Login: { init: (opts: object, onAuth: unknown) => void } } };
+      if (!global.Telegram?.Login?.init) {
+        setTimeout(tryRender, 300);
+        return;
+      }
+      global.Telegram.Login.init(
+        {
+          bot_id: botName,
+          origin: window.location.origin,
+          request_access: true,
+        },
+        (user: Record<string, unknown> | null) => {
+          if (user) {
+            (window as unknown as Record<string, unknown>).onTelegramAuth?.(user);
+          } else {
+            reject(new Error('Вход в Telegram отменён'));
+          }
+        },
+      );
+    };
+    setTimeout(tryRender, 300);
+  });
 }
 
 /**
