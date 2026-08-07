@@ -1,5 +1,5 @@
 /**
- * api/lib/balance.ts — игровой баланс игрока в нано NACKL.
+ * api-lib/balance.ts — игровой баланс игрока в нано NACKL.
  *
  * Баланс = sum(deposits) - sum(spends). Пополнение идёт из блокчейна
  * (deposit.ts), трата — атомарный debit внутри покупки/ставки.

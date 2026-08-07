@@ -6,3 +6,4 @@ acki-rivals.zip
 
 api/lib/eversdk-wasm-b64.ts
 dist-api/
+.vercel
