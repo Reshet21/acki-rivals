@@ -27,7 +27,7 @@ async function messageInfo(hash: string): Promise<{ src: string; dst: string; va
   // Майнет периодически отвечает валидным JSON, но с message:null, либо
   // отдаёт 502/HTML — ретраим, чтобы отличать «индекс не отдал» от
   // «сообщения нет».
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     let json: Record<string, unknown> | null = null;
     try {
       json = (await graphql(q)) as any;
@@ -42,7 +42,7 @@ async function messageInfo(hash: string): Promise<{ src: string; dst: string; va
       }
       return { src: m.a, dst: m.b, valueOther };
     }
-    await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    await new Promise((r) => setTimeout(r, 800));
   }
   return null;
 }
@@ -67,15 +67,15 @@ async function scanPayments(
   // Майнет периодически отвечает валидным JSON с account:null — ретраим,
   // чтобы отличать «не отдал» от «платежей нет».
   let json: any = null;
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       json = (await graphql(q)) as any;
-    } catch (e) {
+    } catch {
       json = null;
     }
     const acc = json?.data?.blockchain?.account;
     if (acc) break;
-    await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
   }
   const edges = json?.data?.blockchain?.account?.transactions?.edges || [];
 
@@ -121,15 +121,15 @@ export async function scanAllPayments(
   const dappId = TREASURY_DAPP_ID || accountId;
   const q = `query { blockchain { account(account_id: "${accountId}", dapp_id: "${dappId}") { transactions { edges { node { a: now b: aborted c: in_msg } } } } } }`;
   let json: any = null;
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       json = (await graphql(q)) as any;
-    } catch (e) {
+    } catch {
       json = null;
     }
     const acc = json?.data?.blockchain?.account;
     if (acc) break;
-    await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
   }
   const edges = json?.data?.blockchain?.account?.transactions?.edges || [];
 
