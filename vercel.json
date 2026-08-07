@@ -21,11 +21,19 @@
   ],
   "functions": {
     "api/shop/buy.ts": {
+      "maxDuration": 60,
       "regions": [
         "fra1"
       ]
     },
     "api/treasury/*.ts": {
+      "maxDuration": 60,
+      "regions": [
+        "fra1"
+      ]
+    },
+    "api/balance/*.ts": {
+      "maxDuration": 60,
       "regions": [
         "fra1"
       ]

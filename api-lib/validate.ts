@@ -85,10 +85,11 @@ async function scanPayments(
   //    aborted-транзакцией (контракт кидает исключение на currency-перевод,
   //    но NACKL доставляется, сообщение имеет статус processed). Проверяем
   //    само сообщение (value_other + src).
-  for (const e of edges.slice().reverse()) {
-    const node = e?.node;
-    if (!node?.c) continue;
-    const info = await messageInfo(node.c);
+  const nodes = edges.slice().reverse().map((e: any) => e?.node).filter((n: any) => n?.c);
+  const infos = await Promise.all(nodes.map((n: any) => messageInfo(n.c)));
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    const info = infos[i];
     if (!info) continue;
     if (srcFilter) {
       const srcHex = info.src.split(':').pop()?.toLowerCase();
@@ -132,11 +133,15 @@ export async function scanAllPayments(
   }
   const edges = json?.data?.blockchain?.account?.transactions?.edges || [];
 
+  // Все messageInfo-запросы параллельно (иначе депозит не влезает
+  // в таймаут serverless-функции при ленте в десятки транзакций).
+  const nodes = edges.slice().reverse().map((e: any) => e?.node).filter((n: any) => n?.c);
+  const infos = await Promise.all(nodes.map((n: any) => messageInfo(n.c)));
+
   const found: Payment[] = [];
-  for (const e of edges.slice().reverse()) {
-    const node = e?.node;
-    if (!node?.c) continue;
-    const info = await messageInfo(node.c);
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    const info = infos[i];
     if (!info) continue;
 
     const nackl = info.valueOther[NACKL_ECC_INDEX];
