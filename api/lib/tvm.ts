@@ -16,7 +16,7 @@ import wasmBase64 from './eversdk-wasm-b64.js';
 const nodeRequire = createRequire(import.meta.url);
 (globalThis as unknown as { __tvmRequire: (n: string) => unknown }).__tvmRequire = (name: string) => nodeRequire(name);
 
-const NETWORK = process.env.TREASURY_NETWORK || 'https://shellnet.ackinacki.org';
+const NETWORK = process.env.TREASURY_NETWORK || 'https://mainnet.ackinacki.org';
 
 let _client: TonClient | null = null;
 
