@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Card, Rarity } from '../types';
 import { PACKS, getPackById } from '../data/packs';
 import { useI18n } from '../i18n';
@@ -67,6 +67,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [gameBalance, setGameBalance] = useState<number | null>(null);
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number>(10);
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   // Игровой баланс (депозиты NACKL на казначейство)
   useEffect(() => {
@@ -94,6 +95,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
     const check = async () => {
+      // Проверяем только сумму с уникальным хвостом (база + 0.01..0.99).
+      // Целая сумма в поле = хвост ещё не добавлен: сначала генерим его,
+      // иначе платёж ровно на целую сумму может принадлежать другому игроку.
+      if (!hasTail(depositAmount)) {
+        applyQuote(depositAmount);
+        return;
+      }
       const dep = await depositNackl(player, depositAmount, 1);
       if (cancelled) return;
       if (dep.success && (dep.depositedNackl || 0) > 0) {
@@ -245,6 +253,44 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     }
   };
 
+  // Уникальная сумма: база (что ввёл игрок / цена пака) + случайный хвост
+  // 0.01..0.99. Хвост пишется ПРЯМО В ПОЛЕ и генерится автоматически:
+  // 1. после ввода (debounce 800мс); 2. при открытии панели; 3. по blur;
+  // 4. внутри "Я пополнил"/автополлинга, если сумма вдруг ещё целая.
+  // 🎲 — ручная перегенерация.
+  const hasTail = (amount: number) =>
+    Number.isFinite(amount) && Math.round(amount * 100) % 100 !== 0;
+
+  const quoteVersionRef = useRef(0);
+  const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const applyQuote = async (wanted: number) => {
+    if (!walletConnection || !Number.isFinite(wanted) || wanted <= 0) return;
+    const version = ++quoteVersionRef.current;
+    setQuoteLoading(true);
+    try {
+      const q = await fetchDepositQuote(walletConnection.walletAddress, wanted);
+      if (q && version === quoteVersionRef.current) setDepositAmount(q.amountNackl);
+    } finally {
+      if (version === quoteVersionRef.current) setQuoteLoading(false);
+    }
+  };
+
+  // Ввод суммы: сразу инвалидируем летящие квоты (игрок печатает) и по
+  // остановке печати (800мс тишины) автоматом добавляем уникальный хвост.
+  // Если игрок сам ввёл дробную (например 25.37) — это уже уникальная
+  // сумма, её не трогаем.
+  const onDepositAmountChange = (raw: string) => {
+    quoteVersionRef.current++;
+    if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current);
+    const amount = parseFloat(raw);
+    setDepositAmount(amount);
+    if (!Number.isFinite(amount) || amount <= 0 || hasTail(amount)) return;
+    quoteTimerRef.current = setTimeout(() => {
+      applyQuote(amount);
+    }, 800);
+  };
+
   const handleDepositNow = async (buyPackAfter: string | null) => {
     if (!walletConnection) return;
     const player = walletConnection.walletAddress;
@@ -253,8 +299,23 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     setCheckingFallback(true);
     setFallbackNote(null);
     try {
+      // Сумма без хвоста: сначала генерим уникальную (база + 0.01..0.99),
+      // затем игрок переводит РОВНО её — платёж не перепутается с чужим.
+      let amount = depositAmount;
+      if (!hasTail(amount)) {
+        const q = await fetchDepositQuote(player, amount);
+        if (!q) {
+          setFallbackNote('Не удалось подобрать уникальную сумму, попробуйте ещё раз');
+          return;
+        }
+        amount = q.amountNackl;
+        setDepositAmount(amount);
+        setFallbackNote(`Переведите РОВНО ${amount.toFixed(2)} NACKL на ник ${payTargetName} и нажмите «Я пополнил» ещё раз`);
+        return;
+      }
+
       // 1. Сканируем блокчейн: зачисляем на игровой баланс все платежи игрока
-      const dep = await depositNackl(player, depositAmount);
+      const dep = await depositNackl(player, amount);
       if (!dep.success) {
         setFallbackNote(dep.error || 'Платёж не найден. Проверьте сумму и ник.');
         return;
@@ -494,10 +555,9 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
             )}
             {walletConnection && (
               <button
-                onClick={async () => {
+                onClick={() => {
                   setShowDeposit(true); setFallbackPackId(null); setPaymentError(null);
-                  const q = await fetchDepositQuote(walletConnection!.walletAddress, depositAmount);
-                  if (q) setDepositAmount(q.amountNackl);
+                  applyQuote(depositAmount);
                 }}
                 className="px-2.5 py-1.5 rounded-full text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all"
               >
@@ -581,7 +641,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
               <div className="px-4 py-4 flex flex-col gap-3">
                 <div className="text-[12px] text-white/80">
                   Переведите РОВНО{' '}
-                  <span className="font-bold text-white">{Number.isFinite(depositAmount) ? depositAmount.toFixed(2) : '—'} NACKL</span>{' '}
+                  <span className="font-bold text-white">
+                    {hasTail(depositAmount)
+                      ? depositAmount.toFixed(2)
+                      : quoteLoading
+                        ? 'подбираем…'
+                        : '—'} NACKL
+                  </span>{' '}
                   в AN Wallet на{' '}
                   <span className="font-bold text-white">ник: {payTargetName}</span>. Сумма уникальна для вас — платёж зачтётся только вам:
                 </div>
@@ -592,24 +658,25 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     step="any"
                     inputMode="decimal"
                     value={Number.isFinite(depositAmount) ? String(depositAmount) : ''}
-                    onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
+                    onChange={(e) => onDepositAmountChange(e.target.value)}
+                    onBlur={() => {
+                      if (!hasTail(depositAmount)) applyQuote(depositAmount);
+                    }}
                     className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-black/40 border border-white/15 text-white text-sm font-bold outline-none focus:border-neon-blue"
                     placeholder="Сумма NACKL"
                   />
                   <span className="text-white/60 text-sm font-bold shrink-0">NACKL</span>
                   <button
-                    onClick={async () => {
-                      const q = await fetchDepositQuote(walletConnection!.walletAddress, depositAmount);
-                      if (q) setDepositAmount(q.amountNackl);
-                    }}
-                    className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all shrink-0"
+                    onClick={() => applyQuote(depositAmount)}
+                    disabled={quoteLoading}
+                    className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all shrink-0 disabled:opacity-40"
                     title="Выдать новую уникальную сумму"
                   >
-                    🎲
+                    {quoteLoading ? '…' : '🎲'}
                   </button>
                 </div>
                 <div className="text-[10px] text-white/40">
-                  Кнопка 🎲 выдаёт новую уникальную сумму (например, 10.37) — у двух игроков суммы не совпадают, поэтому платёж не перепутается
+                  Уникальная сумма (например, 10.37) генерируется автоматически после ввода — нажимать 🎲 не нужно. У двух игроков суммы не совпадают, поэтому платёж не перепутается
                 </div>
                 <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-[11px] font-mono text-white/80 break-all select-all">
                   {payTargetName}

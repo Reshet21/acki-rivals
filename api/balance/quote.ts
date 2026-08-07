@@ -39,8 +39,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!isValidAddress(player)) {
     return res.status(400).json({ error: 'player: ожидается "0:" + 64 hex' });
   }
-  const wanted = Math.max(1, Math.min(10000, Math.round(parseFloat(wantedRaw) || 10)));
-  const baseNano = BigInt(wanted) * NANO_PER_NACKL;
+  const wanted = Math.max(0.01, Math.min(10000, parseFloat(wantedRaw) || 10));
+  // База с точностью до сотых NACKL (хвост 0.01..0.99 выдаётся поверх базы,
+  // поэтому итог не меньше введённой игроком суммы).
+  const baseNano = BigInt(Math.round(wanted * 100)) * 10_000_000n;
 
   try {
     const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
