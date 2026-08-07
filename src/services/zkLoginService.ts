@@ -176,6 +176,70 @@ export async function loginWithGoogle(): Promise<{
 }
 
 /**
+ * Обработка пользователя виджета Telegram: собираем каноническую строку
+ * данных, POST на oauth.gosh.sh/v1/telegram → { data: <JWT> }.
+ */
+async function handleTelegramUser(
+  user: {
+    id: number;
+    first_name?: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+    auth_date: number;
+    hash: string;
+  },
+  nonce: string,
+): Promise<OAuthIdToken> {
+  // Каноническая строка данных виджета (для проверки подписи на прокси)
+  const parts: string[] = [];
+  if (user.auth_date) parts.push(`auth_date=${user.auth_date}`);
+  if (user.first_name) parts.push(`first_name=${user.first_name}`);
+  if (user.id) parts.push(`id=${user.id}`);
+  if (user.last_name) parts.push(`last_name=${user.last_name}`);
+  if (user.photo_url) parts.push(`photo_url=${user.photo_url}`);
+  if (user.username) parts.push(`username=${user.username}`);
+  const dataCheckString = parts.join('&');
+
+  const res = await fetch(`${TELEGRAM_OAUTH_URL}/v1/telegram`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      data: dataCheckString,
+      bot_name: TELEGRAM_BOT_NAME,
+      hash: user.hash,
+      id: user.id,
+      nonce,
+      client_id: TELEGRAM_CLIENT_ID,
+    }),
+  });
+  const json = (await res.json()) as Record<string, unknown>;
+  if (!res.ok) {
+    throw new Error(
+      `Telegram OAuth failed (HTTP ${res.status}): ${JSON.stringify(json).slice(0, 200)}`,
+    );
+  }
+  // Ответ вида { data: "<jwt>" } или { data: { id_token: "<jwt>" } }
+  const raw = json.data as string | Record<string, unknown> | null;
+  const idToken: string =
+    typeof raw === 'string'
+      ? raw
+      : String((raw as Record<string, unknown>)?.id_token ?? '');
+  if (!idToken) {
+    throw new Error(`Telegram OAuth: нет id_token в ответе: ${JSON.stringify(json).slice(0, 200)}`);
+  }
+  const payload = decodeJwtPayload(idToken) as Record<string, string>;
+  const kid = decodeJwtHeader(idToken).kid;
+  return {
+    idToken,
+    sub: payload.sub,
+    aud: payload.aud,
+    kid,
+    iss: payload.iss ?? TELEGRAM_OAUTH_URL,
+  };
+}
+
+/**
  * Войти через Telegram через OAuth-прокси oauth.gosh.sh (ZK Login Widget).
  *
  * Флоу (выяснен экспериментально 07.08.2026, прокси жив):
@@ -185,6 +249,10 @@ export async function loginWithGoogle(): Promise<{
  * 2. POST https://oauth.gosh.sh/v1/telegram с телом
  *    { data, bot_name, hash, id, nonce, client_id } → { data: <JWT> }.
  *    client_id = app_dapp_id (0x26), nonce — из prepare_zk_login_v1().
+ *
+ * ВАЖНО: виджет рендерится в ВИДИМОМ оверлее (раньше контейнер был скрыт
+ * display:none — пользователь жал кнопку и ничего не видел). Таймаут 15с,
+ * кнопка «Отмена», ошибки показываются через reject.
  *
  * @param nonce — из prepare_zk_login_v1() (bind эфемерного ключа к JWT)
  */
@@ -199,112 +267,138 @@ export function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
       return;
     }
 
-    // Telegram Login Widget: грузим официальный скрипт виджета
-    const existing = document.getElementById('tg-widget-script');
-    if (!existing) {
-      const s = document.createElement('script');
-      s.id = 'tg-widget-script';
-      s.async = true;
-      s.src = 'https://telegram.org/js/telegram-widget.js?22';
-      document.head.appendChild(s);
-    }
+    // ── Видимый оверлей с виджетом Telegram Login ──
+    const overlay = document.createElement('div');
+    overlay.id = 'tg-login-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      inset: '0',
+      zIndex: '2147483647',
+      background: 'rgba(0,0,0,0.78)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+    });
+    const card = document.createElement('div');
+    Object.assign(card.style, {
+      background: '#131318',
+      border: '1px solid rgba(255,255,255,0.15)',
+      borderRadius: '16px',
+      padding: '20px',
+      width: '300px',
+      maxWidth: '85vw',
+      textAlign: 'center',
+      color: '#fff',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+    });
+    const title = document.createElement('div');
+    title.textContent = '✈️ Войдите через Telegram';
+    title.style.cssText = 'font-size:16px;font-weight:700;margin-bottom:14px;';
+    const hint = document.createElement('div');
+    hint.id = 'tg-login-hint';
+    hint.textContent = 'Загружаем виджет…';
+    hint.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:12px;';
+    const widgetContainer = document.createElement('div');
+    widgetContainer.id = `telegram-login-${TELEGRAM_BOT_NAME}`;
+    widgetContainer.style.cssText = 'display:flex;justify-content:center;margin-bottom:12px;min-height:48px;';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Отмена';
+    cancelBtn.style.cssText =
+      'width:100%;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.08);' +
+      'border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:13px;font-weight:600;cursor:pointer;';
+    card.appendChild(title);
+    card.appendChild(hint);
+    card.appendChild(widgetContainer);
+    card.appendChild(cancelBtn);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
 
-    const botName = TELEGRAM_BOT_NAME;
-    const clientId = TELEGRAM_CLIENT_ID;
+    let settled = false;
+    const done = (err?: Error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      overlay.remove();
+      if (err) reject(err);
+    };
+    cancelBtn.onclick = () => done(new Error('Вход в Telegram отменён'));
 
-    // Колбэк вызова после авторизации в Telegram
-    (window as unknown as Record<string, unknown>).onTelegramAuth = async (user: {
-      id: number;
-      first_name?: string;
-      last_name?: string;
-      username?: string;
-      photo_url?: string;
-      auth_date: number;
-      hash: string;
-    }) => {
-      try {
-        // Каноническая строка данных виджета (для проверки подписи на прокси)
-        const parts: string[] = [];
-        if (user.auth_date) parts.push(`auth_date=${user.auth_date}`);
-        if (user.first_name) parts.push(`first_name=${user.first_name}`);
-        if (user.id) parts.push(`id=${user.id}`);
-        if (user.last_name) parts.push(`last_name=${user.last_name}`);
-        if (user.photo_url) parts.push(`photo_url=${user.photo_url}`);
-        if (user.username) parts.push(`username=${user.username}`);
-        const dataCheckString = parts.join('&');
+    const timeoutId = setTimeout(
+      () => done(new Error('Таймаут авторизации Telegram. Проверьте доступ к telegram.org')),
+      15000,
+    );
 
-        const res = await fetch(`${TELEGRAM_OAUTH_URL}/v1/telegram`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            data: dataCheckString,
-            bot_name: botName,
-            hash: user.hash,
-            id: user.id,
-            nonce,
-            client_id: clientId,
-          }),
-        });
-        const json = (await res.json()) as Record<string, unknown>;
-        if (!res.ok) {
-          throw new Error(
-            `Telegram OAuth failed (HTTP ${res.status}): ${JSON.stringify(json).slice(0, 200)}`,
+    // ── Загрузка официального скрипта виджета ──
+    const loadWidgetScript = (): Promise<void> =>
+      new Promise((resolveLoad, rejectLoad) => {
+        if (document.getElementById('tg-widget-script')) {
+          // Скрипт уже подключён — ждём готовности API (макс 5с)
+          const waitForApi = (left: number) => {
+            if ((window as unknown as { Telegram?: { Login?: unknown } }).Telegram?.Login) {
+              resolveLoad();
+              return;
+            }
+            if (left <= 0) {
+              rejectLoad(new Error('Виджет Telegram не инициализировался'));
+              return;
+            }
+            setTimeout(() => waitForApi(left - 250), 250);
+          };
+          waitForApi(20);
+          return;
+        }
+        const s = document.createElement('script');
+        s.id = 'tg-widget-script';
+        s.async = true;
+        s.src = 'https://telegram.org/js/telegram-widget.js?22';
+        s.onload = () => resolveLoad();
+        s.onerror = () =>
+          rejectLoad(
+            new Error('Не удалось загрузить виджет Telegram (telegram.org недоступен?)'),
           );
+        document.head.appendChild(s);
+      });
+
+    loadWidgetScript()
+      .then(() => {
+        const global = window as unknown as {
+          Telegram?: { Login?: { init: (opts: object, cb: (user: Record<string, unknown> | null) => void) => void } };
+        };
+        if (!global.Telegram?.Login?.init) {
+          throw new Error('Виджет Telegram не инициализировался');
         }
-        // Ответ вида { data: "<jwt>" } или { data: { id_token: "<jwt>" } }
-        const raw = json.data as string | Record<string, unknown> | null;
-        const idToken: string =
-          typeof raw === 'string'
-            ? raw
-            : String((raw as Record<string, unknown>)?.id_token ?? '');
-        if (!idToken) {
-          throw new Error(`Telegram OAuth: нет id_token в ответе: ${JSON.stringify(json).slice(0, 200)}`);
-        }
-        const payload = decodeJwtPayload(idToken) as Record<string, string>;
-        const kid = decodeJwtHeader(idToken).kid;
-        resolve({
-          idToken,
-          sub: payload.sub,
-          aud: payload.aud,
-          kid,
-          iss: payload.iss ?? TELEGRAM_OAUTH_URL,
-        });
-      } catch (e) {
-        reject(e instanceof Error ? e : new Error(String(e)));
-      }
-    };
-
-    // Рендерим кнопку виджета и «нажимаем» её после короткой паузы
-    const container = document.createElement('div');
-    container.id = 'tg-login-widget';
-    container.style.display = 'none';
-    document.body.appendChild(container);
-
-    const w = document.createElement('div');
-    container.appendChild(w);
-
-    const tryRender = () => {
-      const global = window as unknown as { Telegram?: { Login: { init: (opts: object, onAuth: (user: Record<string, unknown> | null) => void) => void } } };
-      if (!global.Telegram?.Login?.init) {
-        setTimeout(tryRender, 300);
-        return;
-      }
-      global.Telegram.Login.init(
-        {
-          bot_id: botName,
-          origin: window.location.origin,
-          request_access: true,
-        },
-        (user) => {
-          if (user) {
-            (window as unknown as { onTelegramAuth?: (u: typeof user) => void }).onTelegramAuth?.(user);
-          } else {
-            reject(new Error('Вход в Telegram отменён'));
-          }
-        },
-      );
-    };
-    setTimeout(tryRender, 300);
+        // Виджет сам вставляет кнопку в #telegram-login-<bot_name>
+        global.Telegram.Login.init(
+          {
+            bot_id: TELEGRAM_BOT_NAME,
+            request_access: true,
+            lang: 'ru',
+          },
+          (user) => {
+            if (!user) {
+              done(new Error('Вход в Telegram отменён'));
+              return;
+            }
+            const typed = user as {
+              id: number;
+              first_name?: string;
+              last_name?: string;
+              username?: string;
+              photo_url?: string;
+              auth_date: number;
+              hash: string;
+            };
+            handleTelegramUser(typed, nonce)
+              .then((token) => {
+                done();
+                resolve(token);
+              })
+              .catch((e) => done(e instanceof Error ? e : new Error(String(e))));
+          },
+        );
+      })
+      .catch((e) => done(e instanceof Error ? e : new Error(String(e))));
   });
 }
 
