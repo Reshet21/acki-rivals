@@ -7,9 +7,6 @@ import { getRarityLabel, getPackName } from '../i18n/cardTranslations';
 import { useHaptic } from '../hooks/useHaptic';
 import type { WalletConnection } from '../services/beeEngine';
 import {
-  payNacklToTreasury,
-  requestAckr,
-  getTreasurySignerKeys,
   depositNackl,
   getPlayerBalance,
   buyWithBalance,
@@ -63,10 +60,6 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [buyingPackId, setBuyingPackId] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [needsReconnect, setNeedsReconnect] = useState(false);
-  const [exchangeAmount, setExchangeAmount] = useState<number>(50);
-  const [exchanging, setExchanging] = useState(false);
-  const [exchangeMsg, setExchangeMsg] = useState<string | null>(null);
-  const [exchangeOk, setExchangeOk] = useState(false);
   const [fallbackPackId, setFallbackPackId] = useState<string | null>(null);
   const [fallbackNote, setFallbackNote] = useState<string | null>(null);
   const [checkingFallback, setCheckingFallback] = useState(false);
@@ -302,47 +295,6 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     setShowDeposit(false);
     setFallbackNote(null);
     setBuyingPackId(null);
-  };
-
-  // ═══ Обмен NACKL → ACKR (казначейство) ═══
-  const handleExchange = async () => {
-    if (!walletConnection) {
-      setExchangeMsg(t('shop.connectWalletError'));
-      setExchangeOk(false);
-      return;
-    }
-    const signerKeys = getTreasurySignerKeys();
-    if (!signerKeys) {
-      setExchangeMsg('🔑 Нужен вход через Google (zkLogin) для подписи платежа');
-      setExchangeOk(false);
-      return;
-    }
-    if (nacklBalance !== null && parseFloat(nacklBalance) < exchangeAmount) {
-      setExchangeMsg(t('shop.notEnoughNackl'));
-      setExchangeOk(false);
-      return;
-    }
-
-    impactOccurred('medium');
-    setExchanging(true);
-    setExchangeMsg(null);
-    try {
-      const txHash = await payNacklToTreasury(walletConnection, signerKeys, exchangeAmount);
-      setExchangeMsg(`Оплачено ${exchangeAmount} NACKL. Получаем ACKR...`);
-      const result = await requestAckr(walletConnection.walletAddress, exchangeAmount);
-      if (result.success) {
-        setExchangeOk(true);
-        setExchangeMsg(`Получено ${result.ackrAmount} ACKR (tx ${(result.txHash || '').slice(0, 10)}…)`);
-      } else {
-        setExchangeOk(false);
-        setExchangeMsg(`Платёж отправлен (tx ${txHash.slice(0, 10)}…), но выдача ACKR: ${result.error || 'ошибка'}`);
-      }
-    } catch (e) {
-      setExchangeOk(false);
-      setExchangeMsg(`Ошибка обмена: ${e instanceof Error ? e.message : 'неизвестная'}`);
-    } finally {
-      setExchanging(false);
-    }
   };
 
   const canBuyPack = (packId: string): boolean => {
@@ -752,64 +704,6 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
             );
           })}
 
-          {/* ═══ Обмен NACKL → ACKR (казначейство) ═══ */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden"
-            style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-4 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute w-24 h-24 rounded-full bg-white/10 -top-8 -right-8" />
-              </div>
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="text-3xl">💱</div>
-                <div className="flex-1">
-                  <div className="text-lg font-black text-white">Обмен: NACKL → ACKR</div>
-                  <div className="text-[10px] text-white/70">Курс 1:1 · ACKR зачисляются на ваш TIP-3 кошелёк</div>
-                </div>
-              </div>
-            </div>
-            <div className="px-4 py-3">
-              {IS_DEV_PAYMENT ? (
-                <div className="text-[11px] text-yellow-400/80 text-center py-2">
-                  Доступно в live-режиме (VITE_PAYMENT_MODE=live)
-                </div>
-              ) : (
-                <>
-                  <div className="flex gap-1.5 flex-wrap mb-3">
-                    {[10, 50, 100, 500].map((amount) => (
-                      <button
-                        key={amount}
-                        onClick={() => setExchangeAmount(amount)}
-                        disabled={exchanging}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                          exchangeAmount === amount
-                            ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                            : 'bg-white/5 border-white/10 text-white/50'
-                        }`}
-                      >
-                        {amount} NACKL
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={handleExchange}
-                    disabled={exchanging || !walletConnection}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-                      exchanging || !walletConnection
-                        ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white active:scale-95 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                    }`}
-                  >
-                    {exchanging ? 'Обмен...' : `Купить ${exchangeAmount} ACKR за ${exchangeAmount} NACKL`}
-                  </button>
-                  {exchangeMsg && (
-                    <div className={`mt-2 text-[11px] text-center ${exchangeOk ? 'text-emerald-300' : 'text-yellow-400'}`}>
-                      {exchangeMsg}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
