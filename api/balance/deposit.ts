@@ -17,7 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { TREASURY_ADDR, isDev } from '../lib/config.js';
 import { scanAllPayments, isValidAddress } from '../lib/validate.js';
-import { creditDeposit, getBalance } from '../lib/balance.js';
+import { creditDeposit } from '../lib/balance.js';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';

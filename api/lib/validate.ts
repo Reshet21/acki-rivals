@@ -27,13 +27,12 @@ async function messageInfo(hash: string): Promise<{ src: string; dst: string; va
   // Майнет периодически отвечает валидным JSON, но с message:null, либо
   // отдаёт 502/HTML — ретраим, чтобы отличать «индекс не отдал» от
   // «сообщения нет».
-  let last: Record<string, unknown> | null = null;
   for (let attempt = 0; attempt < 5; attempt++) {
     let json: Record<string, unknown> | null = null;
     try {
       json = (await graphql(q)) as any;
-    } catch (e) {
-      last = { error: e instanceof Error ? e.message : String(e) };
+    } catch {
+      // retry ниже
     }
     const m = (json as any)?.data?.blockchain?.message;
     if (m) {
@@ -155,51 +154,4 @@ export async function scanAllPayments(
  */
 export async function findPayment(player: string, amountNano: bigint, treasuryAccount: string): Promise<Payment | null> {
   return scanPayments(amountNano, treasuryAccount, player);
-}
-
-/**
- * Верификация платежа по хешу ТРАНЗАКЦИИ, который показывает кошелёк
- * при отправке перевода (AN Wallet показывает хеш газовой/анкерной
- * транзакции, а сам NACKL лежит в её out_msgs).
- *
- * Работает даже когда тяжёлый запрос account.transactions нестабилен —
- * точечные transaction(hash)/message(hash) майнет отдаёт охотнее.
- */
-export async function findPaymentByTxHash(
-  txHash: string,
-  amountNano: bigint,
-  treasuryAccount: string,
-): Promise<Payment | null> {
-  const q = `query { blockchain { transaction(hash: "${txHash}") { a: now b: aborted c: out_msgs } } }`;
-  let tx: any = null;
-  for (let attempt = 0; attempt < 5 && !tx; attempt++) {
-    const json = (await graphql(q)) as any;
-    tx = json?.data?.blockchain?.transaction;
-    if (!tx) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-  }
-  if (!tx || tx.b) return null;
-  const outMsgs: string[] = tx.c || [];
-
-  for (const msgHash of outMsgs) {
-    if (!/^[0-9a-fA-F]{64}$/.test(msgHash)) continue;
-    const info = await messageInfo(msgHash);
-    if (!info) continue;
-
-    const nackl = info.valueOther[NACKL_ECC_INDEX];
-    if (!nackl) continue;
-    const amount = BigInt(nackl);
-    if (amount < amountNano) continue;
-
-    return { msgHash, amountNano: amount, src: info.src, now: Number(tx.a) * 1000 };
-  }
-  return null;
-}
-
-/**
- * Совпадает ли отправитель платежа с адресом игрока.
- * Критично для мультипользователя: платёж засчитывается ТОЛЬКО тому,
- * кто его реально отправил, иначе игрок A получит пак за счёт перевода игрока B.
- */
-export function matchesSender(src: string, player: string): boolean {
-  return typeof src === 'string' && typeof player === 'string' && src.toLowerCase() === player.toLowerCase();
 }

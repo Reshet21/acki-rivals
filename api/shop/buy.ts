@@ -19,7 +19,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { isDev } from '../lib/config.js';
 import { isValidAddress } from '../lib/validate.js';
-import { debitSpend, getBalance } from '../lib/balance.js';
+import { debitSpend } from '../lib/balance.js';
 
 /** Цены паков в NACKL (дублируются из src/data/packs.ts) */
 const PACK_PRICES: Record<string, number> = {
