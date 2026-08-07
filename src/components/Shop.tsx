@@ -10,6 +10,7 @@ import {
   depositNackl,
   getPlayerBalance,
   buyWithBalance,
+  fetchDepositQuote,
   TREASURY_ADDRESS,
   TREASURY_NAME,
 } from '../services/treasuryService';
@@ -196,10 +197,12 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
         return;
       } else {
         // 402 (недостаточно средств) или ошибка — панель пополнения
-        // с суммой = цена пака (сумма заявки = идентификатор платежа)
+        // с УНИКАЛЬНОЙ суммой (база = цена пака + дробный хвост):
+        // платёж ровно на эту сумму может перевести только этот игрок.
         setPaymentError(result.error || t('shop.paymentError'));
+        const q = await fetchDepositQuote(player, pack.nacklPrice);
+        setDepositAmount(q?.amountNackl ?? pack.nacklPrice);
         setFallbackPackId(packId);
-        setDepositAmount(pack.nacklPrice);
         setFallbackNote(null);
         setBuyingPackId(null);
         return;
@@ -491,7 +494,11 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
             )}
             {walletConnection && (
               <button
-                onClick={() => { setShowDeposit(true); setFallbackPackId(null); setPaymentError(null); }}
+                onClick={async () => {
+                  setShowDeposit(true); setFallbackPackId(null); setPaymentError(null);
+                  const q = await fetchDepositQuote(walletConnection!.walletAddress, depositAmount);
+                  if (q) setDepositAmount(q.amountNackl);
+                }}
                 className="px-2.5 py-1.5 rounded-full text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all"
               >
                 ➕ Пополнить
@@ -573,8 +580,10 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
               </div>
               <div className="px-4 py-4 flex flex-col gap-3">
                 <div className="text-[12px] text-white/80">
-                  Введите сумму пополнения и переведите её в AN Wallet на{' '}
-                  <span className="font-bold text-white">ник: {payTargetName}</span>. Баланс пополнится автоматически:
+                  Переведите РОВНО{' '}
+                  <span className="font-bold text-white">{Number.isFinite(depositAmount) ? depositAmount.toFixed(2) : '—'} NACKL</span>{' '}
+                  в AN Wallet на{' '}
+                  <span className="font-bold text-white">ник: {payTargetName}</span>. Сумма уникальна для вас — платёж зачтётся только вам:
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -588,6 +597,19 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     placeholder="Сумма NACKL"
                   />
                   <span className="text-white/60 text-sm font-bold shrink-0">NACKL</span>
+                  <button
+                    onClick={async () => {
+                      const q = await fetchDepositQuote(walletConnection!.walletAddress, depositAmount);
+                      if (q) setDepositAmount(q.amountNackl);
+                    }}
+                    className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all shrink-0"
+                    title="Выдать новую уникальную сумму"
+                  >
+                    🎲
+                  </button>
+                </div>
+                <div className="text-[10px] text-white/40">
+                  Кнопка 🎲 выдаёт новую уникальную сумму (например, 10.37) — у двух игроков суммы не совпадают, поэтому платёж не перепутается
                 </div>
                 <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-[11px] font-mono text-white/80 break-all select-all">
                   {payTargetName}

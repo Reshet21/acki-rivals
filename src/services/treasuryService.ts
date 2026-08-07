@@ -174,6 +174,25 @@ export async function depositNackl(
 }
 
 /**
+ * Уникальная сумма пополнения: сервер выдаёт базовую сумму с дробным
+ * хвостом (напр. 10.37), которую может перевести только этот игрок —
+ * платёж гарантированно его (отправителя блокчейн не раскрывает).
+ */
+export async function fetchDepositQuote(
+  player: string,
+  wantedNackl = 10,
+): Promise<{ amountNackl: number; amountNano: string } | null> {
+  try {
+    const res = await fetch(`/api/balance/quote?player=${encodeURIComponent(player)}&wanted=${encodeURIComponent(String(wantedNackl))}`);
+    const json = (await res.json()) as { success?: boolean; amountNackl?: string; amountNano?: string };
+    if (!json.success || !json.amountNackl) return null;
+    return { amountNackl: parseFloat(json.amountNackl), amountNano: json.amountNano! };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Текущий игровой баланс в NACKL (0 при ошибке).
  */
 export async function getPlayerBalance(player: string): Promise<number> {
