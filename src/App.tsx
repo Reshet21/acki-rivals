@@ -389,7 +389,7 @@ function AppInner() {
               </div>
 
               {/* Tertiary Actions - Minimal */}
-              <div className="w-full max-w-xs grid grid-cols-4 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+              <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
                 <button onClick={() => { selectionChanged(); setScreen('upgrade'); }}
                   className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
