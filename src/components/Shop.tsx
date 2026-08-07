@@ -690,6 +690,27 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                 <div className="text-[10px] text-white/50 text-center">
                   Баланс проверяется автоматически каждые 15 секунд — ничего нажимать не нужно
                 </div>
+                {onZkLogin && !hasEpkKey && (
+                  <div className="flex flex-col gap-1.5">
+                    <div className="text-[10px] text-white/40 text-center">
+                      Или войдите через Telegram/Google, чтобы платить из кошелька напрямую:
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onZkLogin('telegram')}
+                        className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-500 to-cyan-600 text-white active:scale-95 transition-all"
+                      >
+                        ✈️ Войти через Telegram
+                      </button>
+                      <button
+                        onClick={() => onZkLogin('google')}
+                        className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-white active:scale-95 transition-all"
+                      >
+                        🔑 Войти через Google
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={() => handleDepositNow(fallbackPackId)}
                   disabled={checkingFallback}
