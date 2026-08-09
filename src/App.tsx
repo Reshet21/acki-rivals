@@ -199,7 +199,7 @@ function AppInner() {
         haptic.selectionChanged();
         return prev.filter((c) => c.uid !== card.uid);
       }
-      if (prev.length >= 8) return prev;
+      if (prev.length >= 10) return prev;
       haptic.selectionChanged();
       return [...prev, card];
     });
@@ -355,7 +355,7 @@ function AppInner() {
               </div>
 
               {/* Deck warning */}
-              {deck.length !== 8 && (
+              {deck.length !== 10 && (
                 <div className="w-full max-w-xs px-4 py-2.5 text-center animate-fade-in" style={{ borderRadius: 9, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
                   <span className="text-xs font-medium" style={{ color: 'rgba(255,215,0,0.8)' }}>{t('menu.deckHint')}</span>
                 </div>
@@ -372,16 +372,16 @@ function AppInner() {
               {/* Premium Battle Buttons */}
               <div className="w-full max-w-xs space-y-2.5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
                 {/* PvP Button - Hero */}
-                <button onClick={() => { impactOccurred('medium'); setScreen('pvp'); }} disabled={deck.length !== 8}
+                <button onClick={() => { impactOccurred('medium'); setScreen('pvp'); }} disabled={deck.length !== 10}
                   className="w-full py-3 font-bold text-base flex items-center justify-center transition-all relative overflow-hidden active:scale-[0.97] font-display"
                   style={{
                     borderRadius: 9,
-                    background: deck.length === 8 ? 'linear-gradient(135deg, rgba(255,61,0,0.22) 0%, rgba(255,109,0,0.16) 50%, rgba(255,145,0,0.12) 100%)' : 'rgba(255,255,255,0.03)',
-                    border: deck.length === 8 ? '1px solid rgba(255,100,0,0.35)' : '1px solid rgba(255,255,255,0.05)',
+                    background: deck.length === 10 ? 'linear-gradient(135deg, rgba(255,61,0,0.22) 0%, rgba(255,109,0,0.16) 50%, rgba(255,145,0,0.12) 100%)' : 'rgba(255,255,255,0.03)',
+                    border: deck.length === 10 ? '1px solid rgba(255,100,0,0.35)' : '1px solid rgba(255,255,255,0.05)',
                     boxShadow: 'none',
-                    color: deck.length === 8 ? '#ffd9c2' : 'rgba(255,255,255,0.15)',
+                    color: deck.length === 10 ? '#ffd9c2' : 'rgba(255,255,255,0.15)',
                   }}>
-                  {deck.length === 8 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
+                  {deck.length === 10 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
                   <div className="flex items-center justify-center gap-3">
                     <Icon name="globe" size={22} />
                     <div className="flex flex-col items-center text-center">
@@ -392,16 +392,16 @@ function AppInner() {
                 </button>
 
                 {/* AI Battle Button */}
-                <button onClick={() => { impactOccurred('medium'); setScreen('battle'); }} disabled={deck.length !== 8}
+                <button onClick={() => { impactOccurred('medium'); setScreen('battle'); }} disabled={deck.length !== 10}
                   className="w-full py-3 font-bold text-base flex items-center justify-center transition-all relative overflow-hidden active:scale-[0.97] font-display"
                   style={{
                     borderRadius: 9,
-                    background: deck.length === 8 ? 'linear-gradient(135deg, rgba(22,58,95,0.35) 0%, rgba(15,40,71,0.28) 50%, rgba(10,22,40,0.22) 100%)' : 'rgba(255,255,255,0.03)',
-                    border: deck.length === 8 ? '1px solid rgba(0,180,255,0.28)' : '1px solid rgba(255,255,255,0.05)',
+                    background: deck.length === 10 ? 'linear-gradient(135deg, rgba(22,58,95,0.35) 0%, rgba(15,40,71,0.28) 50%, rgba(10,22,40,0.22) 100%)' : 'rgba(255,255,255,0.03)',
+                    border: deck.length === 10 ? '1px solid rgba(0,180,255,0.28)' : '1px solid rgba(255,255,255,0.05)',
                     boxShadow: 'none',
-                    color: deck.length === 8 ? '#d6ecff' : 'rgba(255,255,255,0.15)',
+                    color: deck.length === 10 ? '#d6ecff' : 'rgba(255,255,255,0.15)',
                   }}>
-                  {deck.length === 8 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(0,180,255,0.06) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
+                  {deck.length === 10 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(0,180,255,0.06) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
                   <div className="flex items-center justify-center gap-3">
                     <Icon name="cpu" size={22} />
                     <div className="flex flex-col items-center text-center">

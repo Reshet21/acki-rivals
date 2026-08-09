@@ -149,7 +149,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   }, [randomQueue, playerId, deck, displayName]);
 
   const handleCreate = async () => {
-    if (deck.length !== 8 || creatingRef.current) return;
+    if (deck.length !== 10 || creatingRef.current) return;
     creatingRef.current = true;
     try {
       setWaiting(true); setError(null);
@@ -171,7 +171,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     return false;
   };
 
-  const handleRandom = () => { if (deck.length !== 8) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
+  const handleRandom = () => { if (deck.length !== 10) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
   const cancelRandom = () => { setRandomQueue(false); setSearchTimer(0); };
 
   const handleJoinOpen = async (game: Game) => {
@@ -219,7 +219,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   };
 
   // ═══ DECK CHECK ═══
-  if (deck.length !== 8) return (
+  if (deck.length !== 10) return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto items-center justify-center p-4">
       <div className="text-white/50 text-center"><div className="text-sm">{t('menu.buildDeck')}</div></div>
       <button onClick={() => { impactOccurred('soft'); onBack(); }} className="mt-4 px-6 py-2 rounded-lg text-sm font-bold bg-white/5 border border-white/10 text-white/60 active:bg-white/10">{t('pvp.back')}</button>
@@ -501,7 +501,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                   <div>
                     <div className="text-sm font-bold text-white truncate max-w-[140px]">{g.host_id === playerId ? displayName : (g.host_name || t('pvp.host'))}</div>
                     <div className="text-[10px] text-white/30 flex items-center gap-2">
-                      <span>{g.host_deck?.length || 0}/8 {t('deck.cards')}</span>
+                      <span>{g.host_deck?.length || 0}/10 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />
                       {g.stake_nano && Number(g.stake_nano) > 0 && (
                         <span className="text-an-gold font-bold">🎯 {(Number(g.stake_nano) / 1e9).toFixed(g.stake_nano.length > 10 ? 2 : 0)} NACKL</span>

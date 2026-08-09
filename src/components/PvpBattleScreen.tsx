@@ -29,8 +29,8 @@ interface Props {
   onSurrender: () => void;
 }
 
-const TOTAL_HP = 12;
-const TOTAL_ROUNDS = 4;
+const TOTAL_HP = 50;
+const TOTAL_ROUNDS = 5;
 const TURN_TIME = 30;
 const STARTING_PILLZ = 12;
 const FREE_PILLZ_PER_ROUND = 1;

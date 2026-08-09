@@ -111,7 +111,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
               <span className="inline-flex items-center gap-1"><Icon name="sword" size={12} /> {tf('deck.battleDeck', 'Боевая колода')}</span> <span style={{ color: 'rgba(255,255,255,0.4)' }}>· тап — убрать</span>
             </div>
             <div className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
-              {deck.length}/8
+              {deck.length}/10
             </div>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
