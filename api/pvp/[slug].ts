@@ -2,27 +2,28 @@
  * api/pvp/[slug].ts — ЕДИНАЯ функция для всех PvP-эндпоинтов.
  *
  * Vercel Hobby лимит — 12 serverless-функций; отдельный файл на каждый
- * эндпоинт превышал лимит. Роутер сохраняет ПРЕЖНИЕ URL (/api/pvp/create
- * и т.д.) — клиент не меняется.
+ * эндпоинт превышал лимит. Handler'ы живут в api-lib/pvp-handlers/
+ * (не в api/, поэтому функций НЕ создают), роутер сохраняет прежние URL
+ * (/api/pvp/create и т.д.) — клиент не меняется.
  *
  * Список slug: create, join, move, game, list, my, surrender, abandon,
  *               settle, refund, balance, shop, leaderboard, marketplace
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import createHandler from './create.js';
-import joinHandler from './join.js';
-import moveHandler from './move.js';
-import gameHandler from './game.js';
-import listHandler from './list.js';
-import myHandler from './my.js';
-import surrenderHandler from './surrender.js';
-import abandonHandler from './abandon.js';
-import settleHandler from './settle.js';
-import refundHandler from './refund.js';
-import balanceHandler from './balance.js';
-import shopHandler from './shop.js';
-import leaderboardHandler from './leaderboard.js';
-import marketplaceHandler from './marketplace.js';
+import createHandler from '../api-lib/pvp-handlers/create.js';
+import joinHandler from '../api-lib/pvp-handlers/join.js';
+import moveHandler from '../api-lib/pvp-handlers/move.js';
+import gameHandler from '../api-lib/pvp-handlers/game.js';
+import listHandler from '../api-lib/pvp-handlers/list.js';
+import myHandler from '../api-lib/pvp-handlers/my.js';
+import surrenderHandler from '../api-lib/pvp-handlers/surrender.js';
+import abandonHandler from '../api-lib/pvp-handlers/abandon.js';
+import settleHandler from '../api-lib/pvp-handlers/settle.js';
+import refundHandler from '../api-lib/pvp-handlers/refund.js';
+import balanceHandler from '../api-lib/pvp-handlers/balance.js';
+import shopHandler from '../api-lib/pvp-handlers/shop.js';
+import leaderboardHandler from '../api-lib/pvp-handlers/leaderboard.js';
+import marketplaceHandler from '../api-lib/pvp-handlers/marketplace.js';
 
 const ROUTES: Record<string, (req: VercelRequest, res: VercelResponse) => Promise<void> | void> = {
   create: createHandler,
