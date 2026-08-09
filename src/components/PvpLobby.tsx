@@ -134,7 +134,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
           if (updated && (await reserveOrRollback(updated, false))) { setRandomQueue(false); setRoom(updated); }
         } else if (!createdOwnRef.current && Date.now() - startTime >= 3000) {
           createdOwnRef.current = true;
-          const g = await createGame(playerId, deck, displayName);
+          const g = await createGame(playerId, deck, displayName, stake > 0 ? BigInt(Math.round(stake * 1e9)).toString() : '0');
           if (g) { setRandomQueue(false); setRoom(g); }
         } else {
           creatingRef.current = false; // nothing to do, release lock
@@ -153,15 +153,17 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     creatingRef.current = true;
     try {
       setWaiting(true); setError(null);
-      const g = await createGame(playerId, deck, displayName);
+      const g = await createGame(playerId, deck, displayName, stake > 0 ? BigInt(Math.round(stake * 1e9)).toString() : '0');
       if (g && !(await reserveOrRollback(g, true))) return;
       if (g) { setRoom(g); localStorage.setItem('pvp_pending_room_id', g.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); creatingRef.current = false; }
   };
 
   const reserveOrRollback = async (g: Game, isHost: boolean): Promise<boolean> => {
-    if (stake <= 0) return true;
-    const r = await reservePvpStake(playerId, g.id, stake);
+    // Ставка комнаты одна: host платит свою, гость — ту же, что у комнаты
+    const amount = isHost ? stake : (g.stake_nano ? Number(g.stake_nano) / 1e9 : 0);
+    if (amount <= 0) return true;
+    const r = await reservePvpStake(playerId, g.id, amount);
     if (r.success) return true;
     setError(r.error || 'Ошибка резерва ставки');
     setWaiting(false);
@@ -268,6 +270,11 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         <div className="w-full max-w-xs mt-2">
           <div className="text-[10px] text-white/40 text-center mb-1 uppercase tracking-widest">{t('pvp.roomCode')}</div>
           <div className="w-full px-4 py-3 rounded-xl bg-an-card/80 border border-an-gold/30 text-center font-mono text-sm text-an-gold break-all select-all backdrop-blur-sm shadow-[0_0_20px_rgba(255,215,0,0.15)]">{room.id}</div>
+          {(room.stake_nano && Number(room.stake_nano) > 0) && (
+            <div className="mt-2 w-full px-4 py-2 rounded-xl bg-an-gold/10 border border-an-gold/40 text-center text-sm font-bold text-an-gold">
+              🎯 {t('pvp.stake')}: {(Number(room.stake_nano) / 1e9).toFixed(room.stake_nano.length > 10 ? 2 : 0)} NACKL
+            </div>
+          )}
         </div>
 
         <button onClick={() => { selectionChanged(); handleCopy(); }}
@@ -496,7 +503,9 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                     <div className="text-[10px] text-white/30 flex items-center gap-2">
                       <span>{g.host_deck?.length || 0}/8 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />
-                      <span className="text-an-gold inline-flex"><Icon name="sword" size={14} /></span>
+                      {g.stake_nano && Number(g.stake_nano) > 0 && (
+                        <span className="text-an-gold font-bold">🎯 {(Number(g.stake_nano) / 1e9).toFixed(g.stake_nano.length > 10 ? 2 : 0)} NACKL</span>
+                      )}
                     </div>
                   </div>
                 </div>

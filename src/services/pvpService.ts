@@ -61,6 +61,7 @@ export interface Game {
   state: GameState;
   status: string;
   created_at: string;
+  stake_nano?: string | null;
 }
 
 export interface Move {
@@ -85,7 +86,7 @@ export interface PlayerEntry {
 
 // ─── Game actions ────────────────────────────────────────
 
-export async function createGame(hostId: string, hostDeck: Card[], hostName?: string): Promise<Game | null> {
+export async function createGame(hostId: string, hostDeck: Card[], hostName?: string, stakeNano?: string): Promise<Game | null> {
   const client = getClient();
   if (!client) throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env');
 
@@ -96,6 +97,7 @@ export async function createGame(hostId: string, hostDeck: Card[], hostName?: st
       host_name: hostName || null,
       host_deck: hostDeck,
       status: 'waiting',
+      stake_nano: stakeNano || '0',
     })
     .select()
     .single();

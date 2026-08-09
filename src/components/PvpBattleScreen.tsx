@@ -786,6 +786,12 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
               {playerHP} HP vs {opponentHP} HP
             </div>
 
+            {(battleResult === 'win' && game.stake_nano && Number(game.stake_nano) > 0) && (
+              <div className="text-sm font-black text-neon-green bg-neon-green/10 border border-neon-green/30 rounded-xl px-4 py-2">
+                +{(Number(game.stake_nano) * 2 / 1e9).toFixed(2)} NACKL 🎯
+              </div>
+            )}
+
             <div className="flex flex-col gap-1.5 w-full max-w-xs">
               <div className="inline-flex items-center gap-1 text-[8px] text-white/30 uppercase tracking-wider mb-0.5"><Icon name="book" size={9} /> {t('pvp.log')}</div>
               {roundLog.map((entry, i) => (

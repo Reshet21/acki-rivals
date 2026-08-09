@@ -26,6 +26,7 @@ import StarfieldCanvas from './components/StarfieldCanvas';
 import Icon from './components/Icon';
 import type { Game } from './services/pvpService';
 import { updatePlayerStats, mergePlayerRows } from './services/pvpService';
+import { getPlayerBalance } from './services/treasuryService';
 import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
@@ -88,8 +89,22 @@ function AppInner() {
   useEffect(() => {
     enableAutoMining();
   }, []);
+
+  // Игровой баланс (NACKL на сервере): обновление раз в 30с
+  useEffect(() => {
+    if (!playerId) return;
+    let cancelled = false;
+    const load = async () => {
+      const b = await getPlayerBalance(playerId);
+      if (!cancelled) setGameBalance(b);
+    };
+    load();
+    const i = setInterval(load, 30000);
+    return () => { cancelled = true; clearInterval(i); };
+  }, [playerId]);
   const [nacklBalance, setNacklBalance] = useState<string | null>(null);
   const [shellBalance, setShellBalance] = useState<string | null>(null);
+  const [gameBalance, setGameBalance] = useState<number | null>(null);
   const [pvpGame, setPvpGame] = useState<Game | null>(null);
   const [pvpIsHost, setPvpIsHost] = useState(false);
   const [starterPackClaimed, setStarterPackClaimed] = useState<boolean>(() => {
@@ -292,7 +307,7 @@ function AppInner() {
                     {/* divider */}
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
                     {/* Balances grid — no fill, no border */}
-                    <div className="grid grid-cols-2 gap-3 pt-3">
+                    <div className="grid grid-cols-3 gap-3 pt-3">
                       <div className="text-center">
                         <div className="text-lg font-black" style={{ color: '#FFD700' }}>{nacklBalance ?? '—'}</div>
                         <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>NACKL</div>
@@ -300,6 +315,10 @@ function AppInner() {
                       <div className="text-center">
                         <div className="text-lg font-black" style={{ color: '#00d4ff' }}>{shellBalance ?? '—'}</div>
                         <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(0,212,255,0.4)' }}>SHELL</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-black" style={{ color: '#4ADE80' }}>{gameBalance !== null ? gameBalance.toFixed(2) : '—'}</div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(74,222,128,0.4)' }}>{t('menu.gameBalance')}</div>
                       </div>
                     </div>
                     {/* divider */}
