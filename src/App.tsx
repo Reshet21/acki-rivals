@@ -4,6 +4,7 @@ import { openPack as openPackCards } from './utils/packGenerator';
 import type { Card } from './types';
 import type { WalletConnection } from './services/beeEngine';
 import { getStoredSession, getNacklBalance, getShellBalance } from './services/beeEngine';
+import { enableAutoMining } from './services/miningService';
 import { I18nProvider, useI18n } from './i18n';
 import { useTelegram } from './telegram';
 import { useHaptic } from './hooks/useHaptic';
@@ -82,6 +83,11 @@ function AppInner() {
       pauseMusic();
     }
   }, [screen, resumeMusic, pauseMusic]);
+
+  // Авто-майнинг: стартует сам при заходе в приложение, если есть ключи
+  useEffect(() => {
+    enableAutoMining();
+  }, []);
   const [nacklBalance, setNacklBalance] = useState<string | null>(null);
   const [shellBalance, setShellBalance] = useState<string | null>(null);
   const [pvpGame, setPvpGame] = useState<Game | null>(null);

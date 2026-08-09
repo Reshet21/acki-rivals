@@ -13,7 +13,7 @@ import { toNano } from './helpers';
 /** Казначейство — куда игрок шлёт NACKL (мультисиг M, Shellnet) */
 export const TREASURY_ADDRESS =
   import.meta.env.VITE_TREASURY_ADDRESS ||
-  '0:badc33121c6284f5dbf1ec829edbd1d97f5fc7fae5f15461acdd74d77c341d85';
+  '0:d9ed11eaef8f0ec7b475fe29e293bb721cb6a64dfba3fd069b8e2f9303ff6b36';
 /** Ник владельца казначейства — по нему проходят переводы (по адресу AN Wallet просит app id) */
 export const TREASURY_NAME = import.meta.env.VITE_TREASURY_NAME || '';
 const NACKL_ECC_INDEX = '1';

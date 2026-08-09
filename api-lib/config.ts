@@ -38,7 +38,7 @@ export const OWNER_WALLET_ADDR =
 /** Казначейство M (мультисиг; сюда игроки шлют NACKL) */
 export const TREASURY_ADDR =
   process.env.TREASURY_ADDR ||
-  '0:badc33121c6284f5dbf1ec829edbd1d97f5fc7fae5f15461acdd74d77c341d85';
+  '0:d9ed11eaef8f0ec7b475fe29e293bb721cb6a64dfba3fd069b8e2f9303ff6b36';
 
 export const NACKL_ECC_INDEX = '1';
 

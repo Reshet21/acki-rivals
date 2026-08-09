@@ -1,13 +1,20 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import type { WalletConnection } from '../services/beeEngine';
 import {
   requestMiningKeys,
   waitForMiningKeysPropagation,
   getStoredMiningKeys,
   storeMiningKeys,
-  ENDPOINTS,
-  APP_ID,
 } from '../services/beeEngine';
+import {
+  subscribe,
+  initMining,
+  startMining,
+  stopMining,
+  addTap,
+  getReward,
+  getState,
+} from '../services/miningService';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 import Icon from './Icon';
@@ -17,127 +24,39 @@ interface Props {
   onBack: () => void;
 }
 
-interface MinerState {
-  running: boolean;
-  canStart: boolean;
-  debug: { tapSum: string; tapSum5m: string; updatedAt: string } | null;
-}
-
 export default function MiningPanel({ connection, onBack }: Props) {
   const { impactOccurred } = useHaptic();
   const { t } = useI18n();
   const [miningKeys, setMiningKeys] = useState(() =>
     getStoredMiningKeys(connection.profileAddress)
   );
-  const [minerAddress, setMinerAddress] = useState<string | null>(miningKeys?.minerAddress ?? null);
   const [keysPropagated, setKeysPropagated] = useState(miningKeys?.areKeysPropagated ?? false);
 
   const [isRequestingKeys, setIsRequestingKeys] = useState(false);
   const [isWaitingPropagation, setIsWaitingPropagation] = useState(false);
   const [waitElapsed, setWaitElapsed] = useState(0);
-  const [isInitMiner, setIsInitMiner] = useState(false);
-  const [minerReady, setMinerReady] = useState(false);
-  const [minerState, setMinerState] = useState<MinerState>({ running: false, canStart: false, debug: null });
+  const [minerReady, setMinerReady] = useState(() => getState().ready);
+  const [minerRunning, setMinerRunning] = useState(() => getState().running);
+  const [tapData, setTapData] = useState(() => getState().tapSum);
+  const [tapData5m, setTapData5m] = useState(() => getState().tapSum5m);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(
     miningKeys?.areKeysPropagated ? t('mining.keysPropagated') : null
   );
 
-  const workerRef = useRef<Worker | null>(null);
-  const propTokenRef = useRef(0);
-  const waitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const dataTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const msgIdRef = useRef(0);
-  const pendingRef = useRef<Record<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>>({});
+  const propTokenRef = { current: 0 };
+  const waitTimerRef = { current: null as ReturnType<typeof setInterval> | null };
 
-  // ─── Worker lifecycle ─────────────────────────────────
-  const createWorker = useCallback(() => {
-    const w = new Worker(
-      new URL('../services/minerWorker.ts', import.meta.url),
-      { type: 'module' },
-    );
-    w.onmessage = (e: MessageEvent) => {
-      const msg = e.data;
-      if (!msg) return;
-      if (msg.reqId != null && pendingRef.current[msg.reqId]) {
-        const p = pendingRef.current[msg.reqId];
-        delete pendingRef.current[msg.reqId];
-        if (msg.type === 'error') p.reject(new Error(msg.message));
-        else p.resolve(msg);
-        return;
-      }
-      switch (msg.type) {
-        case 'ready':
-          setMinerReady(true);
-          break;
-        case 'status':
-          setMinerState((s) => ({ ...s, running: msg.running, canStart: msg.canStart }));
-          break;
-        case 'data':
-          setMinerState((s) => ({
-            ...s,
-            debug: {
-              tapSum: msg.tapSum,
-              tapSum5m: msg.tapSum5m,
-              updatedAt: new Date().toLocaleTimeString(),
-            },
-          }));
-          break;
-        case 'event':
-          try {
-            const payload = JSON.parse(msg.message);
-            if (payload.error) {
-              setMinerState((s) => ({ ...s, running: false }));
-              setError(`${payload.action ?? 'miner'}: ${payload.error}`);
-            }
-          } catch { /* non-json */ }
-          break;
-        case 'error':
-          setError(msg.message);
-          break;
-      }
-    };
-    w.onerror = (e) => {
-      setError(e.message || 'Worker error');
-      setMinerState((s) => ({ ...s, running: false }));
-    };
-    workerRef.current = w;
-    return w;
-  }, []);
-
-  const send = useCallback(<T,>(type: string, payload?: Record<string, unknown>): Promise<T> => {
-    const w = workerRef.current;
-    if (!w) return Promise.reject(new Error('Worker not ready'));
-    return new Promise<T>((resolve, reject) => {
-      const reqId = ++msgIdRef.current;
-      pendingRef.current[reqId] = { resolve: resolve as (v: unknown) => void, reject };
-      w.postMessage({ type, reqId, ...(payload || {}) });
+  // Подписка на глобальный майнинг-сервис
+  useEffect(() => {
+    return subscribe((s) => {
+      setMinerReady(s.ready);
+      setMinerRunning(s.running);
+      setTapData(s.tapSum);
+      setTapData5m(s.tapSum5m);
+      if (s.error) setError(s.error);
     });
   }, []);
-
-  // Initialize worker on mount, dispose on unmount
-  useEffect(() => {
-    const w = createWorker();
-    return () => {
-      try { w.postMessage({ type: 'dispose' }); } catch { /* ignore */ }
-      w.terminate();
-      workerRef.current = null;
-    };
-  }, [createWorker]);
-
-  // Start data polling once miner is ready
-  useEffect(() => {
-    if (!minerReady) return;
-    const poll = async () => {
-      try { await send('data'); } catch { /* worker busy */ }
-    };
-    poll();
-    dataTimerRef.current = setInterval(poll, 5000);
-    return () => {
-      if (dataTimerRef.current) clearInterval(dataTimerRef.current);
-      dataTimerRef.current = null;
-    };
-  }, [minerReady, send]);
 
   // Elapsed-time counter while waiting for propagation
   useEffect(() => {
@@ -163,10 +82,6 @@ export default function MiningPanel({ connection, onBack }: Props) {
       setError(null);
       setStatus(null);
       setKeysPropagated(false);
-      setMinerAddress(null);
-      setMinerState({ running: false, canStart: false, debug: null });
-      setMinerReady(false);
-      try { workerRef.current?.postMessage({ type: 'dispose' }); } catch { /* ignore */ }
 
       // Step 1: generate + request keys (fast)
       const keys = await requestMiningKeys(connection);
@@ -181,10 +96,11 @@ export default function MiningPanel({ connection, onBack }: Props) {
       const addr = await waitForMiningKeysPropagation(connection.walletName, keys.ownerPublic);
       if (token !== propTokenRef.current) return;
 
-      setMinerAddress(addr);
       setKeysPropagated(true);
       setMiningKeys((prev) => prev ? { ...prev, minerAddress: addr, areKeysPropagated: true } : null);
       setStatus(t('mining.keysPropagated'));
+      // Сервис сам подхватит ключи и запустит майнинг
+      initMining();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setStatus(null);
@@ -202,52 +118,14 @@ export default function MiningPanel({ connection, onBack }: Props) {
     setError(t('mining.cancelled'));
   };
 
-  const handleInitMiner = async () => {
-    if (!miningKeys?.ownerPublic || !miningKeys.ownerSecret || !minerAddress) return;
-    try {
-      setIsInitMiner(true);
-      setError(null);
-      setMinerReady(false);
-      const w = workerRef.current;
-      if (!w) return;
-      w.postMessage({
-        type: 'init',
-        minerAddress,
-        ownerPublic: miningKeys.ownerPublic,
-        ownerSecret: miningKeys.ownerSecret,
-        appId: APP_ID,
-        endpoints: ENDPOINTS,
-      });
-      setStatus(t('mining.initMiner'));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setIsInitMiner(false);
-    }
-  };
-
-  const handleStart = () => {
-    try {
-      setError(null);
-      setMinerState((s) => ({ ...s, running: true, canStart: false }));
-      workerRef.current?.postMessage({ type: 'start', durationMs: 15000 });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  };
-
-  const handleStop = () => {
-    workerRef.current?.postMessage({ type: 'stop' });
-  };
-
-  const handleAddTap = () => {
-    try { workerRef.current?.postMessage({ type: 'tap', x: 1, y: 1 }); }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+  const handleStartMiner = () => {
+    setError(null);
+    initMining();
   };
 
   const handleGetReward = async () => {
     try {
-      await send('reward');
+      await getReward();
       setStatus(t('mining.reward'));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -318,32 +196,31 @@ export default function MiningPanel({ connection, onBack }: Props) {
 
         {keysPropagated && !minerReady && (
           <button
-            onClick={handleInitMiner}
-            disabled={isInitMiner}
+            onClick={handleStartMiner}
             className="w-full py-3 rounded-lg font-bold text-sm
               bg-gradient-to-r from-neon-blue to-neon-purple text-white
               shadow-[0_0_16px_rgba(0,212,255,0.3)]
-              active:scale-95 transition-all disabled:opacity-50"
+              active:scale-95 transition-all"
           >
-            {isInitMiner ? t('mining.initing') : t('mining.startMiner')}
+            {t('mining.startMiner')}
           </button>
         )}
 
         {minerReady && (
           <div className="flex gap-2">
             <button
-              onClick={() => { impactOccurred('medium'); minerState.running ? handleStop() : handleStart(); }}
+              onClick={() => { impactOccurred('medium'); minerRunning ? stopMining() : startMining(); }}
               className={`flex-1 py-3 rounded-lg font-bold text-sm active:scale-95 transition-all ${
-                minerState.running
+                minerRunning
                   ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                   : 'bg-gradient-to-r from-neon-green to-emerald-500 text-white shadow-[0_0_12px_rgba(0,255,159,0.3)]'
               }`}
             >
-              {t(minerState.running ? 'mining.stop' : 'mining.start')}
+              {t(minerRunning ? 'mining.stop' : 'mining.start')}
             </button>
             <button
-              onClick={() => { impactOccurred('light'); handleAddTap(); }}
-              disabled={!minerState.running}
+              onClick={() => { impactOccurred('light'); addTap(); }}
+              disabled={!minerRunning}
               className="flex-1 py-3 rounded-lg font-bold text-sm
                 bg-white/5 border border-white/10 text-white/60
                 active:scale-95 transition-all disabled:opacity-30"
@@ -367,10 +244,10 @@ export default function MiningPanel({ connection, onBack }: Props) {
       {error && <div className="text-xs text-red-400 text-center">{error}</div>}
 
       {/* Miner debug */}
-      {minerState.debug && (
+      {tapData !== '0' && (
         <div className="w-full bg-white/5 rounded-lg p-2 text-[10px] text-white/40 font-mono">
-          <div>{t('mining.taps')}: {minerState.debug.tapSum} ({t('mining.taps5m')}: {minerState.debug.tapSum5m})</div>
-          <div>{t('mining.updatedAt')}: {minerState.debug.updatedAt}</div>
+          <div>{t('mining.taps')}: {tapData} ({t('mining.taps5m')}: {tapData5m})</div>
+          <div className="text-white/30">{t('mining.runsInBackground')}</div>
         </div>
       )}
 

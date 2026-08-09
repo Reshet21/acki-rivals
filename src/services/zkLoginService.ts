@@ -37,6 +37,10 @@ const TELEGRAM_CLIENT_ID =
   import.meta.env.VITE_TELEGRAM_OAUTH_CLIENT_ID || APP_ID;
 /** Telegram-бот (username без @) для Login Widget — бот Acki Nacki (t.me/ackinacki_bot) */
 const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'ackinacki_bot';
+/** Числовой ID бота ackinacki_bot для Telegram Login Widget.
+ *  Виджет требует число, не username. Получить: @userinfobot → /start, или у @BotFather.
+ *  Переопределяется env VITE_TELEGRAM_BOT_ID (пока пусто — виджет не валиден). */
+const TELEGRAM_BOT_ID = import.meta.env.VITE_TELEGRAM_BOT_ID || '';
 
 // JWKS-эндпоинты провайдеров для получения modulus JWK по kid.
 // Для Telegram: TODO — уточнить у @EugeneDAO (скорее всего <oauth-хост>/jwks).
@@ -258,10 +262,10 @@ async function handleTelegramUser(
  */
 export function loginWithTelegram(nonce: string): Promise<OAuthIdToken> {
   return new Promise((resolve, reject) => {
-    if (!TELEGRAM_BOT_NAME) {
+    if (!TELEGRAM_BOT_NAME || !TELEGRAM_BOT_ID) {
       reject(
         new Error(
-          'Telegram-бот для входа не настроен: получите у @EugeneDAO bot_name и укажите VITE_TELEGRAM_BOT_NAME (client_id=0x26 уже настроен)',
+          'Telegram-вход не настроен: нужны VITE_TELEGRAM_BOT_NAME (username) и VITE_TELEGRAM_BOT_ID (числовой ID бота) — получите у @EugeneDAO (client_id=0x26 уже настроен)',
         ),
       );
       return;
