@@ -76,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!updated) {
       // Гонка: кто-то успел раньше — отменяем ставку
       if (stake > 0n) {
-        await supabase!.rpc('refund_stake', { p_game_id: gameId, p_player: player }).catch(() => {});
+        try { await supabase!.rpc('refund_stake', { p_game_id: gameId, p_player: player }); } catch {}
       }
       return res.status(409).json({ error: 'Комната уже занята' });
     }

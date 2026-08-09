@@ -1,7 +1,7 @@
 /**
  * api-lib/battle/abilities.ts — способности карт (серверная копия src/data/abilities.ts).
  */
-import type { Ability, AbilityResult } from './types.js';
+import type { Ability, AbilityResult } from './battle-types.js';
 
 export const abilities: Ability[] = [
   { id: '+1 power', name: 'Укрепление', description: '+1 к своей силе.', apply: (): AbilityResult => ({ powerModifier: 1 }) },

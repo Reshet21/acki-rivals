@@ -17,13 +17,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase, requireAuth, unauthorized } from './auth.js';
 import { isValidAddress } from './validate.js';
-import { getGameRow, isParticipant, isValidGameId, stateOf, finalizeMatch, type GameRow } from './pvp.js';
+import { getGameRow, isParticipant, isValidGameId, stateOf, finalizeMatch } from './pvp.js';
 import { resolvePvpRound, applyRoundDamageToState } from './battle-resolve.js';
 import type { Card } from './battle-types.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 const UID_RE = /^[A-Za-z0-9_-]{6,64}$/;
-const MAX_PILLZ = 99;
 const TOTAL_HP = 50;
 const TOTAL_ROUNDS = 5;
 const STARTING_PILLZ = 12;
@@ -196,8 +195,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const fin = await finalizeMatch(supabase!, game, newState, winner || '', loser || '');
 
     if (draw && Number(game.stake_nano || '0') > 0) {
-      await supabase!.rpc('refund_stake', { p_game_id: gameId, p_player: game.host_id }).catch(() => {});
-      await supabase!.rpc('refund_stake', { p_game_id: gameId, p_player: game.guest_id }).catch(() => {});
+      try { await supabase!.rpc('refund_stake', { p_game_id: gameId, p_player: game.host_id }); } catch {}
+      try { await supabase!.rpc('refund_stake', { p_game_id: gameId, p_player: game.guest_id }); } catch {}
     }
 
     return res.status(200).json({

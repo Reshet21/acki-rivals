@@ -3,7 +3,7 @@
  * Сервер валидирует колоды и карты листингов строго по этому каталогу:
  * id/name/clan/power/damage/ability/rarity должны совпадать байт в байт.
  */
-import type { Card } from './types.js';
+import type { Card } from './battle-types.js';
 
 export const cards: Card[] = [
   // ═══ НЕОНОВЫЕ НАЕМНИКИ — атакующий клан ═══

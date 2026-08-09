@@ -4,9 +4,9 @@
  * изолированная от клиента. Резолв происходит ТОЛЬКО на сервере —
  * клиент не может подменить результат.
  */
-import type { Card, RoundResult } from './types.js';
-import { getAbility } from './abilities.js';
-import { clanBonuses, comboAbilities } from './cards.js';
+import type { Card, RoundResult } from './battle-types.js';
+import { getAbility } from './battle-abilities.js';
+import { clanBonuses, comboAbilities } from './battle-cards.js';
 
 function randomFactor(): number {
   return 0.9 + Math.random() * 0.2;

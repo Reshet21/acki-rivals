@@ -84,8 +84,8 @@ export async function finalizeMatch(
   // Лидерборд — только серверный RPC (публичный доступ закрыт в миграции).
   const winnerName = (winner === game.host_id ? game.host_name : game.guest_name) || 'Игрок';
   const loserName = (loser === game.host_id ? game.host_name : game.guest_name) || 'Игрок';
-  await client.rpc('upsert_player_stats', { p_player_id: winner, p_player_name: winnerName, p_is_win: true }).catch(() => {});
-  await client.rpc('upsert_player_stats', { p_player_id: loser, p_player_name: loserName, p_is_win: false }).catch(() => {});
+  try { await client.rpc('upsert_player_stats', { p_player_id: winner, p_player_name: winnerName, p_is_win: true }); } catch {}
+  try { await client.rpc('upsert_player_stats', { p_player_id: loser, p_player_name: loserName, p_is_win: false }); } catch {}
 
   return { settleError };
 }

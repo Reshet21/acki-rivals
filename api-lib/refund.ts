@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Хост отменяет пустую комнату — удаляем её из листа открытых
     if (game.host_id === player && !game.guest_id) {
-      await supabase!.from('games').delete().eq('id', gameId).catch(() => {});
+      try { await supabase!.from('games').delete().eq('id', gameId); } catch {}
     }
 
     return res.status(200).json({ success: true, balanceNano: data });

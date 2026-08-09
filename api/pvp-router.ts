@@ -26,7 +26,7 @@ import shopHandler from '../api-lib/shop.js';
 import leaderboardHandler from '../api-lib/leaderboard.js';
 import marketplaceHandler from '../api-lib/marketplace.js';
 
-const ROUTES: Record<string, (req: VercelRequest, res: VercelResponse) => Promise<void> | void> = {
+const ROUTES: Record<string, (req: VercelRequest, res: VercelResponse) => unknown> = {
   create: createHandler,
   join: joinHandler,
   move: moveHandler,
