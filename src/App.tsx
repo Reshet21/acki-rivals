@@ -324,7 +324,7 @@ function AppInner() {
                       ].map((b) => (
                         <div key={b.label} className="text-center min-w-0">
                           <div className="text-sm font-bold tabular-nums leading-tight truncate" style={{ color: b.color }}>{b.value}</div>
-                          <div className="text-[9px] uppercase tracking-wider mt-0.5 truncate" style={{ color: `${b.color}66` }}>{b.label}</div>
+                          <div className="text-[9px] uppercase tracking-wider mt-0.5 leading-tight break-words" style={{ color: `${b.color}66` }}>{b.label}</div>
                         </div>
                       ))}
                     </div>
