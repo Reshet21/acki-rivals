@@ -14,11 +14,11 @@ import {
   cancelListing,
   type Listing,
 } from '../services/marketplaceService';
+import { getPlayerBalance } from '../services/treasuryService';
 import Icon from './Icon';
 
 interface Props {
   walletConnection: WalletConnection | null;
-  nacklBalance: string | null;
   collection: Card[];
   onAddCard: (card: Card) => void;
   onRemoveCard: (cardUid: string) => void;
@@ -35,11 +35,26 @@ const IS_DEV_PAYMENT = !import.meta.env.VITE_PAYMENT_MODE || import.meta.env.VIT
 
 const rarityOrder: Record<string, number> = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
 
-export default function Marketplace({ walletConnection, nacklBalance, collection, onAddCard, onRemoveCard, onBack }: Props) {
+export default function Marketplace({ walletConnection, collection, onAddCard, onRemoveCard, onBack }: Props) {
   const { t } = useI18n();
   const { impactOccurred, selectionChanged, notificationOccurred } = useHaptic();
   const walletAddress = useMemo(() => walletConnection?.walletAddress ?? 'anonymous', [walletConnection]);
   const walletName = useMemo(() => walletConnection?.walletName ?? 'Игрок', [walletConnection]);
+
+  // Игровой баланс (Supabase player_balances) — покупки/продажи идут через него
+  const [balance, setBalance] = useState<number | null>(null);
+
+  const refreshBalance = useCallback(async () => {
+    if (walletAddress === 'anonymous') return;
+    const b = await getPlayerBalance(walletAddress);
+    setBalance(b);
+  }, [walletAddress]);
+
+  useEffect(() => {
+    refreshBalance();
+    const i = setInterval(refreshBalance, 15000);
+    return () => clearInterval(i);
+  }, [refreshBalance]);
 
   const [tab, setTab] = useState<Tab>('buy');
   const [allListings, setAllListings] = useState<Listing[]>([]);
@@ -135,14 +150,11 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
       return;
     }
 
-    // Balance check (skip in dev mode)
-    if (!IS_DEV_PAYMENT) {
-      const balance = parseFloat(nacklBalance || '0');
-      if (balance < listing.price_nackl) {
-        setStatus({ kind: 'error', text: `${t('marketplace.notEnoughNackl')} ${listing.price_nackl})` });
-        notificationOccurred('error');
-        return;
-      }
+    // Предварительная проверка игрового баланса (сервер всё равно проверит атомарно)
+    if (balance !== null && balance < listing.price_nackl) {
+      setStatus({ kind: 'error', text: `${t('marketplace.notEnoughNackl')} ${listing.price_nackl})` });
+      notificationOccurred('error');
+      return;
     }
 
     impactOccurred('medium');
@@ -150,16 +162,20 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
 
     const result = await buyListing(listing.id, walletAddress);
 
-    if (result.success && result.card) {
-      onAddCard(result.card);
-      setStatus({ kind: 'bought', text: `${result.card.name} добавлена в коллекцию!` });
+    // dev-режим (без БД): сервер вернул success без карты — берём из листинга
+    const boughtCard = result.card ?? listing.card;
+
+    if (result.success && boughtCard) {
+      onAddCard(boughtCard);
+      if (result.balanceNackl !== undefined) setBalance(result.balanceNackl);
+      setStatus({ kind: 'bought', text: `${boughtCard.name} куплена за ${listing.price_nackl} NACKL` });
       notificationOccurred('success');
       setRefreshKey((k) => k + 1);
     } else {
       setStatus({ kind: 'error', text: result.error || 'Ошибка покупки' });
       notificationOccurred('error');
     }
-  }, [walletAddress, nacklBalance, impactOccurred, notificationOccurred, onAddCard]);
+  }, [walletAddress, balance, impactOccurred, notificationOccurred, onAddCard]);
 
   const handleCancel = useCallback(async (listingId: string) => {
     impactOccurred('light');
@@ -202,8 +218,10 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
             ←
           </button>
           <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-white whitespace-nowrap inline-flex items-center gap-1.5"><Icon name="store" size={16} /> Marketplace</h1>
-          <div className="px-3 py-1.5 rounded-full text-xs font-bold text-neon-blue" style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
-            {nacklBalance || '0'} NACKL
+          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-neon-green" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>
+            <Icon name="moneybag" size={12} />
+            {(balance ?? 0).toFixed(2)}
+            <span className="text-[9px] text-white/40 font-normal">NACKL</span>
           </div>
         </div>
 

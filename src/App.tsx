@@ -503,7 +503,6 @@ function AppInner() {
         <div key="marketplace" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
           <Marketplace
             walletConnection={walletConnection}
-            nacklBalance={nacklBalance}
             collection={collection}
             onAddCard={addCard}
             onRemoveCard={removeCard}

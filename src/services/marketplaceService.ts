@@ -115,52 +115,42 @@ export async function createListing(
 }
 
 /**
- * Купить карту с маркетплейса.
+ * Купить карту с маркетплейса за игровой баланс.
  *
- * Атомарная операция: удаляем листинг только если продавец НЕ равен покупателю.
- * Если два игрока пытаются купить одновременно — один получит листинг, второй ошибку.
+ * Серверная атомарная операция (RPC marketplace_purchase):
+ * списывает цену с игрового баланса покупателя, зачисляет продавцу,
+ * удаляет листинг. Возвращает новый баланс покупателя.
  */
 export async function buyListing(
   listingId: string,
   buyerId: string,
-): Promise<{ success: boolean; card?: Card; error?: string }> {
-  const client = getClient();
-  if (!client) {
-    return { success: false, error: 'Supabase не настроен' };
-  }
-
-  // Атомарная операция: удаляем строку где id совпадает и seller_id НЕ равен покупателю
-  const { data: deleted, error } = await client
-    .from('marketplace_listings')
-    .delete()
-    .eq('id', listingId)
-    .neq('seller_id', buyerId)
-    .select()
-    .single();
-
-  if (error) {
-    // Если ничего не удалили — значит листинг не найден или это своя карта
-    if (error.code === 'PGRST116') {
-      // Проверяем, существует ли листинг
-      const { data: existing } = await client
-        .from('marketplace_listings')
-        .select('seller_id')
-        .eq('id', listingId)
-        .single();
-
-      if (existing) {
-        return { success: false, error: 'Нельзя купить свою карту' };
-      }
-      return { success: false, error: 'Листинг не найден' };
+): Promise<{ success: boolean; card?: Card; balanceNackl?: number; error?: string }> {
+  try {
+    const res = await fetch('/api/marketplace/buy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingId, buyer: buyerId }),
+    });
+    const json = (await res.json()) as {
+      success?: boolean;
+      card?: Card | null;
+      balanceNano?: string;
+      error?: string;
+    };
+    if (res.status === 402) {
+      return { success: false, error: json.error || 'Недостаточно средств' };
     }
-    console.error('[marketplaceService] buyListing error:', error);
-    return { success: false, error: 'Ошибка при покупке' };
+    if (res.ok && json.success) {
+      return {
+        success: true,
+        card: json.card ?? undefined,
+        balanceNackl: json.balanceNano ? Number(json.balanceNano) / 1e9 : undefined,
+      };
+    }
+    return { success: false, error: json.error || 'Ошибка покупки' };
+  } catch {
+    return { success: false, error: 'Сеть недоступна' };
   }
-
-  if (!deleted?.card) {
-    return { success: false, error: 'Ошибка: карта не найдена' };
-  }
-  return { success: true, card: deleted.card };
 }
 
 /**
