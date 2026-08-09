@@ -31,6 +31,15 @@ import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services
 
 type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
 
+/** Красивый формат баланса: "20047.2481" → "20 047.25"; null → "—" */
+function fmtBal(v: string | number | null | undefined): string {
+  if (v === null || v === undefined || v === '') return '—';
+  const s = String(v);
+  const [whole, frac] = s.split('.');
+  const w = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return frac ? `${w}.${(frac + '00').slice(0, 2)}` : w;
+}
+
 function AppInner() {
   const { haptic } = useTelegram();
   const { impactOccurred, selectionChanged } = useHaptic();
@@ -306,20 +315,18 @@ function AppInner() {
                     </div>
                     {/* divider */}
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
-                    {/* Balances grid — no fill, no border */}
-                    <div className="grid grid-cols-3 gap-3 pt-3">
-                      <div className="text-center">
-                        <div className="text-lg font-black" style={{ color: '#FFD700' }}>{nacklBalance ?? '—'}</div>
-                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>NACKL</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-black" style={{ color: '#00d4ff' }}>{shellBalance ?? '—'}</div>
-                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(0,212,255,0.4)' }}>SHELL</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-black" style={{ color: '#4ADE80' }}>{gameBalance !== null ? gameBalance.toFixed(2) : '—'}</div>
-                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(74,222,128,0.4)' }}>{t('menu.gameBalance')}</div>
-                      </div>
+                    {/* Balances grid — compact, formatted */}
+                    <div className="grid grid-cols-3 gap-2 pt-3">
+                      {[
+                        { value: fmtBal(nacklBalance), color: '#FFD700', label: 'NACKL' },
+                        { value: fmtBal(shellBalance), color: '#00d4ff', label: 'SHELL' },
+                        { value: fmtBal(gameBalance !== null ? gameBalance.toFixed(4) : null), color: '#4ADE80', label: t('menu.gameBalance') },
+                      ].map((b) => (
+                        <div key={b.label} className="text-center min-w-0">
+                          <div className="text-sm font-bold tabular-nums leading-tight truncate" style={{ color: b.color }}>{b.value}</div>
+                          <div className="text-[9px] uppercase tracking-wider mt-0.5 truncate" style={{ color: `${b.color}66` }}>{b.label}</div>
+                        </div>
+                      ))}
                     </div>
                     {/* divider */}
                     <div className="mt-3" style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
