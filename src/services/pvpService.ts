@@ -93,14 +93,19 @@ export async function ensureSession(playerId: string): Promise<void> {
   })();
   if (registered[playerId] === token) return;
 
-  await fetch('/api/auth/register', {
+  const res = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ player: playerId, token }),
-  }).catch(() => {});
+  }).catch(() => null);
 
-  registered[playerId] = token;
-  localStorage.setItem(REGISTERED_KEY, JSON.stringify(registered));
+  // Помечаем только при УСПЕШНОЙ регистрации. Если сервер отказал
+  // (например, 403: адрес с активностью требует старый токен) — при
+  // следующем вызове попробуем снова и покажем ошибку пользователю.
+  if (res && res.ok) {
+    registered[playerId] = token;
+    localStorage.setItem(REGISTERED_KEY, JSON.stringify(registered));
+  }
 }
 
 async function api(path: string, options: { method?: string; body?: unknown; player: string; query?: Record<string, string> }): Promise<any> {

@@ -9,18 +9,20 @@
  * майнете src = адрес казначейства) и зачисляет его первому, кто успел
  * (атомарность — уникальный msg_hash в balance_ledger).
  *
+ * 🔒 БЕЗОПАСНОСТЬ (закрыто 09.08): эндпоинт требует валидный токен сессии
+ * заявителя (Authorization: Bearer). Раньше любой, зная адрес, мог
+ * «заявить» чужой платёж и забрать его на баланс жертвы.
+ *
  * Ответ:
  *   200 — { success, depositedNano, balanceNano }
  *   202 — платёж не найден (клиент ретраит)
+ *   401 — нет/невалидный токен сессии
  */
-import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { TREASURY_ADDR, isDev } from '../../api-lib/config.js';
 import { scanAllPayments, isValidAddress } from '../../api-lib/validate.js';
 import { creditDeposit } from '../../api-lib/balance.js';
-
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+import { getSupabase, requireAuth, unauthorized } from '../../api-lib/auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -42,6 +44,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const supabase = getSupabase();
+    if (!supabase && !isDev) {
+      return res.status(500).json({ error: 'База не настроена (SUPABASE_* env)' });
+    }
+    // ── 0. Только владелец сессии может заявить платёж на свой адрес ──
+    if (supabase) {
+      const auth = await requireAuth(req, supabase, player);
+      if (unauthorized(res, auth)) return;
+    }
+
     // ── 1. Ищем платежи ровно заявленной суммы ──
     let payments: Awaited<ReturnType<typeof scanAllPayments>> | null = null;
     try {
@@ -49,11 +61,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (e) {
       console.error('[balance/deposit] GraphQL error:', e);
       return res.status(202).json({ error: 'Сеть блокчейна временно недоступна, пробуем ещё раз', retryAfterMs: 5000 });
-    }
-
-    const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
-    if (!supabase && !isDev) {
-      return res.status(500).json({ error: 'База не настроена (SUPABASE_* env)' });
     }
 
     if (!payments || payments.length === 0) {

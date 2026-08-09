@@ -3,19 +3,24 @@
  *
  * Body: { listingId: "uuid", buyer: "0:hex64" }
  *
+ * 🔒 БЕЗОПАСНОСТЬ (закрыто 09.08): эндпоинт требует валидный токен сессии
+ * (Authorization: Bearer), привязанный к адресу покупателя. Раньше любой,
+ * зная listingId и адрес жертвы, мог списать её баланс и забрать карту.
+ *
  * Сервер вызывает атомарную RPC marketplace_purchase:
  * списывает цену с покупателя, зачисляет продавцу, удаляет листинг.
  * Цена берётся из БД (клиент не передаёт сумму).
  *
  * Ответ:
  *   200 — { success: true, card, balanceNano }
+ *   401 — нет/невалидный токен сессии
  *   402 — недостаточно средств / продавец == покупатель / листинг не найден
  *   500 — ошибка БД
  */
-import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { isDev } from '../../api-lib/config.js';
 import { isValidAddress } from '../../api-lib/validate.js';
+import { getSupabase, requireAuth, unauthorized } from '../../api-lib/auth.js';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
@@ -47,8 +52,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
-    const { data, error } = await supabase.rpc('marketplace_purchase', {
+    const supabase = getSupabase();
+    // ── 0. Только владелец токена может покупать за свой баланс ──
+    const auth = await requireAuth(req, supabase!, buyer);
+    if (unauthorized(res, auth)) return;
+
+    const { data, error } = await supabase!.rpc('marketplace_purchase', {
       p_listing_id: listingId,
       p_buyer: buyer,
     });

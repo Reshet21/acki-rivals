@@ -8,6 +8,11 @@
  * Предметы сейчас: 'pvp_pillz_1' — запас маны +1 (постоянно).
  * ШТРАФ: цены заданы в SHOP_ITEMS (api-lib/constants.ts) — сервер
  * НЕ доверяет ценам от клиента.
+ *
+ * 🔒 АТОМАРНОСТЬ (закрыто 09.08): списание идёт через RPC debit_balance
+ * (UPDATE ... WHERE balance >= amount в одном стейтменте) — два
+ * параллельных запроса не могут списать одни и те же NACKL (раньше было
+ * read-modify-write: гонка = двойное списание).
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase, requireAuth, unauthorized } from './auth.js';
@@ -40,30 +45,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!item) return res.status(404).json({ error: 'Предмет не найден' });
 
   try {
-    const { data: user } = await supabase!
-      .from('player_balances')
-      .select('balance_nano, pillz_boost')
-      .eq('player', player)
-      .maybeSingle();
-    if (!user) return res.status(404).json({ error: 'Игрок не найден' });
-
-    const balance = Number(user.balance_nano ?? 0);
-    if (balance < item.priceNano) {
+    // Атомарное списание: UPDATE ... WHERE balance >= amount — возвращает
+    // новый баланс или null, если не хватает. Гонка невозможна.
+    const { data: newBalance, error: debitErr } = await supabase!.rpc('debit_balance', {
+      p_player: player,
+      p_amount_nano: String(item.priceNano),
+    });
+    if (debitErr) {
+      return res.status(500).json({ error: `debit_balance RPC: ${debitErr.message}` });
+    }
+    if (newBalance === null || newBalance === undefined) {
       return res.status(400).json({ error: 'Недостаточно NACKL' });
     }
 
-    const { error: updateErr } = await supabase!
-      .from('player_balances')
-      .update({
-        balance_nano: (balance - item.priceNano).toString(),
-        pillz_boost: Number(user.pillz_boost ?? 0) + (item.pillzBoost ?? 0),
-      })
-      .eq('player', player);
-    if (updateErr) return res.status(500).json({ error: `player_balances: ${updateErr.message}` });
+    // Бонус предмета — отдельным апдейтом (деньги уже списаны атомарно,
+    // расхождение бонуса при сбое некритично).
+    if ((item.pillzBoost ?? 0) > 0) {
+      const { data: user } = await supabase!
+        .from('player_balances')
+        .select('pillz_boost')
+        .eq('player', player)
+        .maybeSingle();
+      await supabase!.from('player_balances')
+        .update({ pillz_boost: Number(user?.pillz_boost ?? 0) + (item.pillzBoost ?? 0) })
+        .eq('player', player);
+    }
 
     return res.status(200).json({
       success: true,
-      balanceNano: String(balance - item.priceNano),
+      balanceNano: newBalance as string,
     });
   } catch (e) {
     return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });

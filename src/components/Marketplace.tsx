@@ -181,7 +181,7 @@ export default function Marketplace({ walletConnection, collection, onAddCard, o
     impactOccurred('light');
     setStatus({ kind: 'cancelling', text: 'Отменяем листинг…' });
 
-    const result = await cancelListing(listingId);
+    const result = await cancelListing(listingId, walletAddress);
 
     if (result.success && result.card) {
       onAddCard(result.card);
@@ -192,7 +192,7 @@ export default function Marketplace({ walletConnection, collection, onAddCard, o
       setStatus({ kind: 'error', text: result.error || 'Ошибка отмены' });
       notificationOccurred('error');
     }
-  }, [impactOccurred, notificationOccurred, onAddCard]);
+  }, [impactOccurred, notificationOccurred, onAddCard, walletAddress]);
 
   const canSell = selectedCard && sellPrice && parseFloat(sellPrice) > 0;
 

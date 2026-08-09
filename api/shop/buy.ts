@@ -15,7 +15,6 @@
  *   402 — недостаточно средств на балансе
  *   500 — ошибка БД
  */
-import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { isDev } from '../../api-lib/config.js';
 import { isValidAddress } from '../../api-lib/validate.js';

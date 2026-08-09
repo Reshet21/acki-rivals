@@ -3,12 +3,16 @@
  *
  * P2P маркетплейс для торговли картами.
  *
- * Версия 2: данные хранятся в Supabase (таблица marketplace_listings),
- * поэтому листинги видны всем игрокам.
+ * Чтение листингов — напрямую из Supabase (публичный магазин).
+ * Запись (выставить/купить/отменить) — ТОЛЬКО через серверные эндпоинты
+ * с токеном сессии (Authorization: Bearer): api/marketplace/{list,buy,cancel}.
+ * Раньше клиент писал напрямую с anon-ключом — любой мог выставить карту
+ * от чужого имени и удалить чужие листинги (дыра закрыта 09.08).
  */
 
 import type { Card } from '../types';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { getSessionToken, ensureSession } from './pvpService';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -34,7 +38,7 @@ export interface Listing {
 // ─── Public API ─────────────────────────────────────────
 
 /**
- * Получить все активные листинги.
+ * Получить все активные листинги (публичное чтение).
  */
 export async function getListings(): Promise<Listing[]> {
   const client = getClient();
@@ -53,7 +57,7 @@ export async function getListings(): Promise<Listing[]> {
 }
 
 /**
- * Получить листинги конкретного продавца.
+ * Получить листинги конкретного продавца (публичное чтение).
  */
 export async function getMyListings(sellerId: string): Promise<Listing[]> {
   const client = getClient();
@@ -73,7 +77,8 @@ export async function getMyListings(sellerId: string): Promise<Listing[]> {
 }
 
 /**
- * Выставить карту на продажу.
+ * Выставить карту на продажу — сервер валидирует карту/цену и требует
+ * токен сессии продавца.
  */
 export async function createListing(
   card: Card,
@@ -81,12 +86,6 @@ export async function createListing(
   sellerId: string,
   sellerName: string,
 ): Promise<Listing | null> {
-  const client = getClient();
-  if (!client) {
-    console.warn('[marketplaceService] Supabase not configured');
-    return null;
-  }
-
   if (!card.uid) {
     console.warn('[marketplaceService] createListing: card has no uid');
     return null;
@@ -96,22 +95,26 @@ export async function createListing(
     return null;
   }
 
-  const { data, error } = await client
-    .from('marketplace_listings')
-    .insert({
-      card,
-      price_nackl: priceNackl,
-      seller_id: sellerId,
-      seller_name: sellerName,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('[marketplaceService] createListing error:', error);
+  try {
+    await ensureSession(sellerId);
+    const res = await fetch('/api/marketplace/list', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getSessionToken()}`,
+      },
+      body: JSON.stringify({ seller: sellerId, sellerName, card, priceNackl }),
+    });
+    const json = (await res.json()) as { success?: boolean; listing?: Listing; error?: string };
+    if (!res.ok || !json.success) {
+      console.error('[marketplaceService] createListing error:', json.error || res.status);
+      return null;
+    }
+    return json.listing || null;
+  } catch {
+    console.error('[marketplaceService] createListing: network error');
     return null;
   }
-  return data;
 }
 
 /**
@@ -119,16 +122,20 @@ export async function createListing(
  *
  * Серверная атомарная операция (RPC marketplace_purchase):
  * списывает цену с игрового баланса покупателя, зачисляет продавцу,
- * удаляет листинг. Возвращает новый баланс покупателя.
+ * удаляет листинг. Требует токен сессии покупателя.
  */
 export async function buyListing(
   listingId: string,
   buyerId: string,
 ): Promise<{ success: boolean; card?: Card; balanceNackl?: number; error?: string }> {
   try {
+    await ensureSession(buyerId);
     const res = await fetch('/api/marketplace/buy', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getSessionToken()}`,
+      },
       body: JSON.stringify({ listingId, buyer: buyerId }),
     });
     const json = (await res.json()) as {
@@ -154,29 +161,31 @@ export async function buyListing(
 }
 
 /**
- * Отменить листинг (вернуть карту продавцу).
+ * Отменить листинг (вернуть карту продавцу) — сервер проверяет, что
+ * листинг принадлежит sellerId (чужой отменить нельзя).
  */
 export async function cancelListing(
   listingId: string,
+  sellerId: string,
 ): Promise<{ success: boolean; card?: Card; error?: string }> {
-  const client = getClient();
-  if (!client) {
-    return { success: false, error: 'Supabase не настроен' };
+  try {
+    await ensureSession(sellerId);
+    const res = await fetch('/api/marketplace/cancel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getSessionToken()}`,
+      },
+      body: JSON.stringify({ listingId, seller: sellerId }),
+    });
+    const json = (await res.json()) as { success?: boolean; card?: Card | null; error?: string };
+    if (!res.ok || !json.success) {
+      return { success: false, error: json.error || 'Ошибка при отмене' };
+    }
+    return { success: true, card: json.card ?? undefined };
+  } catch {
+    return { success: false, error: 'Сеть недоступна' };
   }
-
-  const { data: deleted, error } = await client
-    .from('marketplace_listings')
-    .delete()
-    .eq('id', listingId)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('[marketplaceService] cancelListing error:', error);
-    return { success: false, error: 'Ошибка при отмене' };
-  }
-
-  return { success: true, card: deleted?.card };
 }
 
 /**
