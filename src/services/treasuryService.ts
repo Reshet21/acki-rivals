@@ -205,6 +205,8 @@ export async function getPlayerBalance(player: string): Promise<number> {
   }
 }
 
+import { getSessionToken, ensureSession } from './pvpService';
+
 /**
  * Купить пак за игровой баланс: сервер атомарно списывает цену
  * (серверная цена пака, клиент не передаёт сумму).
@@ -214,9 +216,13 @@ export async function buyWithBalance(
   packId: string,
 ): Promise<{ success: boolean; balanceNackl?: number; error?: string }> {
   try {
+    await ensureSession(player);
     const res = await fetch('/api/shop/buy', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getSessionToken()}`,
+      },
       body: JSON.stringify({ player, packId }),
     });
     const json = (await res.json()) as {

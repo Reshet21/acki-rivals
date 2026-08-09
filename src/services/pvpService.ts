@@ -73,7 +73,8 @@ export interface PlayerEntry {
 
 // ─── Session token ────────────────────────────────────────
 
-function getSessionToken(): string {
+/** Текущий токен сессии устройства (генерится при первом обращении). */
+export function getSessionToken(): string {
   let token = localStorage.getItem(TOKEN_KEY);
   if (!token) {
     const bytes = new Uint8Array(32);
@@ -85,7 +86,7 @@ function getSessionToken(): string {
 }
 
 /** Зарегистрировать токен под playerId (идемпотентно на устройство). */
-async function ensureSession(playerId: string): Promise<void> {
+export async function ensureSession(playerId: string): Promise<void> {
   const token = getSessionToken();
   const registered: Record<string, string> = (() => {
     try { return JSON.parse(localStorage.getItem(REGISTERED_KEY) || '{}'); } catch { return {}; }
@@ -104,7 +105,6 @@ async function ensureSession(playerId: string): Promise<void> {
 
 async function api(path: string, options: { method?: string; body?: unknown; player: string; query?: Record<string, string> }): Promise<any> {
   await ensureSession(options.player);
-
   let url = path;
   if (options.query) {
     const qs = new URLSearchParams(options.query).toString();

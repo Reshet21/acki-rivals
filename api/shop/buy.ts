@@ -19,6 +19,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { isDev } from '../../api-lib/config.js';
 import { isValidAddress } from '../../api-lib/validate.js';
+import { getSupabase, requireAuth, unauthorized } from '../../api-lib/auth.js';
 import { debitSpend } from '../../api-lib/balance.js';
 
 /** Цены паков в NACKL (дублируются из src/data/packs.ts) */
@@ -27,9 +28,6 @@ const PACK_PRICES: Record<string, number> = {
   standard: 7,
   advanced: 10,
 };
-
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
 function nano(value: number): bigint {
   return BigInt(Math.round(value * 1e9));
@@ -53,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+    const supabase = getSupabase();
     if (!supabase) {
       if (isDev) {
         // dev: без БД считаем покупку успешной (анти-повтор не нужен)
@@ -61,6 +59,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       return res.status(500).json({ error: 'База не настроена (SUPABASE_* env)' });
     }
+
+    // ── 0. Только владелец сессии может тратить баланс ──
+    const auth = await requireAuth(req, supabase, player);
+    if (unauthorized(res, auth)) return;
 
     // ── 1. Атомарное списание с баланса ──
     const debit = await debitSpend(supabase, player, nano(price), packId);
