@@ -22,6 +22,7 @@ import SettingsScreen from './components/SettingsScreen';
 import Marketplace from './components/Marketplace';
 import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
+import Icon from './components/Icon';
 import type { Game } from './services/pvpService';
 import { updatePlayerStats, mergePlayerRows } from './services/pvpService';
 import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
@@ -274,32 +275,31 @@ function AppInner() {
               <div className="w-full max-w-xs animate-slide-up" style={{ animationDelay: '0.1s' }}>
                 {walletConnection ? (
                   /* Connected wallet — show wallet info + balances */
-                  <div className="rounded-2xl p-4 relative overflow-hidden frost" style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.04) 100%)', border: '1px solid rgba(255,215,0,0.15)' }}>
-                    <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.05) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
-                    {/* Wallet info */}
-                    <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)' }}>
+                  <div className="p-4 relative">
+                    {/* Wallet name — centered, no frame */}
+                    <div className="flex items-center justify-center gap-2 pb-3">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black" style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.3)', color: '#FFD700' }}>
                         {walletConnection.walletName.charAt(0).toUpperCase()}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-white truncate">{walletConnection.walletName}</div>
-                        <div className="text-[9px] truncate" style={{ color: 'rgba(255,215,0,0.4)', fontFamily: 'monospace' }}>{walletConnection.walletAddress.slice(0, 14)}...</div>
-                      </div>
-                      <div className="text-[8px] px-2 py-1 rounded-full font-bold" style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ADE80' }}>{t('menu.walletConnected')}</div>
+                      <div className="text-sm font-bold text-white truncate">{walletConnection.walletName}</div>
                     </div>
-                    {/* Balances grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="text-center p-2 rounded-xl" style={{ background: 'rgba(255,215,0,0.06)' }}>
-                        <div className="text-lg font-black" style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>{nacklBalance ?? '—'}</div>
+                    {/* divider */}
+                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
+                    {/* Balances grid — no fill, no border */}
+                    <div className="grid grid-cols-2 gap-3 pt-3">
+                      <div className="text-center">
+                        <div className="text-lg font-black" style={{ color: '#FFD700' }}>{nacklBalance ?? '—'}</div>
                         <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,215,0,0.4)' }}>NACKL</div>
                       </div>
-                      <div className="text-center p-2 rounded-xl" style={{ background: 'rgba(0,212,255,0.06)' }}>
-                        <div className="text-lg font-black" style={{ color: '#00d4ff', textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{shellBalance ?? '—'}</div>
+                      <div className="text-center">
+                        <div className="text-lg font-black" style={{ color: '#00d4ff' }}>{shellBalance ?? '—'}</div>
                         <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(0,212,255,0.4)' }}>SHELL</div>
                       </div>
                     </div>
+                    {/* divider */}
+                    <div className="mt-3" style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
                     {/* Battle stats */}
-                    <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="grid grid-cols-2 gap-3 pt-3">
                       <div className="text-center">
                         <div className="text-lg font-black" style={{ color: '#4ADE80' }}>{battlesWon}</div>
                         <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.wins')}</div>
@@ -313,9 +313,9 @@ function AppInner() {
                 ) : (
                   /* No wallet — prompt to connect */
                   <button onClick={() => { impactOccurred('medium'); setScreen('wallet'); }}
-                    className="w-full rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
-                    style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.06) 0%, rgba(139,92,246,0.04) 100%)', border: '1px solid rgba(0,212,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                    <div className="text-2xl mb-2">👛</div>
+                    className="w-full p-4 text-center transition-all active:scale-[0.98]"
+                    style={{ borderRadius: 9, background: 'linear-gradient(135deg, rgba(0,212,255,0.06) 0%, rgba(139,92,246,0.04) 100%)', border: '1px solid rgba(0,212,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                    <div className="flex justify-center mb-2" style={{ color: '#00d4ff' }}><Icon name="wallet" size={26} /></div>
                     <div className="text-sm font-bold" style={{ color: '#00d4ff' }}>{t('menu.connectWallet')}</div>
                     <div className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.connectWalletDesc') || 'Подключите AN Wallet для игры'}</div>
                   </button>
@@ -324,44 +324,58 @@ function AppInner() {
 
               {/* Deck warning */}
               {deck.length !== 8 && (
-                <div className="w-full max-w-xs px-4 py-2.5 rounded-xl text-center animate-fade-in" style={{ background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
+                <div className="w-full max-w-xs px-4 py-2.5 text-center animate-fade-in" style={{ borderRadius: 9, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
                   <span className="text-xs font-medium" style={{ color: 'rgba(255,215,0,0.8)' }}>{t('menu.deckHint')}</span>
                 </div>
               )}
+
+              {/* Rules — always visible */}
+              <button onClick={() => { selectionChanged(); setScreen('info'); }}
+                className="w-full max-w-xs px-4 py-2.5 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                style={{ borderRadius: 9, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <Icon name="book" size={16} style={{ color: 'rgba(255,215,0,0.8)' }} />
+                <span className="text-xs font-semibold" style={{ color: 'rgba(255,215,0,0.8)' }}>{t('menu.rules')}</span>
+              </button>
 
               {/* Premium Battle Buttons */}
               <div className="w-full max-w-xs space-y-2.5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
                 {/* PvP Button - Hero */}
                 <button onClick={() => { impactOccurred('medium'); setScreen('pvp'); }} disabled={deck.length !== 8}
-                  className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.97] font-display"
+                  className="w-full py-3 font-bold text-base flex items-center justify-center transition-all relative overflow-hidden active:scale-[0.97] font-display"
                   style={{
-                    background: deck.length === 8 ? 'linear-gradient(135deg, #FF3D00 0%, #FF6D00 50%, #FF9100 100%)' : 'rgba(255,255,255,0.03)',
-                    border: deck.length === 8 ? '1px solid rgba(255,100,0,0.4)' : '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: deck.length === 8 ? '0 6px 30px rgba(255,61,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2)' : 'none',
-                    color: deck.length === 8 ? 'white' : 'rgba(255,255,255,0.15)',
+                    borderRadius: 9,
+                    background: deck.length === 8 ? 'linear-gradient(135deg, rgba(255,61,0,0.22) 0%, rgba(255,109,0,0.16) 50%, rgba(255,145,0,0.12) 100%)' : 'rgba(255,255,255,0.03)',
+                    border: deck.length === 8 ? '1px solid rgba(255,100,0,0.35)' : '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: 'none',
+                    color: deck.length === 8 ? '#ffd9c2' : 'rgba(255,255,255,0.15)',
                   }}>
                   {deck.length === 8 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
-                  <span className="text-xl">⚔️</span>
-                  <div className="flex flex-col items-start">
-                    <span className="font-bold">{t('menu.pvpBattle')}</span>
-                    <span className="text-[10px] font-normal opacity-70">{t('menu.pvpDesc')}</span>
+                  <div className="flex items-center justify-center gap-3">
+                    <Icon name="globe" size={22} />
+                    <div className="flex flex-col items-center text-center">
+                      <span className="font-bold">{t('menu.pvpBattle')}</span>
+                      <span className="text-[10px] font-normal opacity-70">{t('menu.pvpDesc')}</span>
+                    </div>
                   </div>
                 </button>
 
                 {/* AI Battle Button */}
                 <button onClick={() => { impactOccurred('medium'); setScreen('battle'); }} disabled={deck.length !== 8}
-                  className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all relative overflow-hidden active:scale-[0.97] font-display"
+                  className="w-full py-3 font-bold text-base flex items-center justify-center transition-all relative overflow-hidden active:scale-[0.97] font-display"
                   style={{
-                    background: deck.length === 8 ? 'linear-gradient(135deg, #0a1628 0%, #0f2847 50%, #163a5f 100%)' : 'rgba(255,255,255,0.03)',
-                    border: deck.length === 8 ? '1px solid rgba(0,180,255,0.3)' : '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: deck.length === 8 ? '0 6px 30px rgba(0,120,255,0.25), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)' : 'none',
-                    color: deck.length === 8 ? 'white' : 'rgba(255,255,255,0.15)',
+                    borderRadius: 9,
+                    background: deck.length === 8 ? 'linear-gradient(135deg, rgba(22,58,95,0.35) 0%, rgba(15,40,71,0.28) 50%, rgba(10,22,40,0.22) 100%)' : 'rgba(255,255,255,0.03)',
+                    border: deck.length === 8 ? '1px solid rgba(0,180,255,0.28)' : '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: 'none',
+                    color: deck.length === 8 ? '#d6ecff' : 'rgba(255,255,255,0.15)',
                   }}>
                   {deck.length === 8 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(0,180,255,0.06) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
-                  <span className="text-xl">🤖</span>
-                  <div className="flex flex-col items-start">
-                    <span className="font-bold">{t('menu.aiBattle')}</span>
-                    <span className="text-[10px] font-normal opacity-70">{t('menu.aiDesc')}</span>
+                  <div className="flex items-center justify-center gap-3">
+                    <Icon name="cpu" size={22} />
+                    <div className="flex flex-col items-center text-center">
+                      <span className="font-bold">{t('menu.aiBattle')}</span>
+                      <span className="text-[10px] font-normal opacity-70">{t('menu.aiDesc')}</span>
+                    </div>
                   </div>
                 </button>
               </div>
@@ -369,64 +383,60 @@ function AppInner() {
               {/* Secondary Actions - Premium Cards */}
               <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <button onClick={() => { selectionChanged(); setScreen('deck'); }}
-                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95] frost"
-                  style={{ border: '1px solid rgba(255,215,0,0.15)' }}>
-                  <span className="text-xl">📚</span>
-                  <span className="font-display" style={{ color: '#FFD700', fontSize: '11px' }}>{t('menu.deck')}</span>
+                  className="py-3.5 font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95]"
+                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Icon name="deck" size={22} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                  <span className="font-display" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>{t('menu.deck')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('shop'); }}
-                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95] frost"
-                  style={{ border: '1px solid rgba(168,85,247,0.15)' }}>
-                  <span className="text-xl">🛒</span>
-                  <span className="font-display" style={{ color: '#A855F7', fontSize: '11px' }}>{t('menu.shop')}</span>
+                  className="py-3.5 font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95]"
+                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Icon name="bag" size={22} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                  <span className="font-display" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>{t('menu.shop')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('marketplace'); }}
-                  className="py-3.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95] frost"
-                  style={{ border: '1px solid rgba(255,215,0,0.15)' }}>
-                  <span className="text-xl">🏪</span>
-                  <span className="font-display" style={{ color: '#FFD700', fontSize: '11px' }}>{t('menu.marketplace') || 'Рынок'}</span>
+                  className="py-3.5 font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95]"
+                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Icon name="store" size={22} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                  <span className="font-display" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>Marketplace</span>
                 </button>
               </div>
 
               {/* Tertiary Actions - Minimal */}
               <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
                 <button onClick={() => { selectionChanged(); setScreen('upgrade'); }}
-                  className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-base">⚒️</span>
+                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Icon name="anvil" size={22} style={{ color: 'rgba(255,255,255,0.6)' }} />
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.upgrade')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('wallet'); }}
-                  className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-base">👛</span>
+                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Icon name="wallet" size={22} style={{ color: 'rgba(255,255,255,0.6)' }} />
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.wallet')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('mining'); }}
-                  className="py-2.5 rounded-xl text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-base">⛏️</span>
+                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Icon name="pickaxe" size={22} style={{ color: 'rgba(255,255,255,0.6)' }} />
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.mining')}</span>
                 </button>
               </div>
             </div>
             {/* Bottom Navigation - Premium Tab Bar (sticky at the bottom) */}
             <div className="shrink-0 px-5 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <div className="w-full max-w-xs mx-auto flex items-center justify-around py-3 rounded-2xl frost">
-                <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
-                  <span className="text-lg">🏆</span>
+              <div className="w-full max-w-xs mx-auto flex items-center justify-around py-3 frost" style={{ borderRadius: 9 }}>
+                <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <Icon name="trophy" size={19} />
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.leaderboard')}</span>
                 </button>
-                <button onClick={() => { selectionChanged(); setScreen('info'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
-                  <span className="text-lg">📖</span>
-                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.rules')}</span>
-                </button>
-                <button onClick={() => { toggleMusic(); selectionChanged(); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
-                  <span className="text-lg">{musicEnabled ? '🎵' : '🔇'}</span>
+                <button onClick={() => { toggleMusic(); selectionChanged(); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95" style={{ color: musicEnabled ? 'rgba(255,215,0,0.7)' : 'rgba(255,255,255,0.4)' }}>
+                  <Icon name={musicEnabled ? 'music' : 'musicOff'} size={19} />
                   <span className="text-[9px]" style={{ color: musicEnabled ? 'rgba(255,215,0,0.6)' : 'rgba(255,255,255,0.3)' }}>{musicEnabled ? 'Музыка' : 'Тихо'}</span>
                 </button>
-                <button onClick={() => { selectionChanged(); setScreen('settings'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95">
-                  <span className="text-lg">⚙️</span>
+                <button onClick={() => { selectionChanged(); setScreen('settings'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <Icon name="gear" size={19} />
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.settings')}</span>
                 </button>
               </div>
@@ -472,6 +482,7 @@ function AppInner() {
 
       {screen === 'wallet' && (
         <div key="wallet" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
+          <button onClick={() => { selectionChanged(); setScreen('menu'); }} className="absolute left-4 top-4 z-20 w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>←</button>
           <WalletPanel
             connection={walletConnection}
             onConnected={handleWalletConnected}
@@ -483,6 +494,7 @@ function AppInner() {
 
       {screen === 'mining' && walletConnection && (
         <div key="mining" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
+          <button onClick={() => { selectionChanged(); setScreen('menu'); }} className="absolute left-4 top-4 z-20 w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>←</button>
           <MiningPanel
             connection={walletConnection}
             onBack={() => setScreen('menu')}

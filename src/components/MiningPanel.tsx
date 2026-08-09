@@ -10,6 +10,7 @@ import {
 } from '../services/beeEngine';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
+import Icon from './Icon';
 
 interface Props {
   connection: WalletConnection;
@@ -255,23 +256,18 @@ export default function MiningPanel({ connection, onBack }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto p-4">
-      <div className="text-lg font-bold text-neon-green">{t('mining.title')}</div>
+      <div className="text-lg font-bold text-white">{t('mining.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</div>
 
-      {/* Mining keys status */}
-      <div className="w-full rounded-xl p-3 text-xs" style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-      }}>
-        <div className="flex justify-between text-white/50 mb-1">
+      {/* Mining keys status — caption, not a button */}
+      <div className="w-full px-1 text-xs">
+        <div className="flex justify-center items-center gap-1.5 text-white/50">
           <span>{t('mining.miningKeys')}</span>
           <span className={keysPropagated ? 'text-neon-green' : 'text-yellow-400'}>
             {keysPropagated ? t('mining.ready') : miningKeys ? t('mining.waitingStatus') : t('mining.notConfigured')}
           </span>
         </div>
         {miningKeys?.ownerPublic && (
-          <div className="text-[10px] text-white/30 font-mono truncate">
+          <div className="text-[10px] text-white/30 font-mono truncate text-center mt-1">
             pub: {miningKeys.ownerPublic}
           </div>
         )}
@@ -343,7 +339,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
                   : 'bg-gradient-to-r from-neon-green to-emerald-500 text-white shadow-[0_0_12px_rgba(0,255,159,0.3)]'
               }`}
             >
-              {minerState.running ? `⏹ ${t('mining.stop')}` : `▶️ ${t('mining.start')}`}
+              {t(minerState.running ? 'mining.stop' : 'mining.start')}
             </button>
             <button
               onClick={() => { impactOccurred('light'); handleAddTap(); }}
@@ -352,7 +348,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
                 bg-white/5 border border-white/10 text-white/60
                 active:scale-95 transition-all disabled:opacity-30"
             >
-              👆 {t('mining.tap')}
+              {t('mining.tap')}
             </button>
             <button
               onClick={handleGetReward}
@@ -360,7 +356,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
                 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400
                 active:scale-95 transition-all"
             >
-              🎁 {t('mining.reward')}
+              <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="gift" size={15} /> {t('mining.reward')}</span>
             </button>
           </div>
         )}
@@ -378,7 +374,7 @@ export default function MiningPanel({ connection, onBack }: Props) {
         </div>
       )}
 
-      <button onClick={() => { impactOccurred('soft'); onBack(); }} className="text-xs text-white/30 hover:text-white/50 transition-colors mt-2">
+      <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all mt-2">
         {t('mining.back')}
       </button>
     </div>

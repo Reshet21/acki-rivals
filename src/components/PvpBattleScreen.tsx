@@ -17,6 +17,7 @@ import {
   type GameState,
   type Move,
 } from '../services/pvpService';
+import Icon from './Icon';
 
 interface Props {
   game: Game;
@@ -689,23 +690,23 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
                   ${currentResult.winner === 'opponent' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
                   ${currentResult.winner === 'draw' ? 'text-white/50 bg-white/5 border border-white/10' : ''}
                 `}>
-                  {currentResult.winner === 'player' && `⚔️ ${t('battle.victory')}`}
-                  {currentResult.winner === 'opponent' && `⚔️ ${t('battle.defeat')}`}
-                  {currentResult.winner === 'draw' && `⚔️ ${t('battle.draw')}`}
+                  {currentResult.winner === 'player' && <span className="inline-flex items-center gap-1.5"><Icon name="sword" size={14} /> {t('battle.victory')}</span>}
+                  {currentResult.winner === 'opponent' && <span className="inline-flex items-center gap-1.5"><Icon name="sword" size={14} /> {t('battle.defeat')}</span>}
+                  {currentResult.winner === 'draw' && <span className="inline-flex items-center gap-1.5"><Icon name="sword" size={14} /> {t('battle.draw')}</span>}
                 </div>
                 {/* Ability effect badges */}
                 <div className="flex flex-wrap gap-1 justify-center mt-1">
                   {currentResult.damageDealt > 0 && (
-                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/20">💥 -{currentResult.damageDealt} HP</span>
+                    <span className="inline-flex items-center gap-1 animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/20"><Icon name="boom" size={10} /> -{currentResult.damageDealt} HP</span>
                   )}
                   {currentResult.healAmount > 0 && (
-                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 border border-green-500/20" style={{ animationDelay: '0.2s' }}>💚 +{currentResult.healAmount} HP</span>
+                    <span className="inline-flex items-center gap-1 animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 border border-green-500/20" style={{ animationDelay: '0.2s' }}><Icon name="heart" size={10} /> +{currentResult.healAmount} HP</span>
                   )}
                   {currentResult.lifeStealAmount > 0 && (
-                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20" style={{ animationDelay: '0.3s' }}>🩸 +{currentResult.lifeStealAmount} HP</span>
+                    <span className="inline-flex items-center gap-1 animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20" style={{ animationDelay: '0.3s' }}><Icon name="drop" size={10} /> +{currentResult.lifeStealAmount} HP</span>
                   )}
                   {currentResult.poisonAmount > 0 && (
-                    <span className="animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 border border-yellow-500/20" style={{ animationDelay: '0.4s' }}>☠️ {currentResult.poisonAmount}</span>
+                    <span className="inline-flex items-center gap-1 animate-card-pop text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 border border-yellow-500/20" style={{ animationDelay: '0.4s' }}><Icon name="skull" size={10} /> {currentResult.poisonAmount}</span>
                   )}
                 </div>
               </div>
@@ -739,20 +740,20 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
               ${currentResult.winner === 'opponent' ? 'text-red-400' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/30' : ''}
             `} style={{ animationDelay: '0.2s' }}>
-              {currentResult.winner === 'player' && `💥 ${t('pvp.hpOpponent')}`}
-              {currentResult.winner === 'opponent' && `💥 ${t('pvp.hpYour')}`}
-              {currentResult.winner === 'draw' && `🤝 ${t('pvp.draw')}`}
+              {currentResult.winner === 'player' && <span className="inline-flex items-center gap-1.5"><Icon name="boom" size={14} /> {t('pvp.hpOpponent')}</span>}
+              {currentResult.winner === 'opponent' && <span className="inline-flex items-center gap-1.5"><Icon name="boom" size={14} /> {t('pvp.hpYour')}</span>}
+              {currentResult.winner === 'draw' && t('pvp.draw')}
             </div>
             {/* Additional effects */}
             <div className="flex gap-2 animate-card-pop" style={{ animationDelay: '0.3s' }}>
               {currentResult.healAmount > 0 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/20">💚 +{currentResult.healAmount}</span>
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/20"><Icon name="heart" size={11} /> +{currentResult.healAmount}</span>
               )}
               {currentResult.poisonAmount > 0 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/20">☠️ {currentResult.poisonAmount}</span>
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/20"><Icon name="skull" size={11} /> {currentResult.poisonAmount}</span>
               )}
               {currentResult.lifeStealAmount > 0 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/20">🩸 +{currentResult.lifeStealAmount}</span>
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/20"><Icon name="drop" size={11} /> +{currentResult.lifeStealAmount}</span>
               )}
             </div>
           </div>
@@ -776,7 +777,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
             </div>
 
             <div className="flex flex-col gap-1.5 w-full max-w-xs">
-              <div className="text-[8px] text-white/30 uppercase tracking-wider mb-0.5">📜 {t('pvp.log')}</div>
+              <div className="inline-flex items-center gap-1 text-[8px] text-white/30 uppercase tracking-wider mb-0.5"><Icon name="book" size={9} /> {t('pvp.log')}</div>
               {roundLog.map((entry, i) => (
                 <div key={i} className="bg-white/5 rounded-lg px-2 py-2 text-[10px]">
                   <div className="flex justify-between items-center mb-1.5">
@@ -820,10 +821,10 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
                   <div className="border-t border-white/5 pt-1.5 mt-1 flex items-center justify-between">
                     <span className="text-white/40">{t('battle.total')}:</span>
                     <div className="flex items-center gap-2">
-                      {entry.damageDealt > 0 && <span className="text-red-300 font-bold">💥{entry.damageDealt}</span>}
-                      {entry.healAmount > 0 && <span className="text-green-300">💚+{entry.healAmount}</span>}
-                      {entry.lifeStealAmount > 0 && <span className="text-purple-300">💜+{entry.lifeStealAmount}</span>}
-                      {entry.poisonAmount > 0 && <span className="text-yellow-300">☠️{entry.poisonAmount}</span>}
+                      {entry.damageDealt > 0 && <span className="inline-flex items-center gap-0.5 text-red-300 font-bold"><Icon name="boom" size={10} />{entry.damageDealt}</span>}
+                      {entry.healAmount > 0 && <span className="inline-flex items-center gap-0.5 text-green-300"><Icon name="heart" size={10} />+{entry.healAmount}</span>}
+                      {entry.lifeStealAmount > 0 && <span className="inline-flex items-center gap-0.5 text-purple-300"><Icon name="drop" size={10} />+{entry.lifeStealAmount}</span>}
+                      {entry.poisonAmount > 0 && <span className="inline-flex items-center gap-0.5 text-yellow-300"><Icon name="skull" size={10} />{entry.poisonAmount}</span>}
                       {entry.damageDealt === 0 && entry.healAmount === 0 && entry.lifeStealAmount === 0 && entry.poisonAmount === 0 && (
                         <span className="text-white/20">—</span>
                       )}

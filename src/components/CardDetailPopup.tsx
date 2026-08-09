@@ -4,6 +4,7 @@ import { useI18n } from '../i18n';
 import { getCardName, getAbilityName, getClanName, getRarityLabel, getAbilityDescription } from '../i18n/cardTranslations';
 import { clanBonuses, comboAbilities } from '../data/cards';
 import { abilityInfo } from '../data/abilityVisuals';
+import Icon from './Icon';
 import { cardArt } from '../data/cardArt';
 import CardArt from './CardArt';
 import { useHaptic } from '../hooks/useHaptic';
@@ -72,11 +73,11 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
             position: 'absolute', top: 8, right: 8, zIndex: 20,
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.15)',
-            color: '#fff', fontSize: 14, cursor: 'pointer',
+            color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           }}
         >
-          ✕
+          <Icon name="close" size={15} />
         </button>
 
         {/* Card image — full art, natural proportions, never cropped */}
@@ -147,7 +148,7 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
           {tab === 'info' ? (
             <div className="animate-fade-in">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontSize: 18 }}>{abilityInfo[card.ability]?.icon || '❓'}</span>
+                <span style={{ display: 'flex', color: abilityInfo[card.ability]?.color || '#fff' }}><Icon name={abilityInfo[card.ability]?.icon || 'sparkle'} size={18} /></span>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: abilityInfo[card.ability]?.color || '#fff' }}>{abilityName}</div>
                   <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>{ab}</div>
@@ -155,7 +156,7 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
               </div>
               {clanBonus && (
                 <div style={{ padding: '6px 10px', borderRadius: 8, background: `${rc}15`, border: `1px solid ${rc}30`, marginTop: 6 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: rc }}>🏰 {clanBonus.name}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: rc, display: 'flex', alignItems: 'center', gap: 4 }}><Icon name="castle" size={11} /> {clanBonus.name}</div>
                   <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)' }}>{clanBonus.desc}</div>
                 </div>
               )}
@@ -168,7 +169,7 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
                 return (
                   <div key={i} style={{ padding: '6px 10px', borderRadius: 8, background: isActive ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.02)', border: isActive ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.04)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span style={{ fontSize: 12 }}>{isActive ? '🔥' : '💤'}</span>
+                      <span style={{ display: 'flex', color: isActive ? '#fb923c' : 'rgba(255,255,255,0.3)' }}><Icon name={isActive ? 'fire' : 'clock'} size={12} /></span>
                       <div style={{ fontSize: 10, fontWeight: 700, color: isActive ? '#fbbf24' : 'rgba(255,255,255,0.45)' }}>{c.name}</div>
                     </div>
                     <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{c.desc}</div>
@@ -191,7 +192,7 @@ export default function CardDetailPopup({ card, hand, onClose }: Props) {
               cursor: 'pointer',
             }}
           >
-            {t('card.close')} — ✕
+            {t('card.close')}
           </button>
         </div>
       </div>

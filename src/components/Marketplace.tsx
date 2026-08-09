@@ -14,6 +14,7 @@ import {
   cancelListing,
   type Listing,
 } from '../services/marketplaceService';
+import Icon from './Icon';
 
 interface Props {
   walletConnection: WalletConnection | null;
@@ -109,27 +110,27 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     if (isNaN(price) || price <= 0) return;
 
     impactOccurred('medium');
-    setStatus({ kind: 'listing', text: '⏳ Выставляем на продажу...' });
+    setStatus({ kind: 'listing', text: 'Выставляем на продажу…' });
 
     const listing = await createListing(selectedCard, price, walletAddress, walletName);
 
     if (listing) {
       // Remove card from seller's collection (and deck if present)
       onRemoveCard(selectedCard.uid!);
-      setStatus({ kind: 'listed', text: `✅ ${selectedCard.name} выставлена за ${price} NACKL` });
+      setStatus({ kind: 'listed', text: `${selectedCard.name} выставлена за ${price} NACKL` });
       notificationOccurred('success');
       setSelectedCard(null);
       setSellPrice('');
       setRefreshKey((k) => k + 1);
     } else {
-      setStatus({ kind: 'error', text: '❌ Не удалось выставить карту' });
+      setStatus({ kind: 'error', text: 'Не удалось выставить карту' });
       notificationOccurred('error');
     }
   }, [selectedCard, sellPrice, walletAddress, walletName, impactOccurred, notificationOccurred, onRemoveCard]);
 
   const handleBuy = useCallback(async (listing: Listing) => {
     if (listing.seller_id === walletAddress) {
-      setStatus({ kind: 'error', text: '❌ Нельзя купить свою карту' });
+      setStatus({ kind: 'error', text: 'Нельзя купить свою карту' });
       notificationOccurred('error');
       return;
     }
@@ -138,41 +139,41 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
     if (!IS_DEV_PAYMENT) {
       const balance = parseFloat(nacklBalance || '0');
       if (balance < listing.price_nackl) {
-        setStatus({ kind: 'error', text: `❌ ${t('marketplace.notEnoughNackl')} ${listing.price_nackl})` });
+        setStatus({ kind: 'error', text: `${t('marketplace.notEnoughNackl')} ${listing.price_nackl})` });
         notificationOccurred('error');
         return;
       }
     }
 
     impactOccurred('medium');
-    setStatus({ kind: 'buying', text: `⏳ Покупаем ${listing.card.name}...` });
+    setStatus({ kind: 'buying', text: `Покупаем ${listing.card.name}…` });
 
     const result = await buyListing(listing.id, walletAddress);
 
     if (result.success && result.card) {
       onAddCard(result.card);
-      setStatus({ kind: 'bought', text: `✅ ${result.card.name} добавлена в коллекцию!` });
+      setStatus({ kind: 'bought', text: `${result.card.name} добавлена в коллекцию!` });
       notificationOccurred('success');
       setRefreshKey((k) => k + 1);
     } else {
-      setStatus({ kind: 'error', text: result.error || '❌ Ошибка покупки' });
+      setStatus({ kind: 'error', text: result.error || 'Ошибка покупки' });
       notificationOccurred('error');
     }
   }, [walletAddress, nacklBalance, impactOccurred, notificationOccurred, onAddCard]);
 
   const handleCancel = useCallback(async (listingId: string) => {
     impactOccurred('light');
-    setStatus({ kind: 'cancelling', text: '⏳ Отменяем листинг...' });
+    setStatus({ kind: 'cancelling', text: 'Отменяем листинг…' });
 
     const result = await cancelListing(listingId);
 
     if (result.success && result.card) {
       onAddCard(result.card);
-      setStatus({ kind: 'cancelled', text: `✅ ${result.card.name} возвращена в коллекцию` });
+      setStatus({ kind: 'cancelled', text: `${result.card.name} возвращена в коллекцию` });
       notificationOccurred('success');
       setRefreshKey((k) => k + 1);
     } else {
-      setStatus({ kind: 'error', text: result.error || '❌ Ошибка отмены' });
+      setStatus({ kind: 'error', text: result.error || 'Ошибка отмены' });
       notificationOccurred('error');
     }
   }, [impactOccurred, notificationOccurred, onAddCard]);
@@ -195,12 +196,12 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
 
       {/* Header */}
       <div className="relative z-10 px-4 pt-4 pb-2 shrink-0">
-        <div className="flex items-center justify-between mb-3">
+        <div className="relative flex items-center justify-between mb-3">
           <button onClick={() => { impactOccurred('soft'); onBack(); }}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
             ←
           </button>
-          <h1 className="text-lg font-bold text-an-gold">🏪 {t('marketplace.title') || 'Маркетплейс'}</h1>
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-white whitespace-nowrap inline-flex items-center gap-1.5"><Icon name="store" size={16} /> Marketplace</h1>
           <div className="px-3 py-1.5 rounded-full text-xs font-bold text-neon-blue" style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
             {nacklBalance || '0'} NACKL
           </div>
@@ -209,19 +210,23 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
         {/* Tabs */}
         <div className="flex gap-1 rounded-xl bg-white/[0.03] border border-white/[0.06] p-1">
           {(['buy', 'my', 'sell'] as const).map((tabKey) => {
-            const label = tabKey === 'buy' ? t('marketplace.tabBuy') : tabKey === 'my' ? t('marketplace.tabMy') : t('marketplace.tabSell');
+            const rawLabel = tabKey === 'buy' ? t('marketplace.tabBuy') : tabKey === 'my' ? t('marketplace.tabMy') : t('marketplace.tabSell');
+            const label = rawLabel.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+            const icon = tabKey === 'buy' ? 'bag' : tabKey === 'my' ? 'user' : 'moneybag';
             const badge = tabKey === 'buy' ? allListings.length : tabKey === 'my' ? myActiveListings.length : 0;
+            const active = tab === tabKey;
             return (
               <button key={tabKey}
                 onClick={() => { selectionChanged(); setTab(tabKey); }}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                  tab === tabKey
-                    ? 'bg-gradient-to-r from-an-gold to-an-orange text-an-dark'
-                    : 'text-white/40 hover:text-white/70'
-                }`}>
+                className="flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                style={{
+                  background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: active ? '#fff' : 'rgba(255,255,255,0.4)',
+                }}>
+                <Icon name={icon} size={13} />
                 {label}
                 {badge > 0 && (
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${tab === tabKey ? 'bg-an-dark/20' : 'bg-white/10'}`}>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10">
                     {badge}
                   </span>
                 )}
@@ -253,7 +258,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
           <div className="space-y-3">
             {allListings.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-4xl mb-3">🏪</div>
+                <div className="flex justify-center mb-3 text-white/40"><Icon name="store" size={40} /></div>
                 <div className="text-white/40 text-sm">{t('marketplace.noListings')}</div>
                 <div className="text-white/20 text-[10px] mt-1">{t('marketplace.noListingsHint')}</div>
               </div>
@@ -266,7 +271,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                 </div>
                 {buyListings.length === 0 ? (
                   <div className="text-center py-10">
-                    <div className="text-3xl mb-2">🔍</div>
+                    <div className="flex justify-center mb-2 text-white/40"><Icon name="search" size={30} /></div>
                     <div className="text-white/40 text-sm">{t('deck.noCards')}</div>
                   </div>
                 ) : (
@@ -289,9 +294,9 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] text-white/40">{listing.card.clan}</span>
                           <span className="text-[10px] text-white/30">·</span>
-                          <span className="text-[10px] text-white/40">💪{listing.card.power + (listing.card.stars ?? 0)} 🗡️{listing.card.damage + (listing.card.stars ?? 0)}</span>
+                          <span className="inline-flex items-center gap-1 text-[10px] text-white/40"><Icon name="sword" size={10} />{listing.card.power + (listing.card.stars ?? 0)} <Icon name="boom" size={10} />{listing.card.damage + (listing.card.stars ?? 0)}</span>
                           {listing.card.stars && listing.card.stars > 0 && (
-                            <span className="text-[10px] text-yellow-400">⭐{listing.card.stars}</span>
+                            <span className="inline-flex items-center gap-0.5 text-[10px] text-yellow-400"><Icon name="star" size={10} />{listing.card.stars}</span>
                           )}
                         </div>
                         <div className="text-[9px] text-white/20 mt-0.5">
@@ -324,7 +329,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
           <div className="space-y-3">
             {myActiveListings.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-4xl mb-3">📦</div>
+                <div className="flex justify-center mb-3 text-white/40"><Icon name="gift" size={40} /></div>
                 <div className="text-white/40 text-sm">У тебя нет активных листингов</div>
                 <div className="text-white/20 text-[10px] mt-1">Перейди во вкладку «Продать», чтобы выставить карту</div>
               </div>
@@ -371,12 +376,12 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-white truncate">{selectedCard.name}</div>
                   <div className="text-[10px] text-white/40 mt-0.5">{selectedCard.clan} · {selectedCard.rarity}</div>
-                  <div className="text-[9px] text-white/25 mt-0.5">💪{selectedCard.power + (selectedCard.stars ?? 0)} 🗡️{selectedCard.damage + (selectedCard.stars ?? 0)}</div>
+                  <div className="inline-flex items-center gap-1 text-[9px] text-white/25 mt-0.5"><Icon name="sword" size={9} />{selectedCard.power + (selectedCard.stars ?? 0)} <Icon name="boom" size={9} />{selectedCard.damage + (selectedCard.stars ?? 0)}</div>
                 </div>
                 <button
                   onClick={() => { setSelectedCard(null); setSellPrice(''); selectionChanged(); }}
                   className="shrink-0 px-3 py-2 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 active:scale-90 transition-all">
-                  🔄 {t('marketplace.changeCard') || 'Сменить'}
+                  <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="arrowRight" size={13} /> {t('marketplace.changeCard') || 'Сменить'}</span>
                 </button>
               </div>
             ) : (
@@ -416,7 +421,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                 className="shrink-0 w-7 h-7 rounded-lg text-xs bg-white/5 text-white/40 hover:bg-white/10 active:scale-90 transition-all"
                 aria-label="Снять выбор"
               >
-                ✕
+                <Icon name="close" size={16} />
               </button>
             </div>
 
@@ -440,7 +445,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                     ? 'bg-gradient-to-r from-an-gold to-an-orange text-an-dark active:scale-95 shadow-[0_0_16px_rgba(255,215,0,0.25)]'
                     : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
                 }`}>
-                💰 {t('marketplace.sellButton')}
+                <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="moneybag" size={15} /> {t('marketplace.sellButton')}</span>
               </button>
             </div>
 
@@ -485,7 +490,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                 <button
                   onClick={() => { impactOccurred('soft'); setPickerOpen(false); }}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                  ✕
+                  <Icon name="close" size={16} />
                 </button>
               </div>
               <div className="space-y-2">
@@ -497,7 +502,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
             <div className="flex-1 min-h-0 overflow-y-auto p-4">
               {filteredSellable.length === 0 ? (
                 <div className="text-center py-10">
-                  <div className="text-3xl mb-2">🔍</div>
+                  <div className="flex justify-center mb-2 text-white/40"><Icon name="search" size={30} /></div>
                   <div className="text-white/40 text-sm">{t('deck.noCards')}</div>
                 </div>
               ) : (
@@ -512,7 +517,7 @@ export default function Marketplace({ walletConnection, nacklBalance, collection
                     onClick={() => { selectionChanged(); setSelectedCard(card); setSellPrice(''); setPickerOpen(false); }}>
                     <CardComponent card={card} compact />
                     {selectedCard?.uid === card.uid && (
-                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-an-gold text-an-dark text-[10px] font-black flex items-center justify-center">✓</div>
+                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-an-gold text-an-dark flex items-center justify-center"><Icon name="check" size={12} stroke={2.5} /></div>
                     )}
                   </div>
                 ))}

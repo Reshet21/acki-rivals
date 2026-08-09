@@ -1,5 +1,6 @@
 import type { Rarity } from '../types';
 import { useI18n } from '../i18n';
+import Icon from './Icon';
 
 export const RARITY_FILTERS: { value: Rarity | 'all'; labelKey: string }[] = [
   { value: 'all', labelKey: 'deck.filterAll' },
@@ -16,24 +17,38 @@ interface RarityChipsProps {
   onHaptic?: () => void;
 }
 
+// цвет квадрата-индикатора редкости (как гем на карточке)
+const RARITY_COLOR: Record<string, string> = {
+  common: '#9ca3af', uncommon: '#10b981', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b',
+};
+// убираем ведущий эмодзи (цветной кружок) из перевода
+const stripEmoji = (s: string) => s.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+
 export function RarityChips({ value, onChange, onHaptic }: RarityChipsProps) {
   const { t } = useI18n();
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-      {RARITY_FILTERS.map((f) => (
-        <button
-          key={f.value}
-          onClick={() => { onHaptic?.(); onChange(f.value); }}
-          className="px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all active:scale-95"
-          style={{
-            background: value === f.value ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${value === f.value ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
-            color: value === f.value ? '#FFD700' : 'rgba(255,255,255,0.4)',
-          }}
-        >
-          {t(f.labelKey)}
-        </button>
-      ))}
+      {RARITY_FILTERS.map((f) => {
+        const active = value === f.value;
+        return (
+          <button
+            key={f.value}
+            onClick={() => { onHaptic?.(); onChange(f.value); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold whitespace-nowrap transition-all active:scale-95"
+            style={{
+              borderRadius: 9,
+              background: active ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${active ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.06)'}`,
+              color: active ? '#fff' : 'rgba(255,255,255,0.5)',
+            }}
+          >
+            {f.value !== 'all' && (
+              <span style={{ width: 9, height: 9, borderRadius: 2, background: RARITY_COLOR[f.value], boxShadow: `0 0 5px ${RARITY_COLOR[f.value]}`, border: '1px solid rgba(255,255,255,0.15)' }} />
+            )}
+            {stripEmoji(t(f.labelKey))}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -61,9 +76,9 @@ export function SearchField({ value, onChange, placeholder }: SearchFieldProps) 
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white/40 hover:bg-white/10 transition-all"
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:bg-white/10 transition-all"
         >
-          ✕
+          <Icon name="close" size={12} />
         </button>
       )}
     </div>

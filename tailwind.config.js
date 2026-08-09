@@ -4,9 +4,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Orbitron', 'sans-serif'],
-        stats: ['Rajdhani', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        // Inter везде — display/stats оставлены как алиасы, чтобы не править классы по всему проекту
+        display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        stats: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        body: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       colors: {
         'an-gold': '#FFD700',

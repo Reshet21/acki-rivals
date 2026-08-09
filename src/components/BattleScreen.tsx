@@ -9,6 +9,7 @@ import CardSelector from './CardSelector';
 import { useTelegram } from '../telegram';
 import { abilityInfo, abilityNames, abilityDescriptions } from '../data/abilityVisuals';
 import StarfieldCanvas from './StarfieldCanvas';
+import Icon from './Icon';
 
 interface Props {
   playerDeck: Card[];
@@ -534,9 +535,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
               ${currentResult.winner === 'ai' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/50 bg-white/5 border border-white/10' : ''}
             `}>
-              {currentResult.winner === 'player' && `🔥 ${t('battle.victory')}`}
-              {currentResult.winner === 'ai' && `💀 ${t('battle.defeat')}`}
-              {currentResult.winner === 'draw' && `⚡ ${t('battle.draw')}`}
+              {currentResult.winner === 'player' && <span className="inline-flex items-center gap-1.5"><Icon name="fire" size={16} /> {t('battle.victory')}</span>}
+              {currentResult.winner === 'ai' && <span className="inline-flex items-center gap-1.5"><Icon name="skull" size={16} /> {t('battle.defeat')}</span>}
+              {currentResult.winner === 'draw' && <span className="inline-flex items-center gap-1.5"><Icon name="bolt" size={16} /> {t('battle.draw')}</span>}
             </div>
 
             {/* Abilities & Effects Row */}
@@ -549,7 +550,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                   return ab ? (
                     <div className="text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                       <div className="flex items-center gap-1">
-                        <span>{ab.icon}</span>
+                        <span style={{ display: 'flex', color: ab.color }}><Icon name={ab.icon} size={11} /></span>
                         <span className="text-white/30 text-[8px]">{t('battle.yours')}</span>
                         <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentPlayerCard.ability] || currentPlayerCard.ability}</span>
                       </div>
@@ -564,7 +565,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                   return ab ? (
                     <div className="text-[9px] px-2 py-1 rounded-lg bg-white/5 border border-white/5" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                       <div className="flex items-center gap-1">
-                        <span>{ab.icon}</span>
+                        <span style={{ display: 'flex', color: ab.color }}><Icon name={ab.icon} size={11} /></span>
                         <span className="text-white/30 text-[8px]">{t('battle.enemy')}</span>
                         <span style={{ color: ab.color, fontWeight: 700 }}>{abilityNames[currentAiCard.ability] || currentAiCard.ability}</span>
                       </div>
@@ -578,23 +579,23 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             {/* Damage Effects */}
             <div className="flex flex-wrap gap-2 justify-center animate-card-pop" style={{ animationDelay: '0.3s' }}>
               {currentResult.damageDealt > 0 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-bold animate-pulse">
-                  💥 -{currentResult.damageDealt} HP
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-bold animate-pulse">
+                  <Icon name="boom" size={12} /> -{currentResult.damageDealt} HP
                 </span>
               )}
               {currentResult.healAmount > 0 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 font-bold animate-pulse">
-                  💚 +{currentResult.healAmount} HP
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 font-bold animate-pulse">
+                  <Icon name="heart" size={12} /> +{currentResult.healAmount} HP
                 </span>
               )}
               {currentResult.lifeStealAmount > 0 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
-                  🩸 +{currentResult.lifeStealAmount} HP
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                  <Icon name="drop" size={12} /> +{currentResult.lifeStealAmount} HP
                 </span>
               )}
               {currentResult.poisonAmount > 0 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-bold">
-                  ☠️ {currentResult.poisonAmount}
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-bold">
+                  <Icon name="skull" size={12} /> {currentResult.poisonAmount}
                 </span>
               )}
             </div>
@@ -635,20 +636,20 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
               ${currentResult.winner === 'ai' ? 'text-neon-red bg-neon-red/10 border border-neon-red/30' : ''}
               ${currentResult.winner === 'draw' ? 'text-white/50 bg-white/5 border border-white/10' : ''}
             `}>
-              {currentResult.winner === 'player' && `⚔️ ${t('battle.hpAi')} ↓`}
-              {currentResult.winner === 'ai' && `⚔️ ${t('battle.hpPlayer')} ↓`}
+              {currentResult.winner === 'player' && <span className="inline-flex items-center gap-1.5"><Icon name="sword" size={14} /> {t('battle.hpAi')} ↓</span>}
+              {currentResult.winner === 'ai' && <span className="inline-flex items-center gap-1.5"><Icon name="sword" size={14} /> {t('battle.hpPlayer')} ↓</span>}
               {currentResult.winner === 'draw' && t('battle.draw')}
             </div>
             {/* Skill effects summary */}
             <div className="flex gap-2 text-[10px]">
               {currentResult.healAmount > 0 && (
-                <span className="text-green-300 bg-green-500/10 px-2 py-0.5 rounded-full">💚 +{currentResult.healAmount}</span>
+                <span className="inline-flex items-center gap-1 text-green-300 bg-green-500/10 px-2 py-0.5 rounded-full"><Icon name="heart" size={11} /> +{currentResult.healAmount}</span>
               )}
               {currentResult.lifeStealAmount > 0 && (
-                <span className="text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full">🩸 +{currentResult.lifeStealAmount}</span>
+                <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full"><Icon name="drop" size={11} /> +{currentResult.lifeStealAmount}</span>
               )}
               {currentResult.poisonAmount > 0 && (
-                <span className="text-yellow-300 bg-yellow-500/10 px-2 py-0.5 rounded-full">☠️ {currentResult.poisonAmount}</span>
+                <span className="inline-flex items-center gap-1 text-yellow-300 bg-yellow-500/10 px-2 py-0.5 rounded-full"><Icon name="skull" size={11} /> {currentResult.poisonAmount}</span>
               )}
             </div>
           </div>
@@ -698,9 +699,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
               WebkitBackdropFilter: 'blur(20px)',
               letterSpacing: '0.1em',
             }}>
-              {battleResult === 'win' && `🏆 ${t('battle.victory')}!`}
-              {battleResult === 'loss' && `💀 ${t('battle.defeat')}`}
-              {battleResult === 'draw' && `⚡ ${t('battle.draw')}`}
+              {battleResult === 'win' && <span className="inline-flex items-center gap-2"><Icon name="trophy" size={20} /> {t('battle.victory')}!</span>}
+              {battleResult === 'loss' && <span className="inline-flex items-center gap-2"><Icon name="skull" size={20} /> {t('battle.defeat')}</span>}
+              {battleResult === 'draw' && <span className="inline-flex items-center gap-2"><Icon name="bolt" size={20} /> {t('battle.draw')}</span>}
             </div>
 
             <div className="text-xs text-white/50 text-center relative z-10">
@@ -708,7 +709,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5 w-full max-w-xs relative z-10">
-              <div className="text-[8px] text-white/30 uppercase tracking-wider mb-0.5">📜 {t('battle.log')}</div>
+              <div className="inline-flex items-center gap-1 text-[8px] text-white/30 uppercase tracking-wider mb-0.5"><Icon name="book" size={9} /> {t('battle.log')}</div>
               {roundLog.map((entry, i) => (
                 <div key={i} className="rounded-lg px-2 py-2 text-[10px] animate-card-pop" style={{
                   background: 'rgba(255,255,255,0.03)',
@@ -734,7 +735,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
                       <span className="text-neon-green font-bold">{entry.playerCard.name}</span>
-                      <span className="text-white/20">⚡</span>
+                      <span className="text-white/20 inline-flex"><Icon name="bolt" size={10} /></span>
                       <span className="text-white/50">
                         {entry.playerBasePower}
                         {entry.playerFinalPower !== entry.playerBasePower && (
@@ -756,7 +757,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
                       <span className="text-neon-red font-bold">{entry.aiCard.name}</span>
-                      <span className="text-white/20">⚡</span>
+                      <span className="text-white/20 inline-flex"><Icon name="bolt" size={10} /></span>
                       <span className="text-white/50">
                         {entry.aiBasePower}
                         {entry.aiFinalPower !== entry.aiBasePower && (
@@ -779,16 +780,16 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                     <span className="text-white/40">{t('battle.total')}:</span>
                     <div className="flex items-center gap-2">
                       {entry.damageDealt > 0 && (
-                        <span className="text-red-300 font-bold">💥{entry.damageDealt}</span>
+                        <span className="inline-flex items-center gap-0.5 text-red-300 font-bold"><Icon name="boom" size={10} />{entry.damageDealt}</span>
                       )}
                       {entry.healAmount > 0 && (
-                        <span className="text-green-300">💚+{entry.healAmount}</span>
+                        <span className="inline-flex items-center gap-0.5 text-green-300"><Icon name="heart" size={10} />+{entry.healAmount}</span>
                       )}
                       {entry.lifeStealAmount > 0 && (
-                        <span className="text-purple-300">💜+{entry.lifeStealAmount}</span>
+                        <span className="inline-flex items-center gap-0.5 text-purple-300"><Icon name="drop" size={10} />+{entry.lifeStealAmount}</span>
                       )}
                       {entry.poisonAmount > 0 && (
-                        <span className="text-yellow-300">☠️{entry.poisonAmount}</span>
+                        <span className="inline-flex items-center gap-0.5 text-yellow-300"><Icon name="skull" size={10} />{entry.poisonAmount}</span>
                       )}
                       {entry.damageDealt === 0 && entry.healAmount === 0 && entry.lifeStealAmount === 0 && entry.poisonAmount === 0 && (
                         <span className="text-white/20">—</span>

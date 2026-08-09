@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import Icon from './Icon';
 import type { WalletConnection } from '../services/beeEngine';
 import {
   createSession,
@@ -110,7 +112,7 @@ export default function WalletPanel({ connection: initialConnection, onConnected
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
         }}>
-          <div className="text-lg font-bold text-neon-green">✅ {t('wallet.connected')}</div>
+          <div className="inline-flex items-center justify-center gap-1.5 text-lg font-bold text-white"><Icon name="check" size={18} stroke={2.4} style={{ color: '#4ade80' }} /> {t('wallet.connected')}</div>
           <div className="text-sm text-white/60 mt-1">{connection.walletName}</div>
           <div className="text-xs text-white/40 font-mono mt-0.5 truncate">
             {connection.walletAddress}
@@ -129,10 +131,10 @@ export default function WalletPanel({ connection: initialConnection, onConnected
             bg-white/5 border border-white/10 text-white/60
             hover:bg-white/10 active:scale-95 transition-all"
         >
-          {isDisconnecting ? t('wallet.disconnecting') : `🔌 ${t('wallet.disconnect')}`}
+          {isDisconnecting ? t('wallet.disconnecting') : <span className="inline-flex items-center justify-center gap-1.5"><Icon name="plug" size={15} /> {t('wallet.disconnect')}</span>}
         </button>
 
-        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="text-xs text-white/30 hover:text-white/50 transition-colors">
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all">
           {t('wallet.back')}
         </button>
       </div>
@@ -149,9 +151,16 @@ export default function WalletPanel({ connection: initialConnection, onConnected
         </div>
 
         <div
-          className="w-full max-w-xs bg-white/10 rounded-xl p-3 break-all text-xs font-mono text-white/70 border border-white/10"
+          className="rounded-xl p-3 border border-white/10"
+          style={{ background: '#ffffff', lineHeight: 0 }}
         >
-          {deepLink}
+          <QRCodeSVG
+            value={deepLink}
+            size={220}
+            level="M"
+            bgColor="#ffffff"
+            fgColor="#000000"
+          />
         </div>
 
         <a

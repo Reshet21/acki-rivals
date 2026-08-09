@@ -14,6 +14,7 @@ import {
   TREASURY_ADDRESS,
   TREASURY_NAME,
 } from '../services/treasuryService';
+import Icon from './Icon';
 
 interface Props {
   walletConnection: WalletConnection | null;
@@ -45,11 +46,11 @@ const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; t
 
 type Phase = 'shop' | 'opening' | 'result';
 
-const packVisuals: Record<string, { gradient: string; icon: string }> = {
-  starter: { gradient: 'from-green-600 via-emerald-500 to-teal-600', icon: '🎉' },
-  basic: { gradient: 'from-gray-600 via-gray-500 to-gray-700', icon: '📦' },
-  standard: { gradient: 'from-blue-600 via-blue-500 to-purple-600', icon: '🎁' },
-  advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: '💎' },
+const packVisuals: Record<string, { gradient: string; icon: import('./Icon').IconName }> = {
+  starter: { gradient: 'from-green-600 via-emerald-500 to-teal-600', icon: 'party' },
+  basic: { gradient: 'from-gray-600 via-gray-500 to-gray-700', icon: 'gift' },
+  standard: { gradient: 'from-blue-600 via-blue-500 to-purple-600', icon: 'gift' },
+  advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: 'sparkle' },
 };
 
 export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack, onReconnectWallet, onZkLogin, hasEpkKey }: Props) {
@@ -247,7 +248,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const copyTreasuryAddress = async () => {
     try {
       await navigator.clipboard.writeText(payTargetName);
-      setFallbackNote(`Скопировано: ${payTargetName} ✔`);
+      setFallbackNote(`Скопировано: ${payTargetName}`);
     } catch {
       setFallbackNote(`Переведите на ник: ${payTargetName}`);
     }
@@ -257,7 +258,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   // 0.01..0.99. Хвост пишется ПРЯМО В ПОЛЕ и генерится автоматически:
   // 1. после ввода (debounce 800мс); 2. при открытии панели; 3. по blur;
   // 4. внутри "Я пополнил"/автополлинга, если сумма вдруг ещё целая.
-  // 🎲 — ручная перегенерация.
+  // ручная перегенерация.
   const hasTail = (amount: number) =>
     Number.isFinite(amount) && Math.round(amount * 100) % 100 !== 0;
 
@@ -427,9 +428,9 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
         <div className="flex justify-between items-center px-5 py-4 shrink-0 relative z-10">
           <div className="flex items-center gap-2">
             {phase === 'opening' ? (
-              <span className="text-lg">✨</span>
+              <span className="text-white/90"><Icon name="sparkle" size={18} /></span>
             ) : (
-              <span className="text-lg">🎉</span>
+              <span className="text-white/90"><Icon name="party" size={18} /></span>
             )}
             <div>
               <div className="text-base font-black text-white">
@@ -522,7 +523,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
               onClick={handleCollect}
               className="w-full py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-an-gold via-yellow-500 to-an-orange text-an-dark active:scale-95 transition-all duration-200 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
             >
-              {t('shop.collect')} 🎴
+              {t('shop.collect')}
             </button>
           </div>
         )}
@@ -542,35 +543,40 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
       </div>
 
       {/* Header */}
-      <div className="flex justify-between items-center px-4 py-3 shrink-0 relative z-10">
-        <div className="text-lg font-bold text-white">{t('shop.title')}</div>
-          <div className="flex items-center gap-1.5">
+      <div className="px-4 py-3 shrink-0 relative z-10">
+        {/* Top row: back arrow (left) + balances stacked (right) */}
+        <div className="flex justify-between items-start">
+          <button onClick={() => { impactOccurred('soft'); onBack(); }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>
+            ←
+          </button>
+          <div className="flex flex-col items-end gap-0.5">
             {gameBalance !== null && (
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full"
-                style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)' }}>
-                <span className="text-sm font-bold" style={{ color: 'rgba(255,215,0,0.95)' }}>
-                  🎮 {gameBalance.toFixed(2)} NACKL
-                </span>
-              </div>
-            )}
-            {walletConnection && (
-              <button
-                onClick={() => {
-                  setShowDeposit(true); setFallbackPackId(null); setPaymentError(null);
-                  applyQuote(depositAmount);
-                }}
-                className="px-2.5 py-1.5 rounded-full text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all"
-              >
-                ➕ Пополнить
-              </button>
-            )}
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full animate-counter-glow"
-              style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
-              <span className="text-sm text-neon-blue font-bold">
-                {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
+              <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: 'rgba(255,215,0,0.95)' }}>
+                <span className="inline-flex items-center gap-1"><Icon name="gamepad" size={11} /> {gameBalance.toFixed(2)} NACKL</span>
               </span>
-            </div>
+            )}
+            <span className="text-[10px] text-neon-blue font-bold whitespace-nowrap">
+              {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
+            </span>
           </div>
+        </div>
+        {/* Title — centered */}
+        <div className="inline-flex items-center justify-center gap-1.5 w-full text-lg font-bold text-white text-center mt-1"><Icon name="bag" size={16} /> {t('shop.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</div>
+        {/* Пополнить — centered, full width */}
+        {walletConnection && (
+          <button
+            onClick={() => {
+              setShowDeposit(true); setFallbackPackId(null); setPaymentError(null);
+              applyQuote(depositAmount);
+            }}
+            className="w-full mt-2 py-2 text-sm font-bold bg-white/10 border border-white/15 text-white active:scale-[0.98] transition-all"
+            style={{ borderRadius: 9 }}
+          >
+            <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="plus" size={15} /> Пополнить</span>
+          </button>
+        )}
       </div>
 
       {/* Wallet warning */}
@@ -595,13 +601,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                       onClick={() => { setNeedsReconnect(false); setPaymentError(null); onZkLogin?.('google'); }}
                       className="px-4 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-white active:scale-95 transition-all animate-pulse-glow"
                     >
-                      🔑 {t('shop.zkLoginButton')}
+                      <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="key" size={14} /> {t('shop.zkLoginButton')}</span>
                     </button>
                     <button
                       onClick={() => { setNeedsReconnect(false); setPaymentError(null); onZkLogin?.('telegram'); }}
                       className="px-4 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-sky-500 to-cyan-600 text-white active:scale-95 transition-all"
                     >
-                      ✈️ {t('shop.zkLoginTelegramButton')}
+                      {t('shop.zkLoginTelegramButton')}
                     </button>
                   </div>
                 )}
@@ -610,7 +616,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     onClick={() => { setNeedsReconnect(false); setPaymentError(null); onReconnectWallet?.(); }}
                     className="px-4 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-yellow-600 to-orange-600 text-white active:scale-95 transition-all"
                   >
-                    {t('shop.reconnectWallet')} 🔄
+                    <span className="inline-flex items-center gap-1.5 justify-center">{t('shop.reconnectWallet')} <Icon name="arrowRight" size={14} /></span>
                   </button>
                 )}
               </div>
@@ -627,7 +633,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
               style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <div className="bg-gradient-to-r from-neon-blue to-neon-purple p-4 relative overflow-hidden">
                 <div className="relative z-10 flex items-center gap-3">
-                  <div className="text-3xl">💸</div>
+                  <div className="text-white/60"><Icon name="moneybag" size={30} /></div>
                   <div className="flex-1">
                     <div className="text-lg font-black text-white">Пополнить игровой баланс</div>
                     <div className="text-[10px] text-white/70">
@@ -672,11 +678,11 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/15 text-white active:scale-95 transition-all shrink-0 disabled:opacity-40"
                     title="Выдать новую уникальную сумму"
                   >
-                    {quoteLoading ? '…' : '🎲'}
+                    {quoteLoading ? '…' : <Icon name="dice" size={16} />}
                   </button>
                 </div>
                 <div className="text-[10px] text-white/40">
-                  Уникальная сумма (например, 10.37) генерируется автоматически после ввода — нажимать 🎲 не нужно. У двух игроков суммы не совпадают, поэтому платёж не перепутается
+                  Уникальная сумма (например, 10.37) генерируется автоматически после ввода. У двух игроков суммы не совпадают, поэтому платёж не перепутается
                 </div>
                 <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-[11px] font-mono text-white/80 break-all select-all">
                   {payTargetName}
@@ -685,7 +691,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                   onClick={copyTreasuryAddress}
                   className="w-full py-2.5 rounded-xl text-xs font-bold bg-white/10 border border-white/10 text-white active:scale-95 transition-all"
                 >
-                  📋 Скопировать ник
+                  <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="deck" size={14} /> Скопировать ник</span>
                 </button>
                 <div className="text-[10px] text-white/50 text-center">
                   Баланс проверяется автоматически каждые 15 секунд — ничего нажимать не нужно
@@ -699,7 +705,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                       : 'bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.2)]'
                   }`}
                 >
-                  {checkingFallback ? 'Проверяем платёж…' : '✅ Я пополнил — проверить'}
+                  {checkingFallback ? 'Проверяем платёж…' : <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="check" size={14} stroke={2.4} /> Я пополнил — проверить</span>}
                 </button>
                 {fallbackNote && (
                   <div className="text-[11px] text-center text-yellow-400/90">{fallbackNote}</div>
@@ -736,13 +742,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     <div className="absolute w-16 h-16 rounded-full bg-white/5 bottom-2 left-4" />
                   </div>
                   <div className="relative z-10 flex items-center gap-3">
-                    <div className="text-3xl">{visual.icon}</div>
+                    <div className="text-white"><Icon name={visual.icon} size={30} /></div>
                     <div className="flex-1">
                       <div className="text-lg font-black text-white">{getPackName(lang, pack.id)}</div>
                       <div className="text-[10px] text-white/70">{t(pack.descKey)}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xl font-black text-white">{pack.nacklPrice > 0 ? `${pack.nacklPrice} NACKL` : '🎁 БЕСПЛАТНО'}</div>
+                      <div className="text-xl font-black text-white">{pack.nacklPrice > 0 ? `${pack.nacklPrice} NACKL` : <span className="inline-flex items-center gap-1.5"><Icon name="gift" size={16} /> БЕСПЛАТНО</span>}</div>
                       <div className="text-[9px] text-white/60">{pack.cardCount} {t('deck.cards')}</div>
                     </div>
                   </div>
@@ -782,7 +788,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                       : canBuy
                         ? pack.nacklPrice > 0
                           ? `${t('shop.buy')} — ${pack.nacklPrice} NACKL`
-                          : '🎁 Забрать бесплатно'
+                          : <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="gift" size={15} /> Забрать бесплатно</span>
                         : walletConnection
                           ? t('shop.notEnough')
                           : t('shop.noWallet')

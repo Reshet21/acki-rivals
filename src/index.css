@@ -1,3 +1,41 @@
+/* ═══════════════════════════════════════
+   INTER — локальный, self-hosted
+   Файлы: public/fonts/*.woff (источники .ttf лежат в /Fonts)
+   ═══════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Inter-Regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/Inter-Medium.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Inter-SemiBold.woff') format('woff');
+}
+
+/* 700..900 → Bold (в статике Inter нет Black; положи Inter-Black.ttf в Fonts/ чтобы добавить 900) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url('/fonts/Inter-Bold.woff') format('woff');
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

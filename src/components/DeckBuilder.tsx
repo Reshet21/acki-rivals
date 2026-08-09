@@ -8,6 +8,7 @@ import { comboAbilities, clanBonuses } from '../data/cards';
 import { cardArt } from '../data/cardArt';
 import CardArt from './CardArt';
 import { getCardName } from '../i18n/cardTranslations';
+import Icon from './Icon';
 
 interface Props {
   collection: Card[];
@@ -35,6 +36,8 @@ function MiniArt({ id }: { id: number }) {
 
 export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: Props) {
   const { t, lang } = useI18n();
+  // фолбэк, если ключ перевода отсутствует (t возвращает сам ключ)
+  const tf = (k: string, fb: string) => { const v = t(k); return v === k ? fb : v; };
   const { selectionChanged, impactOccurred } = useHaptic();
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
@@ -79,15 +82,15 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
       {/* Header */}
       <div className="shrink-0 px-4 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)', background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              ←
-            </button>
-            <h1 className="text-lg font-bold" style={{ color: '#FFD700' }}>{t('deck.title')} ({collection.length})</h1>
-          </div>
-          <div className="px-3 py-1 rounded-full text-xs font-bold transition-all" style={{ background: deck.length >= 8 ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${deck.length >= 8 ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`, color: deck.length >= 8 ? '#4ADE80' : 'rgba(255,255,255,0.5)', boxShadow: deck.length >= 8 ? '0 0 12px rgba(74,222,128,0.2)' : 'none' }}>
-            ⚔️ {deck.length}/8
+        <div className="relative flex justify-between items-center mb-3">
+          <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            ←
+          </button>
+          <h1 className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 text-lg font-bold whitespace-nowrap text-white">
+            <Icon name="cards" size={17} /> {t('deck.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}
+          </h1>
+          <div className="px-3 py-1 rounded-full text-xs font-bold text-white/60" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {collection.length}
           </div>
         </div>
 
@@ -104,8 +107,8 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
       {deck.length > 0 && (
         <div className="shrink-0 px-4 py-3" style={{ background: 'rgba(251,191,36,0.04)', borderBottom: '1px solid rgba(255,215,0,0.12)' }}>
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xs font-bold" style={{ color: '#FFD700' }}>
-              ⚔️ {t('deck.battleDeck') || 'Боевая колода'} <span style={{ color: 'rgba(255,255,255,0.4)' }}>· тап — убрать</span>
+            <div className="text-xs font-bold text-white">
+              <span className="inline-flex items-center gap-1"><Icon name="sword" size={12} /> {tf('deck.battleDeck', 'Боевая колода')}</span> <span style={{ color: 'rgba(255,255,255,0.4)' }}>· тап — убрать</span>
             </div>
             <div className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
               {deck.length}/8
@@ -123,10 +126,10 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
                   title={getCardName(lang, card.id)}
                 >
                   <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(251,191,36,0.7)', boxShadow: '0 0 12px rgba(251,191,36,0.3)' }}>
-                    {art ? <CardArt src={art} boxRatio={3 / 4} mode="fixed" minH={76} maxH={76} /> : <div style={{ width: 64, height: 76, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, opacity: 0.2, background: '#080503' }}>🃏</div>}
+                    {art ? <CardArt src={art} boxRatio={3 / 4} mode="fixed" minH={76} maxH={76} /> : <div style={{ width: 64, height: 76, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.2, background: '#080503' }}><Icon name="cards" size={22} /></div>}
                   </div>
                   <div style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: '50%', background: '#ef4444', border: '2px solid #7f1d1d', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, boxShadow: '0 0 10px rgba(239,68,68,0.7)' }}>×</div>
-                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: 8, lineHeight: 1.15, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
                     {getCardName(lang, card.id)}
                   </div>
                 </button>
@@ -141,22 +144,22 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
         <div className="shrink-0 px-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(168,85,247,0.03)' }}>
           {activeCombos.length > 0 && (
             <div className="mb-2">
-              <div className="text-xs font-bold mb-1.5" style={{ color: '#a78bfa' }}>
-                ✨ {t('deck.activeCombos') || 'Активные комбо'} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>· {activeCombos.length}</span>
+              <div className="text-xs font-bold mb-1.5 text-center" style={{ color: '#e5d5b0' }}>
+                <span className="inline-flex items-center gap-1"><Icon name="sparkle" size={12} /> {tf('deck.activeCombos', 'Активные комбо')}</span> <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>· {activeCombos.length}</span>
               </div>
               <div className="flex flex-col gap-1.5">
                 {activeCombos.map((c) => (
-                  <div key={`${c.card1}-${c.card2}`} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.18)', borderRadius: 10, padding: '5px 8px' }}>
+                  <div key={`${c.card1}-${c.card2}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 4px' }}>
                     <div style={{ display: 'flex' }}>
                       <MiniArt id={c.card1} />
                       <div style={{ width: 2 }} />
                       <MiniArt id={c.card2} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: '#c4b5fd' }}>{c.name}</div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: '#e5d5b0' }}>{c.name}</div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.desc}</div>
                     </div>
-                    <span style={{ fontSize: 13, flexShrink: 0 }}>✨</span>
+                    <span style={{ flexShrink: 0, color: '#e5d5b0', display: 'flex' }}><Icon name="sparkle" size={13} /></span>
                   </div>
                 ))}
               </div>
@@ -164,21 +167,21 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
           )}
           {activeClans.length > 0 && (
             <div>
-              <div className="text-xs font-bold mb-1.5" style={{ color: '#6ee7b7' }}>
-                🏰 {t('deck.clanBonuses') || 'Клановые бонусы'}
+              <div className="text-xs font-bold mb-1.5 text-center" style={{ color: '#e5d5b0' }}>
+                <span className="inline-flex items-center gap-1"><Icon name="castle" size={12} /> {tf('deck.clanBonuses', 'Клановые бонусы')}</span>
               </div>
               <div className="flex flex-col gap-1.5">
                 {activeClans.map(([clan, n]) => {
                   const b = clanBonuses[clan];
                   if (!b) return null;
                   return (
-                    <div key={clan} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(110,231,183,0.06)', border: '1px solid rgba(110,231,183,0.18)', borderRadius: 10, padding: '5px 8px' }}>
-                      <span style={{ fontSize: 13 }}>🏰</span>
+                    <div key={clan} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 4px' }}>
+                      <span style={{ color: '#e5d5b0', display: 'flex' }}><Icon name="castle" size={13} /></span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: '#86efac' }}>{b.name}</div>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: '#e5d5b0' }}>{b.name}</div>
                         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.desc}</div>
                       </div>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: '#6ee7b7', flexShrink: 0 }}>{n} карт</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#e5d5b0', flexShrink: 0 }}>{n} карт</span>
                     </div>
                   );
                 })}
@@ -206,7 +209,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
         </div>
         {filtered.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-3xl mb-2">🔍</div>
+            <div className="flex justify-center mb-2 text-white/40"><Icon name="search" size={30} /></div>
             <div className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('deck.noCards')}</div>
           </div>
         )}

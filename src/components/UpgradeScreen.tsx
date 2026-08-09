@@ -4,6 +4,7 @@ import { useI18n } from '../i18n';
 import { useHaptic } from '../hooks/useHaptic';
 import CardComponent from './CardComponent';
 import { RarityChips, SearchField } from './CardFilters';
+import Icon from './Icon';
 import type { Rarity } from '../types';
 
 interface Props {
@@ -115,19 +116,17 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
       {/* Header */}
-      <div className="shrink-0 p-4 border-b border-white/10 flex justify-between items-center bg-black/60 backdrop-blur-md safe-top">
-        <div>
-          <h1 className="text-xl font-black bg-gradient-to-r from-cyan-400 to-neon-blue bg-clip-text text-transparent tracking-wide">
-            ⚒️ {t('upgrade.title')}
-          </h1>
-          <p className="text-[10px] text-white/40 mt-0.5">{t('upgrade.mergeHint')}</p>
-        </div>
+      <div className="shrink-0 p-4 border-b border-white/10 relative flex flex-col items-center bg-black/60 backdrop-blur-md safe-top">
         <button
           onClick={() => { impactOccurred('soft'); onBack(); }}
-          className="px-4 py-2 bg-white/10 rounded-lg text-xs font-bold text-white/80 active:bg-white/20 active:scale-95 transition-all"
+          className="absolute left-4 top-4 w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-white/10 text-white/80 active:bg-white/20 active:scale-95 transition-all"
         >
-          {t('deck.back')}
+          ←
         </button>
+        <h1 className="inline-flex items-center gap-1.5 text-lg font-black text-white tracking-wide text-center">
+          <Icon name="anvil" size={16} /> {t('upgrade.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}
+        </h1>
+        <p className="text-[10px] text-white/40 mt-0.5 text-center">{t('upgrade.mergeHint')}</p>
       </div>
 
       {/* Search + rarity filters */}
@@ -171,6 +170,13 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             {notReady.map(renderGridItem)}
           </div>
         </section>
+      </div>
+
+      {/* Back */}
+      <div className="shrink-0 px-4 py-3 border-t border-white/10 bg-black/60 backdrop-blur-md">
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all">
+          {t('deck.back')}
+        </button>
       </div>
 
       {/* Upgrade Modal */}

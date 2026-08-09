@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '../i18n';
 import { useHaptic } from '../hooks/useHaptic';
 import { getLeaderboard, type PlayerEntry } from '../services/pvpService';
+import Icon from './Icon';
 
 interface Props {
   playerId: string;
@@ -56,9 +57,12 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
 
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
-      <div className="shrink-0 px-3 pt-3 pb-2" style={{ background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="text-sm font-bold text-white mb-1">{t('leaderboard.title')}</div>
-        <div className="text-[10px] text-white/40">{t('leaderboard.subtitle')}</div>
+      <div className="shrink-0 px-3 pt-3 pb-2 relative" style={{ background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="absolute left-3 top-3 w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>
+          ←
+        </button>
+        <div className="inline-flex items-center justify-center gap-1.5 w-full text-sm font-bold text-white mb-1 text-center"><Icon name="trophy" size={14} /> {t('leaderboard.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</div>
+        <div className="text-[10px] text-white/40 text-center">{t('leaderboard.subtitle')}</div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
@@ -106,8 +110,8 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
                       {isPlayer && <span className="text-[8px] text-neon-blue">{t('leaderboard.you')}</span>}
                     </div>
                     <div className="flex gap-2 text-[9px] text-white/40">
-                      <span className="text-neon-green">✓{entry.wins}</span>
-                      <span className="text-neon-red">✗{entry.losses}</span>
+                      <span className="inline-flex items-center gap-0.5 text-neon-green"><Icon name="check" size={9} stroke={2.4} />{entry.wins}</span>
+                      <span className="inline-flex items-center gap-0.5 text-neon-red"><Icon name="close" size={9} stroke={2.4} />{entry.losses}</span>
                       <span>{winRate(entry.wins, entry.losses)}%</span>
                     </div>
                   </div>
@@ -123,7 +127,7 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full py-16 px-6 text-center">
-            <div className="text-5xl mb-4 opacity-30">🏆</div>
+            <div className="flex justify-center mb-4 opacity-30"><Icon name="trophy" size={50} /></div>
             <div className="text-base font-bold mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('leaderboard.noPlayers')}</div>
             <div className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>{t('leaderboard.connectWallet')}</div>
           </div>

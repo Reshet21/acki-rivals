@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import type { Card } from '../types';
 import { abilityIcons, abilityColors, abilityNames } from '../data/abilityVisuals';
+import type { IconName } from './Icon';
 import { cardArt } from '../data/cardArt';
 import CardArt from './CardArt';
 import { RarityChips, SearchField } from './CardFilters';
 import type { Rarity } from '../types';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
+import Icon from './Icon';
 
 interface Props {
   cards: Card[];
@@ -18,7 +20,7 @@ const rarityColor: Record<string, string> = {
   common: '#6b7280', uncommon: '#10b981', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b',
 };
 
-function getAbilityIcon(ability: string): string { return abilityIcons[ability] || '❓'; }
+function getAbilityIcon(ability: string): IconName { return abilityIcons[ability] || 'sparkle'; }
 function getAbilityColor(ability: string): string { return abilityColors[ability] || '#9ca3af'; }
 function getAbilityName(ability: string): string { return abilityNames[ability] || ability; }
 
@@ -82,8 +84,8 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
               <div style={{
                 position: 'absolute', top: 2, right: 2, width: 14, height: 14,
                 borderRadius: 7, background: 'rgba(0,0,0,0.7)', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff',
-              }}>✕</div>
+                alignItems: 'center', justifyContent: 'center', color: '#fff',
+              }}><Icon name="close" size={9} stroke={2.4} /></div>
             </div>
 
             {/* Card info */}
@@ -92,13 +94,13 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
                 {sel.name}
               </div>
               <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
-                <span>⚡{sel.power}</span>
-                <span style={{ color: '#fca5a5' }}>💥{sel.damage}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}><Icon name="sword" size={10} />{sel.power}</span>
+                <span style={{ color: '#fca5a5', display: 'inline-flex', alignItems: 'center', gap: 2 }}><Icon name="boom" size={10} />{sel.damage}</span>
               </div>
               {/* Ability display */}
               {sel.ability && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, padding: '2px 6px', background: 'rgba(0,0,0,0.3)', borderRadius: 4, border: '1px solid rgba(255,215,0,0.2)' }}>
-                  <span style={{ fontSize: 10 }}>{getAbilityIcon(sel.ability)}</span>
+                  <span style={{ display: 'flex', color: getAbilityColor(sel.ability) }}><Icon name={getAbilityIcon(sel.ability)} size={10} /></span>
                   <span style={{ fontSize: 9, color: getAbilityColor(sel.ability), fontWeight: 700 }}>{getAbilityName(sel.ability)}</span>
                 </div>
               )}
@@ -165,8 +167,8 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
                   </div>
                   {/* Stats overlayed */}
                   <div style={{ position: 'absolute', bottom: 14, right: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                    <span style={{ fontSize: 8, fontWeight: 900, color: '#e2e8f0', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>⚡{card.power}</span>
-                    <span style={{ fontSize: 8, fontWeight: 900, color: '#fca5a5', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>💥{card.damage}</span>
+                    <span style={{ fontSize: 8, fontWeight: 900, color: '#e2e8f0', textShadow: '0 1px 4px rgba(0,0,0,0.9)', display: 'inline-flex', alignItems: 'center', gap: 1 }}><Icon name="sword" size={8} />{card.power}</span>
+                    <span style={{ fontSize: 8, fontWeight: 900, color: '#fca5a5', textShadow: '0 1px 4px rgba(0,0,0,0.9)', display: 'inline-flex', alignItems: 'center', gap: 1 }}><Icon name="boom" size={8} />{card.damage}</span>
                   </div>
                 </div>
               </button>

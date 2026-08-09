@@ -13,11 +13,11 @@ export default function SettingsScreen({ onBack }: Props) {
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
       {/* Header */}
       <div className="shrink-0 px-4 py-4 border-b" style={{ borderColor: 'rgba(255,215,0,0.1)' }}>
-        <div className="flex items-center gap-3">
+        <div className="relative flex items-center h-8">
           <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
             ←
           </button>
-          <h1 className="text-lg font-bold" style={{ color: '#FFD700' }}>{t('settings.title')}</h1>
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold whitespace-nowrap text-white">{t('settings.title')}</h1>
         </div>
       </div>
 
@@ -67,6 +67,13 @@ export default function SettingsScreen({ onBack }: Props) {
           <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>ACKI RIVALS v0.1.0</div>
           <div className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.15)' }}>Powered by Acki Nacki Blockchain</div>
         </div>
+      </div>
+
+      {/* Back */}
+      <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+        <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-full py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.98]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+          {t('deck.back')}
+        </button>
       </div>
     </div>
   );

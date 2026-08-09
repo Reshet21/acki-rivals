@@ -3,6 +3,7 @@ import type { Card } from '../types';
 import { createGame, joinGame, getWaitingGames, abandonGame, cancelGame, getGame, type Game } from '../services/pvpService';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
+import Icon from './Icon';
 
 interface Props {
   playerId: string;
@@ -205,7 +206,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   // ═══ DECK CHECK ═══
   if (deck.length !== 8) return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto items-center justify-center p-4">
-      <div className="text-white/50 text-center"><div className="text-lg mb-2">⚠️</div><div className="text-sm">{t('menu.buildDeck')}</div></div>
+      <div className="text-white/50 text-center"><div className="text-sm">{t('menu.buildDeck')}</div></div>
       <button onClick={() => { impactOccurred('soft'); onBack(); }} className="mt-4 px-6 py-2 rounded-lg text-sm font-bold bg-white/5 border border-white/10 text-white/60 active:bg-white/10">{t('pvp.back')}</button>
     </div>
   );
@@ -219,7 +220,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         <div className="absolute w-24 h-24 rounded-full bg-an-red/5 animate-float-alt" style={{ top: '70%', right: '20%' }} />
       </div>
       <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-xs">
-        <div className="text-5xl animate-title-glow">⚔️</div>
+        <div className="flex justify-center text-an-gold animate-title-glow"><Icon name="sword" size={48} /></div>
         <div className="text-center">
           <div className="text-lg font-black text-an-gold animate-pulse-ring">{t('pvp.player1Waiting')}</div>
           <div className="text-sm text-white/50 text-center mt-1">{t('pvp.waitingForSecondPlayer')}</div>
@@ -227,8 +228,8 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
 
         {/* Player 1 card */}
         <div className="w-full p-3 rounded-xl bg-an-card/60 border border-an-gold/20 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-an-gold/30 to-an-orange/30 flex items-center justify-center text-lg border border-an-gold/30">
-            👤
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-an-gold/30 to-an-orange/30 flex items-center justify-center text-an-gold border border-an-gold/30">
+            <Icon name="user" size={18} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-xs text-white/40 uppercase tracking-wider">{t('pvp.youShort')}</div>
@@ -262,17 +263,17 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
               ? 'bg-an-green/20 text-an-green border-2 border-an-green/40 shadow-[0_0_20px_rgba(0,230,118,0.2)]'
               : 'bg-an-card/60 border-2 border-an-gold/20 text-an-gold hover:border-an-gold/40 active:bg-an-surface'
           }`}>
-          {copied ? '✓ ' + t('pvp.copied') : '📋 ' + t('pvp.copyCode')}
+          {copied ? <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="check" size={13} stroke={2.4} /> {t('pvp.copied')}</span> : <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="deck" size={13} /> {t('pvp.copyCode')}</span>}
         </button>
 
         <div className="flex gap-2 w-full max-w-xs">
           <button onClick={handleMinimize}
             className="flex-1 py-3 rounded-xl text-sm font-bold bg-an-card/60 border-2 border-white/10 text-white/70 hover:border-white/30 active:bg-white/5 transition-all duration-200">
-            🔽 {t('pvp.minimize')}
+            {t('pvp.minimize')}
           </button>
           <button onClick={handleAbandon}
             className="flex-1 py-3 rounded-xl text-sm font-bold bg-an-red/10 border-2 border-an-red/30 text-an-red hover:border-an-red/50 active:bg-an-red/20 transition-all duration-200">
-            🚪 {t('pvp.exitRoom')}
+            {t('pvp.exitRoom')}
           </button>
         </div>
       </div>
@@ -298,7 +299,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       </div>
       <div className="relative z-10 flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="text-5xl animate-spin" style={{ animationDuration: '2s' }}>🎲</div>
+          <div className="flex justify-center animate-spin text-an-gold" style={{ animationDuration: '2s' }}><Icon name="dice" size={48} /></div>
           <div className="absolute -top-2 -right-2 w-4 h-4 bg-an-gold rounded-full animate-ping" />
         </div>
         <div className="text-center">
@@ -316,7 +317,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         </div>
         <button onClick={cancelRandom} 
           className="mt-4 px-8 py-3 rounded-xl text-sm font-bold bg-an-red/10 border-2 border-an-red/30 text-an-red hover:border-an-red/50 active:bg-an-red/20 transition-all duration-200">
-          ❌ {t('pvp.exitSearch')}
+          {t('pvp.exitSearch')}
         </button>
       </div>
     </div>
@@ -347,27 +348,31 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       {/* Header */}
       <div className="relative z-10 px-4 pt-4 pb-2 shrink-0">
         <div className="text-center">
-          <div className="text-lg font-black text-an-gold animate-title-glow">⚔️ PvP</div>
+          <div className="inline-flex items-center gap-1.5 text-lg font-black text-white"><Icon name="sword" size={16} /> PvP</div>
           <div className="text-[10px] text-white/30 uppercase tracking-[0.2em]">{t('pvp.gameRules')}</div>
         </div>
       </div>
 
       {/* Tab bar */}
       <div className="relative z-10 flex mx-4 gap-1 rounded-xl bg-an-card/50 border border-an-border/50 p-1 shrink-0">
-        {(['menu', 'open', 'join'] as const).map((tabKey, i) => (
-          <button key={tabKey} 
-            onClick={() => { selectionChanged(); setTab(tabKey); }} 
-            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-300 ${
-              tab === tabKey 
-                ? 'bg-gradient-to-r from-an-gold to-an-orange text-an-dark shadow-lg scale-105' 
-                : 'text-white/40 hover:text-white/70'
-            }`}
-            style={{ animationDelay: `${i * 0.1}s` }}>
-            {tabKey === 'menu' && t('pvp.menu')}
-            {tabKey === 'open' && t('pvp.openRooms')}
-            {tabKey === 'join' && t('pvp.byCode')}
-          </button>
-        ))}
+        {(['menu', 'open', 'join'] as const).map((tabKey) => {
+          const active = tab === tabKey;
+          const icon = tabKey === 'menu' ? 'gamepad' : tabKey === 'open' ? 'search' : 'link';
+          const raw = tabKey === 'menu' ? t('pvp.menu') : tabKey === 'open' ? t('pvp.openRooms') : t('pvp.byCode');
+          const label = raw.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+          return (
+            <button key={tabKey}
+              onClick={() => { selectionChanged(); setTab(tabKey); }}
+              className="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+              style={{
+                background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color: active ? '#fff' : 'rgba(255,255,255,0.4)',
+              }}>
+              <Icon name={icon} size={13} />
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {error && (
@@ -381,44 +386,34 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
           <div className="flex flex-col gap-3 animate-fade-in">
             {/* Random Battle */}
             <button onClick={() => { impactOccurred('medium'); handleRandom(); }} disabled={waiting}
-              className={`group relative py-5 rounded-2xl font-bold text-sm flex flex-col items-center gap-2
-                bg-gradient-to-br from-an-red via-red-600 to-an-orange text-white
-                shadow-[0_0_30px_rgba(255,61,0,0.2)]
-                active:scale-[0.97] disabled:opacity-50 transition-all duration-200 overflow-hidden
-                ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-              `}
-              style={{ transitionDelay: '0.1s', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-              <div className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent group-hover:translate-x-full transition-transform duration-700" />
-              <span className="text-3xl">🎲</span>
-              <span className="text-base">{t('pvp.randomBattle')}</span>
-              <span className="text-[10px] text-white/60 font-normal">{t('pvp.findOpponent')}</span>
+              className={`w-full py-3 font-bold text-base flex items-center justify-center gap-3 active:scale-[0.97] disabled:opacity-50 transition-all ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+              style={{ borderRadius: 9, background: 'linear-gradient(135deg, rgba(255,61,0,0.22) 0%, rgba(255,109,0,0.16) 50%, rgba(255,145,0,0.12) 100%)', border: '1px solid rgba(255,100,0,0.35)', color: '#ffd9c2' }}>
+              <Icon name="dice" size={22} />
+              <div className="flex flex-col items-center text-center">
+                <span className="font-bold">{t('pvp.randomBattle')}</span>
+                <span className="text-[10px] font-normal opacity-70">{t('pvp.findOpponent')}</span>
+              </div>
             </button>
-            
+
             {/* Create Room */}
             <button onClick={() => { impactOccurred('medium'); handleCreate(); }} disabled={waiting}
-              className={`group relative py-5 rounded-2xl font-bold text-sm flex flex-col items-center gap-2
-                bg-gradient-to-br from-an-gold via-yellow-500 to-an-orange text-an-dark
-                shadow-[0_0_30px_rgba(255,215,0,0.2)]
-                active:scale-[0.97] disabled:opacity-50 transition-all duration-200 overflow-hidden
-                ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-              `}
-              style={{ transitionDelay: '0.2s', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-              <div className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700" />
-              <span className="text-3xl">🏠</span>
-              <span className="text-base">{t('pvp.createRoom')}</span>
-              <span className="text-[10px] text-an-dark/60 font-normal">{t('pvp.shareCode')}</span>
+              className={`w-full py-3 font-bold text-base flex items-center justify-center gap-3 active:scale-[0.97] disabled:opacity-50 transition-all ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+              style={{ borderRadius: 9, background: 'linear-gradient(135deg, rgba(255,215,0,0.18) 0%, rgba(255,180,0,0.12) 50%, rgba(255,145,0,0.10) 100%)', border: '1px solid rgba(255,200,0,0.32)', color: '#ffe9b8' }}>
+              <Icon name="castle" size={22} />
+              <div className="flex flex-col items-center text-center">
+                <span className="font-bold">{t('pvp.createRoom')}</span>
+                <span className="text-[10px] font-normal opacity-70">{t('pvp.shareCode')}</span>
+              </div>
             </button>
 
             {/* Rules footer */}
             <div className="text-center mt-4 animate-fade-in" style={{ animationDelay: '0.5s' }}>
               <div className="flex items-center justify-center gap-3 text-[10px] text-white/20">
-                <span>❤️ 12HP</span>
+                <span className="inline-flex items-center gap-1"><Icon name="heart" size={11} /> 12HP</span>
                 <span className="w-1 h-1 rounded-full bg-white/10" />
-                <span>💊 12+1 {t('battle.pillzShort')}.</span>
+                <span className="inline-flex items-center gap-1"><Icon name="pill" size={11} /> 12+1 {t('battle.pillzShort')}.</span>
                 <span className="w-1 h-1 rounded-full bg-white/10" />
-                <span>⚔️ 4 {t('battle.roundShort')}.</span>
+                <span className="inline-flex items-center gap-1"><Icon name="sword" size={11} /> 4 {t('battle.roundShort')}.</span>
               </div>
             </div>
           </div>
@@ -430,7 +425,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
               <div className="text-xs text-white/50 uppercase tracking-wider font-bold">{t('pvp.availableRooms')}</div>
               <button onClick={loadRooms} 
                 className="text-[10px] px-3 py-1 rounded-lg bg-an-gold/10 border border-an-gold/20 text-an-gold hover:bg-an-gold/20 transition-all active:scale-95">
-                🔄 {t('pvp.refresh')}
+                <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="arrowRight" size={13} /> {t('pvp.refresh')}</span>
               </button>
             </div>
             
@@ -443,7 +438,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
             
             {!loadingRooms && openRooms.length === 0 && (
               <div className="flex flex-col items-center gap-2 py-12 animate-fade-in">
-                <div className="text-4xl opacity-30">😴</div>
+                <div className="flex justify-center opacity-30 text-white/50"><Icon name="clock" size={40} /></div>
                 <div className="text-xs text-white/30">{t('pvp.noOpenRooms')}</div>
               </div>
             )}
@@ -453,15 +448,15 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                 className="flex items-center justify-between p-4 rounded-2xl bg-an-card/60 border border-an-border/50 hover:border-an-gold/30 transition-all duration-300 animate-slide-up"
                 style={{ animationDelay: `${i * 0.08}s` }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-an-gold/20 to-an-orange/20 flex items-center justify-center text-lg border border-an-gold/20">
-                    👤
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-an-gold/20 to-an-orange/20 flex items-center justify-center text-an-gold border border-an-gold/20">
+                    <Icon name="user" size={18} />
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white truncate max-w-[140px]">{g.host_id === playerId ? displayName : (g.host_name || t('pvp.host'))}</div>
                     <div className="text-[10px] text-white/30 flex items-center gap-2">
                       <span>{g.host_deck?.length || 0}/8 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />
-                      <span className="text-an-gold">⚔️</span>
+                      <span className="text-an-gold inline-flex"><Icon name="sword" size={14} /></span>
                     </div>
                   </div>
                 </div>
@@ -493,7 +488,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                     {t('pvp.connecting')}
                   </span>
                 ) : (
-                  `⚔️ ${t('pvp.join')}`
+                  <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="sword" size={14} /> {t('pvp.join')}</span>
                 )}
               </button>
             </div>

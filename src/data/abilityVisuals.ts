@@ -1,25 +1,28 @@
-export const abilityInfo: Record<string, { icon: string; color: string }> = {
-  '+1 power': { icon: '⚔️', color: '#60a5fa' }, '+2 power': { icon: '⚔️', color: '#93c5fd' },
-  '+3 power': { icon: '⚔️', color: '#bfdbfe' }, '+4 power': { icon: '⚔️', color: '#67e8f9' },
-  '+1 damage': { icon: '💥', color: '#f87171' }, '+2 damage': { icon: '💥', color: '#fca5a5' },
-  '+1 pillz': { icon: '💊', color: '#4ade80' }, '+3 pillz': { icon: '💊', color: '#86efac' },
-  '-1 opponent power': { icon: '🛡️', color: '#fb923c' }, '-2 opponent power': { icon: '🛡️', color: '#fdba74' },
-  '-2 opponent damage': { icon: '🛡️', color: '#fb923c' },
-  'heal 1': { icon: '💚', color: '#4ade80' }, 'heal 2': { icon: '💚', color: '#86efac' }, 'heal 3': { icon: '💚', color: '#bbf7d0' },
-  'poison 1': { icon: '☠️', color: '#facc15' }, 'poison 2': { icon: '☠️', color: '#fde047' }, 'poison 3': { icon: '☠️', color: '#fef08a' },
-  'life steal 1': { icon: '🩸', color: '#c084fc' }, 'life steal 2': { icon: '🩸', color: '#d8b4fe' }, 'life steal 3': { icon: '🩸', color: '#e9d5ff' },
-  'stop opponent ability': { icon: '🚫', color: '#f87171' }, 'double damage': { icon: '⚡', color: '#fde047' },
+import type { IconName } from '../components/Icon';
+
+// icon — имя штриховой иконки из компонента <Icon/> (эмодзи заменены)
+export const abilityInfo: Record<string, { icon: IconName; color: string }> = {
+  '+1 power': { icon: 'sword', color: '#60a5fa' }, '+2 power': { icon: 'sword', color: '#93c5fd' },
+  '+3 power': { icon: 'sword', color: '#bfdbfe' }, '+4 power': { icon: 'sword', color: '#67e8f9' },
+  '+1 damage': { icon: 'boom', color: '#f87171' }, '+2 damage': { icon: 'boom', color: '#fca5a5' },
+  '+1 pillz': { icon: 'pill', color: '#4ade80' }, '+3 pillz': { icon: 'pill', color: '#86efac' },
+  '-1 opponent power': { icon: 'shield', color: '#fb923c' }, '-2 opponent power': { icon: 'shield', color: '#fdba74' },
+  '-2 opponent damage': { icon: 'shield', color: '#fb923c' },
+  'heal 1': { icon: 'heart', color: '#4ade80' }, 'heal 2': { icon: 'heart', color: '#86efac' }, 'heal 3': { icon: 'heart', color: '#bbf7d0' },
+  'poison 1': { icon: 'skull', color: '#facc15' }, 'poison 2': { icon: 'skull', color: '#fde047' }, 'poison 3': { icon: 'skull', color: '#fef08a' },
+  'life steal 1': { icon: 'drop', color: '#c084fc' }, 'life steal 2': { icon: 'drop', color: '#d8b4fe' }, 'life steal 3': { icon: 'drop', color: '#e9d5ff' },
+  'stop opponent ability': { icon: 'ban', color: '#f87171' }, 'double damage': { icon: 'bolt', color: '#fde047' },
 };
 
-export const abilityIcons: Record<string, string> = {
-  '+1 pillz': '💊', '+2 pillz': '💊', '+3 pillz': '💊',
-  '+1 power': '⚔️', '+2 power': '⚔️', '+3 power': '⚔️', '+4 power': '⚔️',
-  '+1 damage': '💥', '+2 damage': '💥', '+3 damage': '💥',
-  '-1 opponent power': '🛡️', '-2 opponent power': '🛡️', '-2 opponent damage': '🛡️',
-  'heal 1': '💚', 'heal 2': '💚', 'heal 3': '💚',
-  'poison 1': '☠️', 'poison 2': '☠️', 'poison 3': '☠️',
-  'life steal 1': '🩸', 'life steal 2': '🩸', 'life steal 3': '🩸',
-  'stop opponent ability': '🚫', 'double damage': '⚡',
+export const abilityIcons: Record<string, IconName> = {
+  '+1 pillz': 'pill', '+2 pillz': 'pill', '+3 pillz': 'pill',
+  '+1 power': 'sword', '+2 power': 'sword', '+3 power': 'sword', '+4 power': 'sword',
+  '+1 damage': 'boom', '+2 damage': 'boom', '+3 damage': 'boom',
+  '-1 opponent power': 'shield', '-2 opponent power': 'shield', '-2 opponent damage': 'shield',
+  'heal 1': 'heart', 'heal 2': 'heart', 'heal 3': 'heart',
+  'poison 1': 'skull', 'poison 2': 'skull', 'poison 3': 'skull',
+  'life steal 1': 'drop', 'life steal 2': 'drop', 'life steal 3': 'drop',
+  'stop opponent ability': 'ban', 'double damage': 'bolt',
 };
 
 export const abilityColors: Record<string, string> = {
