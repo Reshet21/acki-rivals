@@ -13,9 +13,9 @@
  * Ответ: 200 { success, game } | 402 (не хватает средств) | 400 | 401 | 500
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase, requireAuth, unauthorized } from '../auth.js';
-import { isValidAddress } from '../validate.js';
-import { validateDeck } from '../deck.js';
+import { getSupabase, requireAuth, unauthorized } from './auth.js';
+import { isValidAddress } from './validate.js';
+import { validateDeck } from './deck.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 const NANO_RE = /^\d+$/;

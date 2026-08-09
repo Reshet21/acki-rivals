@@ -7,8 +7,8 @@
  * Колоды НЕ раскрываются: для маркетплейса не нужен deck игрока.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase, requireAuth, unauthorized } from '../auth.js';
-import { isValidAddress } from '../validate.js';
+import { getSupabase, requireAuth, unauthorized } from './auth.js';
+import { isValidAddress } from './validate.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });

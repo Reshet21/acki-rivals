@@ -7,8 +7,8 @@
  * решает: показать «ждём соперника» или «бой идёт».
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase, requireAuth, unauthorized } from '../auth.js';
-import { isValidAddress } from '../validate.js';
+import { getSupabase, requireAuth, unauthorized } from './auth.js';
+import { isValidAddress } from './validate.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 

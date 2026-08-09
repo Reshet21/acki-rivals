@@ -7,8 +7,8 @@
  * каждая карта нормализуется против каталога (id/name/clan/power/damage/
  * ability/rarity берутся из каталога, а не от клиента).
  */
-import type { Card } from './battle/types.js';
-import { getCardById, MAX_STARS } from './battle/cards.js';
+import type { Card } from './battle-types.js';
+import { getCardById, MAX_STARS } from './battle-cards.js';
 
 export const DECK_SIZE = 10;
 export const MAX_PILLZ = 12;

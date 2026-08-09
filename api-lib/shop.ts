@@ -10,9 +10,9 @@
  * НЕ доверяет ценам от клиента.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase, requireAuth, unauthorized } from '../auth.js';
-import { isValidAddress } from '../validate.js';
-import { SHOP_ITEMS } from '../constants.js';
+import { getSupabase, requireAuth, unauthorized } from './auth.js';
+import { isValidAddress } from './validate.js';
+import { SHOP_ITEMS } from './constants.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 

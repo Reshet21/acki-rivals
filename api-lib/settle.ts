@@ -8,9 +8,9 @@
  * победы и кражу банка посторонними (только участник, только finished).
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase, requireAuth, unauthorized } from '../auth.js';
-import { isValidAddress } from '../validate.js';
-import { getGameRow, isParticipant, isValidGameId, stateOf } from '../pvp.js';
+import { getSupabase, requireAuth, unauthorized } from './auth.js';
+import { isValidAddress } from './validate.js';
+import { getGameRow, isParticipant, isValidGameId, stateOf } from './pvp.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 

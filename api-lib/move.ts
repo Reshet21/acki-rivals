@@ -15,11 +15,11 @@
  * Клиент НИКОГДА не присылает результат раунда — только свой ход.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase, requireAuth, unauthorized } from '../auth.js';
-import { isValidAddress } from '../validate.js';
-import { getGameRow, isParticipant, isValidGameId, stateOf, finalizeMatch, type GameRow } from '../pvp.js';
-import { resolvePvpRound, applyRoundDamageToState } from '../battle/resolve.js';
-import type { Card } from '../battle/types.js';
+import { getSupabase, requireAuth, unauthorized } from './auth.js';
+import { isValidAddress } from './validate.js';
+import { getGameRow, isParticipant, isValidGameId, stateOf, finalizeMatch, type GameRow } from './pvp.js';
+import { resolvePvpRound, applyRoundDamageToState } from './battle-resolve.js';
+import type { Card } from './battle-types.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 const UID_RE = /^[A-Za-z0-9_-]{6,64}$/;

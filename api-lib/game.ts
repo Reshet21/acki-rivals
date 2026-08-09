@@ -8,8 +8,8 @@
  * в руку оппонента или подменить ход нельзя.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase } from '../auth.js';
-import { getGameRow, isValidGameId } from '../pvp.js';
+import { getSupabase } from './auth.js';
+import { getGameRow, isValidGameId } from './pvp.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });

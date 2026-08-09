@@ -1,16 +1,16 @@
 /**
- * api/pvp/abandon.ts — POST: объявить оппонента дезертиром.
+ * api/pvp/surrender.ts — POST: сдаться в PvP.
  *
  * Body: { player, gameId }
  *
- * Победа присуждается ТОЛЬКО если оппонент не отправил ход в текущем
- * раунде (state.round) — сервер проверяет по таблице moves. Если ход
- * оппонента есть — 409 (игра продолжается).
+ * Сервер завершает игру в пользу оппонента, расчитывает ставку
+ * (банк — победителю) и обновляет лидерборд. Игрок не может «сдаться
+ * в свою пользу» — исход всегда честный.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase, requireAuth, unauthorized } from '../auth.js';
-import { isValidAddress } from '../validate.js';
-import { getGameRow, isParticipant, isValidGameId, stateOf, opponentOf, finalizeMatch } from '../pvp.js';
+import { getSupabase, requireAuth, unauthorized } from './auth.js';
+import { isValidAddress } from './validate.js';
+import { getGameRow, isParticipant, isValidGameId, stateOf, finalizeMatch } from './pvp.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 
@@ -39,27 +39,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const state = stateOf(game);
-    const opp = opponentOf(game, player);
-    if (!opp) return res.status(409).json({ error: 'У вас пока нет соперника' });
-
-    // Оппонент не ходил в текущем раунде?
-    const { data: oppMoves } = await supabase!.from('moves')
-      .select('id').eq('game_id', gameId).eq('round', state.round).eq('player_id', opp).limit(1);
-    if (oppMoves && oppMoves.length > 0) {
-      return res.status(409).json({ error: 'Оппонент уже сходил — игра продолжается' });
-    }
-
     const isHost = game.host_id === player;
     const newState: Record<string, unknown> = {
       ...state,
       phase: 'ended',
-      hostHP: isHost ? state.hostHP : 0,
-      guestHP: isHost ? 0 : state.guestHP,
+      // Сдавшийся проигрывает: его HP = 0
+      hostHP: isHost ? 0 : state.hostHP,
+      guestHP: isHost ? state.guestHP : 0,
     };
 
-    await finalizeMatch(supabase!, game, newState, player, opp);
+    const winner = isHost ? game.guest_id! : game.host_id;
+    await finalizeMatch(supabase!, game, newState, winner, player);
 
-    return res.status(200).json({ success: true, ended: true, winner: player });
+    return res.status(200).json({ success: true, ended: true, winner });
   } catch (e) {
     return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }
