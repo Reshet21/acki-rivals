@@ -8,13 +8,18 @@
 -- 0. Чистим дубликаты ходов (старая клиентская логика позволяла повторные)
 delete from moves
  where id not in (
-   select min(id) from moves group by game_id, round, player_id
+   select distinct on (game_id, round, player_id) id
+     from moves
+    order by game_id, round, player_id, created_at
  );
 
 delete from moves
  where card_uid is not null
    and id not in (
-     select min(id) from moves where card_uid is not null group by game_id, card_uid
+     select distinct on (game_id, card_uid) id
+       from moves
+      where card_uid is not null
+      order by game_id, card_uid, created_at
    );
 
 -- 1. sessions (если вдруг не применилось)
