@@ -122,6 +122,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
   const [opponentMoveTimer, setOpponentMoveTimer] = useState(0);
   const [damageFlash, setDamageFlash] = useState<'none' | 'player' | 'opponent'>('none');
   const [screenShake, setScreenShake] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -131,6 +132,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
   const animatedRoundsRef = useRef<Set<number>>(new Set());
   const serverStateRef = useRef(serverState);
   const endedRef = useRef(false);
+  const animatingRef = useRef(false); // true, пока идёт VS/damage-анимация раунда
 
   roundRef.current = round;
   battlePhaseRef.current = battlePhase;
@@ -141,6 +143,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
   const finishBattle = useCallback((r: 'win' | 'loss' | 'draw') => {
     if (endedRef.current) return;
     endedRef.current = true;
+    animatingRef.current = false;
     if (r === 'win') playVictory();
     else if (r === 'loss') playDefeat();
     else playDraw();
@@ -174,7 +177,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
   }, [isHost, finishBattle]);
 
   // ─── Анимация раунда из серверного roundResult ───
-  const animateRound = useCallback((rr: PvpRoundResult) => {
+  const animateRound = useCallback((rr: PvpRoundResult, freshState: Game['state']) => {
     if (endedRef.current) return;
     const myCard: Card | null = rr.hostCard && rr.guestCard
       ? (isHost ? rr.hostCard : rr.guestCard)
@@ -185,6 +188,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
     if (!myCard || !oppCard) return;
     if (animatedRoundsRef.current.has(roundRef.current)) return;
     animatedRoundsRef.current.add(roundRef.current);
+    animatingRef.current = true;
 
     const myWithUid: Card = { ...myCard, uid: `resolved-my-${rr.hostCardId}-${rr.guestCardId}` };
     const oppWithUid: Card = { ...oppCard, uid: `resolved-opp-${rr.hostCardId}-${rr.guestCardId}` };
@@ -209,7 +213,9 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
     setCurrentResult(mappedResult);
 
     setPlayerPillz((p) => Math.max(0, p - myPillz));
-    if (myWithUid.uid) setPlayerCardsUsed((prev) => [...prev, myWithUid.uid!]);
+    // Карта помечается использованной в handleSelect при успешном submitMove
+    // (там реальный uid из руки), а НЕ здесь — синтетический uid не совпадает
+    // с uid карт в руке, и рука никогда бы не уменьшалась.
 
     setRoundLog((prev) => [...prev, {
       round: roundRef.current,
@@ -238,11 +244,11 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
       setBattlePhase('damage');
 
       damageTimerRef.current = setTimeout(() => {
-        // Визуальный (локальный) расчёт HP — сервер это уже сделал
-        const myDealt = mappedResult.winner === 'opponent' ? mappedResult.damageDealt : 0;
-        const oppDealt = mappedResult.winner === 'player' ? mappedResult.damageDealt : 0;
-        const newMyHP = Math.max(0, (isHost ? serverStateRef.current.hostHP : serverStateRef.current.guestHP) - myDealt);
-        const newOppHP = Math.max(0, (isHost ? serverStateRef.current.guestHP : serverStateRef.current.hostHP) - oppDealt);
+        // HP берём из серверного state — сервер уже применил урон/хил/яд.
+        // Локально НЕ вычитаем (иначе двойное списание).
+        const newMyHP = Math.max(0, isHost ? freshState.hostHP : freshState.guestHP);
+        const newOppHP = Math.max(0, isHost ? freshState.guestHP : freshState.hostHP);
+        animatingRef.current = false;
 
         if (mappedResult.winner === 'player' && mappedResult.damageDealt > 0) {
           playHit();
@@ -277,8 +283,11 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
         if (!fresh || cancelled) return;
         const st = fresh.state;
         if (st?.roundResult && st.lastResolvedRound === roundRef.current) {
-          animateRound(st.roundResult);
+          animateRound(st.roundResult, st);
         }
+        // Пока анимация раунда идёт — не применяем серверный state,
+        // иначе экран «пустеет», а таймеры доигрывают звуки/HP в фоне.
+        if (animatingRef.current) return;
         if (st?.phase === 'ended' || fresh.status === 'finished') {
           applyServerState(st);
         } else if (st?.round !== roundRef.current && st?.phase === 'select') {
@@ -348,14 +357,19 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
 
     playCardSwoosh();
     setBattlePhase('submitting');
+    setError(null);
 
     try {
       if (!card.uid) throw new Error('Карта без uid');
       await submitMove(game.id, playerId, round, card.uid, pillz);
+      // Помечаем реальный uid карты — рука уменьшается, сервер отклонит
+      // повторный ход этой карты (409 «карта уже использована»).
+      setPlayerCardsUsed((prev) => [...prev, card.uid!]);
       setBattlePhase('waiting_opponent');
       // Поллинг подхватит результат, когда сервер срезолвит раунд
     } catch (e) {
       console.error('Failed to submit move:', e);
+      setError(e instanceof Error ? e.message : 'Ошибка отправки хода');
       setBattlePhase('select');
     }
   }, [battlePhase, game.id, playerId, round]);
@@ -377,6 +391,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
 
   useEffect(() => {
     return () => {
+      animatingRef.current = false;
       if (timerRef.current) clearInterval(timerRef.current);
       if (vsTimerRef.current) clearTimeout(vsTimerRef.current);
       if (damageTimerRef.current) clearTimeout(damageTimerRef.current);
@@ -416,6 +431,11 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
         <span className="text-xs text-white/60">{t('pvp.roundShort')} {round}/{TOTAL_ROUNDS}</span>
         <span className="text-[10px] text-neon-red/70 truncate max-w-[120px]">{opponentLabel}</span>
+        {error && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg text-[11px] font-bold text-red-300 bg-red-500/15 border border-red-500/40 z-50 animate-slide-down max-w-[90%] text-center">
+            {error}
+          </div>
+        )}
 
         <button onClick={() => { impactOccurred('heavy'); handleSurrender(); }}
           className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/40 active:text-white/70 active:bg-white/10 transition-all">

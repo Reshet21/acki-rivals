@@ -141,6 +141,10 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         }
       } catch (e: any) {
         if (e?.message) setError(String(e.message));
+        // Сбросить ОБА лоча, иначе после первой ошибки join (гонка «комната
+        // уже занята») поиск навсегда замирает: следующий тик выходит по
+        // acquired=true и ничего не делает.
+        joiningRef.current = false;
         creatingRef.current = false;
       }
     };
