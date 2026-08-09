@@ -11,20 +11,20 @@
  *       settle, refund, balance, shop, leaderboard, marketplace
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import createHandler from './api-lib/create.js';
-import joinHandler from './api-lib/join.js';
-import moveHandler from './api-lib/move.js';
-import gameHandler from './api-lib/game.js';
-import listHandler from './api-lib/list.js';
-import myHandler from './api-lib/my.js';
-import surrenderHandler from './api-lib/surrender.js';
-import abandonHandler from './api-lib/abandon.js';
-import settleHandler from './api-lib/settle.js';
-import refundHandler from './api-lib/refund.js';
-import balanceHandler from './api-lib/pvp-balance.js';
-import shopHandler from './api-lib/shop.js';
-import leaderboardHandler from './api-lib/leaderboard.js';
-import marketplaceHandler from './api-lib/marketplace.js';
+import createHandler from '../api-lib/create.js';
+import joinHandler from '../api-lib/join.js';
+import moveHandler from '../api-lib/move.js';
+import gameHandler from '../api-lib/game.js';
+import listHandler from '../api-lib/list.js';
+import myHandler from '../api-lib/my.js';
+import surrenderHandler from '../api-lib/surrender.js';
+import abandonHandler from '../api-lib/abandon.js';
+import settleHandler from '../api-lib/settle.js';
+import refundHandler from '../api-lib/refund.js';
+import balanceHandler from '../api-lib/pvp-balance.js';
+import shopHandler from '../api-lib/shop.js';
+import leaderboardHandler from '../api-lib/leaderboard.js';
+import marketplaceHandler from '../api-lib/marketplace.js';
 
 const ROUTES: Record<string, (req: VercelRequest, res: VercelResponse) => Promise<void> | void> = {
   create: createHandler,
