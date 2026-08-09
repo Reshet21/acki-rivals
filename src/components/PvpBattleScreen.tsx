@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Card, RoundResult } from '../types';
-import { resolvePvpRound, roundResultForView, applyRoundDamage, winnerFromHP } from '../services/pvpResolution';
 import CardComponent from './CardComponent';
 import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
@@ -8,15 +7,11 @@ import { useHaptic } from '../hooks/useHaptic';
 import { playCardSwoosh, playVS, playHit, playVictory, playDefeat, playDraw, playHeal, playPoison, playLifeSteal } from '../utils/soundEffects';
 import {
   submitMove,
-  getRoundMoves,
   getGame,
-  updateGameState,
-  subscribeToGame,
+  surrenderGame,
   abandonGame,
-  settlePvpStake,
   type Game,
-  type GameState,
-  type Move,
+  type PvpRoundResult,
 } from '../services/pvpService';
 import Icon from './Icon';
 
@@ -25,6 +20,7 @@ interface Props {
   playerId: string;
   playerName?: string;
   isHost: boolean;
+  myDeck: Card[];
   onBattleEnd: (result: 'win' | 'loss' | 'draw') => void;
   onSurrender: () => void;
 }
@@ -32,12 +28,13 @@ interface Props {
 const TOTAL_HP = 50;
 const TOTAL_ROUNDS = 5;
 const TURN_TIME = 30;
-const STARTING_PILLZ = 12;
-const FREE_PILLZ_PER_ROUND = 1;
 const VS_DURATION = 2500;
 const DAMAGE_DURATION = 2000;
+const OPPONENT_TIMEOUT = 40;
 
 type BattlePhase = 'waiting' | 'select' | 'submitting' | 'waiting_opponent' | 'vs' | 'damage' | 'ended';
+
+const MY_DECK_KEY = (gameId: string) => `pvp_my_deck_${gameId}`;
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -48,33 +45,62 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function PvpBattleScreen({ game, playerId, playerName, isHost, onBattleEnd, onSurrender }: Props) {
+/** Конвертация результата серверного раунда в представление клиента. */
+function rrToView(rr: PvpRoundResult, isPlayerHost: boolean): RoundResult {
+  const playerIsHost = isPlayerHost;
+  const pBase = playerIsHost ? rr.hostBasePower : rr.guestBasePower;
+  const pFinal = playerIsHost ? rr.hostFinalPower : rr.guestFinalPower;
+  const aBase = playerIsHost ? rr.guestBasePower : rr.hostBasePower;
+  const aFinal = playerIsHost ? rr.guestFinalPower : rr.hostFinalPower;
+  return {
+    winner: rr.winner === 'draw' ? 'draw' : rr.winner === 'host' ? (playerIsHost ? 'player' : 'ai') : (playerIsHost ? 'ai' : 'player'),
+    damageDealt: rr.damage,
+    playerAttack: playerIsHost ? rr.hostAttack : rr.guestAttack,
+    aiAttack: playerIsHost ? rr.guestAttack : rr.hostAttack,
+    playerBasePower: pBase,
+    playerFinalPower: pFinal,
+    aiBasePower: aBase,
+    aiFinalPower: aFinal,
+    healAmount: rr.healAmount,
+    poisonAmount: rr.poisonAmount,
+    lifeStealAmount: rr.lifeStealAmount,
+    opponentDamageReduction: rr.opponentDamageReduction,
+  };
+}
+
+export default function PvpBattleScreen({ game, playerId, playerName, isHost, myDeck, onBattleEnd, onSurrender }: Props) {
   const { t } = useI18n();
   const { impactOccurred } = useHaptic();
 
-  const rawMyDeck: Card[] = isHost ? (game.host_deck || []) : (game.guest_deck || []);
-  const rawOppDeck: Card[] = isHost ? (game.guest_deck || []) : (game.host_deck || []);
+  // Моя колода: пропс (из лобби) или восстановленная из localStorage
+  const [deck] = useState<Card[]>(() => {
+    if (myDeck.length > 0) return myDeck;
+    try {
+      const raw = localStorage.getItem(MY_DECK_KEY(game.id));
+      if (raw) return JSON.parse(raw) as Card[];
+    } catch {}
+    return [];
+  });
+  useEffect(() => {
+    if (deck.length > 0) localStorage.setItem(MY_DECK_KEY(game.id), JSON.stringify(deck));
+  }, [deck, game.id]);
 
-  // Ensure all cards have UIDs (Supabase may not preserve them). Use deterministic
-  // UIDs so lookups stay stable across renders and re-joins.
-  const ensureUids = (deck: Card[]) => deck.map((c, i) => c.uid ? c : { ...c, uid: `pvp-${c.id}-${i}` });
-  const myDeck = useMemo(() => ensureUids(rawMyDeck), [rawMyDeck]);
-  const oppDeck = useMemo(() => ensureUids(rawOppDeck), [rawOppDeck]);
+  // Синхронизация с сервером (единственный источник истины)
+  const [serverState, setServerState] = useState(game.state);
 
-  // Deal 4 random cards from 8-card deck
-  const [myHand] = useState<Card[]>(() => shuffleArray(myDeck).slice(0, TOTAL_ROUNDS));
-  const [oppHand] = useState<Card[]>(() => shuffleArray(oppDeck).slice(0, TOTAL_ROUNDS));
+  // 4 случайные карты из 10 — как и у соперника (сервер хранит все колоды)
+  const [myHand] = useState<Card[]>(() => shuffleArray(deck).slice(0, TOTAL_ROUNDS));
 
-  const [playerHP, setPlayerHP] = useState(TOTAL_HP);
-  const [opponentHP, setOpponentHP] = useState(TOTAL_HP);
-  const [playerPillz, setPlayerPillz] = useState(STARTING_PILLZ);
-  const [opponentPillz, setOpponentPillz] = useState(STARTING_PILLZ);
-  const [round, setRound] = useState(1);
+  const [playerHP, setPlayerHP] = useState(() => (isHost ? serverState.hostHP : serverState.guestHP));
+  const [opponentHP, setOpponentHP] = useState(() => (isHost ? serverState.guestHP : serverState.hostHP));
+  const [playerPillz, setPlayerPillz] = useState(() => (isHost ? serverState.hostPillz : serverState.guestPillz));
+  const [round, setRound] = useState(() => serverState.round);
 
   const [playerCardsUsed, setPlayerCardsUsed] = useState<string[]>([]);
-  const [opponentCardsUsed, setOpponentCardsUsed] = useState<string[]>([]);
 
-  const [battlePhase, setBattlePhase] = useState<BattlePhase>('waiting');
+  const [battlePhase, setBattlePhase] = useState<BattlePhase>(
+    serverState.phase === 'ended' ? 'ended' : (game.guest_id ? 'select' : 'waiting'),
+  );
   const [timer, setTimer] = useState(TURN_TIME);
 
   const [currentPlayerCard, setCurrentPlayerCard] = useState<Card | null>(null);
@@ -93,7 +119,6 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | 'draw'>('draw');
   const [roundLog, setRoundLog] = useState<any[]>([]);
-  const [, setOpponentDisconnected] = useState(false);
   const [opponentMoveTimer, setOpponentMoveTimer] = useState(0);
   const [damageFlash, setDamageFlash] = useState<'none' | 'player' | 'opponent'>('none');
   const [screenShake, setScreenShake] = useState(false);
@@ -101,76 +126,109 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const damageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const playerHPRef = useRef(TOTAL_HP);
-  const opponentHPRef = useRef(TOTAL_HP);
-  const roundRef = useRef(1);
-  const battlePhaseRef = useRef<BattlePhase>('waiting');
-  const playerPillzRef = useRef(12);
-  const opponentPillzRef = useRef(12);
-  const playerCardsUsedRef = useRef<string[]>([]);
-  const opponentCardsUsedRef = useRef<string[]>([]);
+  const roundRef = useRef(round);
+  const battlePhaseRef = useRef<BattlePhase>(battlePhase);
   const animatedRoundsRef = useRef<Set<number>>(new Set());
-  const lastRoundResultRef = useRef<GameState['roundResult'] | null>(null);
+  const serverStateRef = useRef(serverState);
+  const endedRef = useRef(false);
 
-  playerHPRef.current = playerHP;
-  opponentHPRef.current = opponentHP;
   roundRef.current = round;
   battlePhaseRef.current = battlePhase;
-  playerPillzRef.current = playerPillz;
-  opponentPillzRef.current = opponentPillz;
-  playerCardsUsedRef.current = playerCardsUsed;
-  opponentCardsUsedRef.current = opponentCardsUsed;
+  serverStateRef.current = serverState;
 
   const playerCardsRemaining = myHand.filter((c) => c.uid && !playerCardsUsed.includes(c.uid));
-  const opponentCardsRemaining = oppHand.filter((c) => c.uid && !opponentCardsUsed.includes(c.uid));
 
-  const findCardById = useCallback((deck: Card[], id: number, excludeUids: string[]): Card | undefined => {
-    return deck.find((c) => c.id === id && c.uid && !excludeUids.includes(c.uid));
+  const finishBattle = useCallback((r: 'win' | 'loss' | 'draw') => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    if (r === 'win') playVictory();
+    else if (r === 'loss') playDefeat();
+    else playDraw();
+    setBattleResult(r);
+    setBattlePhase('ended');
   }, []);
 
-  const runRoundAnimation = useCallback((myCard: Card, myPillz: number, oppCard: Card, oppPillz: number, result: RoundResult) => {
+  const applyServerState = useCallback((st: Game['state']) => {
+    if (st.phase === 'ended') {
+      setPlayerHP(isHost ? st.hostHP : st.guestHP);
+      setOpponentHP(isHost ? st.guestHP : st.hostHP);
+      const myHP = isHost ? st.hostHP : st.guestHP;
+      const oppHP = isHost ? st.guestHP : st.hostHP;
+      if (myHP > oppHP) finishBattle('win');
+      else if (oppHP > myHP) finishBattle('loss');
+      else finishBattle('draw');
+      return;
+    }
+    setServerState(st);
+    if (st.round !== roundRef.current) {
+      // Новый раунд — синхронизируем ресурсы
+      setRound(st.round);
+      setPlayerPillz(isHost ? st.hostPillz : st.guestPillz);
+      setCurrentPlayerCard(null);
+      setCurrentOpponentCard(null);
+      setCurrentResult(null);
+      if (battlePhaseRef.current === 'waiting_opponent' || battlePhaseRef.current === 'vs' || battlePhaseRef.current === 'damage') {
+        setBattlePhase('select');
+      }
+    }
+  }, [isHost, finishBattle]);
+
+  // ─── Анимация раунда из серверного roundResult ───
+  const animateRound = useCallback((rr: PvpRoundResult) => {
+    if (endedRef.current) return;
+    const myCard: Card | null = rr.hostCard && rr.guestCard
+      ? (isHost ? rr.hostCard : rr.guestCard)
+      : null;
+    const oppCard: Card | null = rr.hostCard && rr.guestCard
+      ? (isHost ? rr.guestCard : rr.hostCard)
+      : null;
+    if (!myCard || !oppCard) return;
     if (animatedRoundsRef.current.has(roundRef.current)) return;
     animatedRoundsRef.current.add(roundRef.current);
-    setCurrentPlayerCard(myCard);
+
+    const myWithUid: Card = { ...myCard, uid: `resolved-my-${rr.hostCardId}-${rr.guestCardId}` };
+    const oppWithUid: Card = { ...oppCard, uid: `resolved-opp-${rr.hostCardId}-${rr.guestCardId}` };
+    const myPillz = isHost ? rr.hostPillzUsed : rr.guestPillzUsed;
+    const oppPillz = isHost ? rr.guestPillzUsed : rr.hostPillzUsed;
+
+    setCurrentPlayerCard(myWithUid);
     setCurrentPlayerPillz(myPillz);
-    setCurrentOpponentCard(oppCard);
+    setCurrentOpponentCard(oppWithUid);
     setCurrentOpponentPillz(oppPillz);
 
+    const view = rrToView(rr, isHost);
     const mappedResult = {
-      winner: result.winner === 'player' ? ('player' as const) : result.winner === 'ai' ? ('opponent' as const) : ('draw' as const),
-      damageDealt: result.damageDealt,
-      playerAttack: result.playerAttack,
-      opponentAttack: result.aiAttack,
-      healAmount: result.healAmount,
-      poisonAmount: result.poisonAmount,
-      lifeStealAmount: result.lifeStealAmount,
+      winner: view.winner === 'player' ? ('player' as const) : view.winner === 'ai' ? ('opponent' as const) : ('draw' as const),
+      damageDealt: view.damageDealt,
+      playerAttack: view.playerAttack,
+      opponentAttack: view.aiAttack,
+      healAmount: view.healAmount,
+      poisonAmount: view.poisonAmount,
+      lifeStealAmount: view.lifeStealAmount,
     };
     setCurrentResult(mappedResult);
 
     setPlayerPillz((p) => Math.max(0, p - myPillz));
-    setOpponentPillz((p) => Math.max(0, p - oppPillz));
-
-    if (myCard.uid) setPlayerCardsUsed((prev) => [...prev, myCard.uid!]);
-    if (oppCard.uid) setOpponentCardsUsed((prev) => [...prev, oppCard.uid!]);
+    if (myWithUid.uid) setPlayerCardsUsed((prev) => [...prev, myWithUid.uid!]);
 
     setRoundLog((prev) => [...prev, {
       round: roundRef.current,
-      playerCard: myCard,
+      playerCard: myWithUid,
       playerPillz: myPillz,
-      aiCard: oppCard,
+      aiCard: oppWithUid,
       aiPillz: oppPillz,
       winner: mappedResult.winner === 'player' ? 'player' : mappedResult.winner === 'opponent' ? 'ai' : 'draw',
-      damageDealt: result.damageDealt,
-      playerAttack: result.playerAttack,
-      aiAttack: result.aiAttack,
-      playerBasePower: result.playerBasePower,
-      playerFinalPower: result.playerFinalPower,
-      aiBasePower: result.aiBasePower,
-      aiFinalPower: result.aiFinalPower,
-      healAmount: result.healAmount,
-      poisonAmount: result.poisonAmount,
-      lifeStealAmount: result.lifeStealAmount,
-      opponentDamageReduction: result.opponentDamageReduction,
+      damageDealt: view.damageDealt,
+      playerAttack: view.playerAttack,
+      aiAttack: view.aiAttack,
+      playerBasePower: view.playerBasePower,
+      playerFinalPower: view.playerFinalPower,
+      aiBasePower: view.aiBasePower,
+      aiFinalPower: view.aiFinalPower,
+      healAmount: view.healAmount,
+      poisonAmount: view.poisonAmount,
+      lifeStealAmount: view.lifeStealAmount,
+      opponentDamageReduction: view.opponentDamageReduction,
     }]);
 
     playVS();
@@ -180,12 +238,12 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
       setBattlePhase('damage');
 
       damageTimerRef.current = setTimeout(() => {
-        // Pure HP resolution via pvpResolution.ts
-        const outcome = applyRoundDamage(playerHPRef.current, opponentHPRef.current, result, TOTAL_HP);
-        const newMyHP = outcome.myHP;
-        const newOppHP = outcome.oppHP;
+        // Визуальный (локальный) расчёт HP — сервер это уже сделал
+        const myDealt = mappedResult.winner === 'opponent' ? mappedResult.damageDealt : 0;
+        const oppDealt = mappedResult.winner === 'player' ? mappedResult.damageDealt : 0;
+        const newMyHP = Math.max(0, (isHost ? serverStateRef.current.hostHP : serverStateRef.current.guestHP) - myDealt);
+        const newOppHP = Math.max(0, (isHost ? serverStateRef.current.guestHP : serverStateRef.current.hostHP) - oppDealt);
 
-        // ─── Visual effects: screen shake + damage flash ───
         if (mappedResult.winner === 'player' && mappedResult.damageDealt > 0) {
           playHit();
           setDamageFlash('opponent');
@@ -204,184 +262,36 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
         setPlayerHP(newMyHP);
         setOpponentHP(newOppHP);
-
-        // KO check
-        if (outcome.ended) {
-          const r = winnerFromHP(newMyHP, newOppHP);
-          if (r === 'win') playVictory();
-          else if (r === 'loss') playDefeat();
-          else playDraw();
-          setBattleResult(r);
-          setBattlePhase('ended');
-          const koState: GameState = { phase: 'ended', round: roundRef.current, hostHP: isHost ? newMyHP : newOppHP, guestHP: isHost ? newOppHP : newMyHP, hostPillz: isHost ? playerPillzRef.current : opponentPillzRef.current, guestPillz: isHost ? opponentPillzRef.current : playerPillzRef.current, lastResolvedRound: roundRef.current, roundResult: lastRoundResultRef.current ?? undefined };
-          if (isHost) {
-            updateGameState(game.id, koState).catch(console.error);
-            abandonGame(game.id).catch(console.error);
-          }
-          return;
-        }
-
-        const nextRound = roundRef.current + 1;
-
-        const newState: GameState = {
-          phase: nextRound > TOTAL_ROUNDS ? 'ended' : 'select',
-          round: nextRound,
-          hostHP: isHost ? newMyHP : newOppHP,
-          guestHP: isHost ? newOppHP : newMyHP,
-          hostPillz: isHost ? playerPillzRef.current : opponentPillzRef.current,
-          guestPillz: isHost ? opponentPillzRef.current : playerPillzRef.current,
-          lastResolvedRound: roundRef.current,
-          roundResult: lastRoundResultRef.current ?? undefined,
-        };
-
-        if (isHost) {
-          updateGameState(game.id, newState).catch(console.error);
-        }
-
-        if (nextRound > TOTAL_ROUNDS) {
-          const r = winnerFromHP(newMyHP, newOppHP);
-          if (r === 'win') playVictory();
-          else if (r === 'loss') playDefeat();
-          else playDraw();
-          setBattleResult(r);
-          setBattlePhase('ended');
-          if (isHost) abandonGame(game.id).catch(console.error);
-        } else {
-          setRound(nextRound);
-          setPlayerPillz((p) => Math.min(STARTING_PILLZ, p + FREE_PILLZ_PER_ROUND));
-          setOpponentPillz((p) => Math.min(STARTING_PILLZ, p + FREE_PILLZ_PER_ROUND));
-          setCurrentPlayerCard(null);
-          setCurrentOpponentCard(null);
-          setCurrentResult(null);
-          setBattlePhase('select');
-        }
       }, DAMAGE_DURATION);
     }, VS_DURATION);
-  }, [game.id, isHost]);
+  }, [isHost]);
 
-  // ─── Helper: animate round from GameState.roundResult (for guest or after host resolves) ───
-  const animateFromRoundResult = useCallback((rr: NonNullable<GameState['roundResult']>) => {
-    if (animatedRoundsRef.current.has(roundRef.current)) return;
-
-    const isPlayerGuest = !isHost;
-    const myCard = findCardById(myDeck, isPlayerGuest ? rr.guestCardId : rr.hostCardId, playerCardsUsedRef.current);
-    const oppCard = findCardById(oppDeck, isPlayerGuest ? rr.hostCardId : rr.guestCardId, opponentCardsUsedRef.current);
-    if (!myCard || !oppCard) return;
-
-    const myPillz = isPlayerGuest ? rr.guestPillzUsed : rr.hostPillzUsed;
-    const oppPillz = isPlayerGuest ? rr.hostPillzUsed : rr.guestPillzUsed;
-    const view = roundResultForView(rr, isPlayerGuest ? 'guest' : 'host');
-    runRoundAnimation(myCard, myPillz, oppCard, oppPillz, view);
-  }, [isHost, myDeck, oppDeck, findCardById, runRoundAnimation]);
-
-  // ─── Host: resolve round authoritatively and write to game state ───
-  const resolveAndAnimate = useCallback((myMove: Move, oppMove: Move) => {
-    if (!isHost) return;
-    if (animatedRoundsRef.current.has(roundRef.current)) return;
-
-    const myCard = findCardById(myDeck, myMove.card_id, playerCardsUsedRef.current);
-    const oppCard = findCardById(oppDeck, oppMove.card_id, opponentCardsUsedRef.current);
-    if (!myCard || !oppCard) {
-      console.error('resolveAndAnimate: cards not found', { myCard, oppCard, myMove, oppMove });
-      return;
-    }
-
-    const roundResult = resolvePvpRound({
-      hostCard: myCard, hostPillz: myMove.pillz,
-      guestCard: oppCard, guestPillz: oppMove.pillz,
-      hostDeck: myDeck, guestDeck: oppDeck,
-    });
-    lastRoundResultRef.current = roundResult;
-
-    updateGameState(game.id, {
-      phase: 'resolve',
-      round: roundRef.current,
-      hostHP: playerHPRef.current,
-      guestHP: opponentHPRef.current,
-      hostPillz: playerPillzRef.current,
-      guestPillz: opponentPillzRef.current,
-      lastResolvedRound: roundRef.current,
-      roundResult,
-    }).catch(console.error);
-
-    runRoundAnimation(myCard, myMove.pillz, oppCard, oppMove.pillz, roundResultForView(roundResult, 'host'));
-  }, [isHost, myDeck, oppDeck, findCardById, game.id, runRoundAnimation]);
-
-  // ─── Primary loop: polling-based resolution (works WITHOUT Realtime subscriptions) ───
+  // ─── Поллинг сервера (единственный источник истины) ───
   useEffect(() => {
-    if (battlePhase !== 'waiting_opponent') return;
-
+    if (battlePhase !== 'waiting_opponent' && battlePhase !== 'vs' && battlePhase !== 'damage') return;
     let cancelled = false;
     const poll = async () => {
-      if (cancelled) return;
+      if (cancelled || endedRef.current) return;
       try {
-        const currentRound = roundRef.current;
-        const moves = await getRoundMoves(game.id, currentRound);
-        const myMove = moves.find((m) => m.player_id === playerId);
-        const oppMove = moves.find((m) => m.player_id !== playerId);
-
-        // Host: if both moves are present, resolve
-        if (isHost && myMove && oppMove) {
-          resolveAndAnimate(myMove, oppMove);
-          return; // host resolved, done for this round
+        const fresh = await getGame(game.id);
+        if (!fresh || cancelled) return;
+        const st = fresh.state;
+        if (st?.roundResult && st.lastResolvedRound === roundRef.current) {
+          animateRound(st.roundResult);
         }
-
-        // Guest (or host already resolved on previous poll): check game state
-        if (myMove && oppMove) {
-          const freshGame = await getGame(game.id);
-          const state = freshGame?.state;
-          if (state?.lastResolvedRound === currentRound && state?.roundResult) {
-            animateFromRoundResult(state.roundResult);
-          }
+        if (st?.phase === 'ended' || fresh.status === 'finished') {
+          applyServerState(st);
+        } else if (st?.round !== roundRef.current && st?.phase === 'select') {
+          applyServerState(st);
         }
-      } catch (e) {
-        console.error('PvP poll error:', e);
-      }
+      } catch {}
     };
-
-    poll(); // immediate check
+    poll();
     const interval = setInterval(poll, 1500);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [battlePhase, game.id, playerId, isHost, resolveAndAnimate, animateFromRoundResult]);
+  }, [battlePhase, game.id, animateRound, applyServerState]);
 
-  // ─── Realtime subscription (optimization — fires faster than polling when it works) ───
-  useEffect(() => {
-    const cleanup = subscribeToGame(
-      game.id,
-      (_move: Move) => {
-        // Subscription is just a hint — polling handles actual resolution.
-        // We ignore individual moves here to keep logic simple and reliable.
-      },
-      (updatedGame: Game) => {
-        const state = updatedGame.state;
-
-        // Handle finished game
-        if (updatedGame.status === 'finished' && state?.phase === 'ended') {
-          const myHP = isHost ? state.hostHP : state.guestHP;
-          const oppHP = isHost ? state.guestHP : state.hostHP;
-          let r: 'win' | 'loss' | 'draw' = 'draw';
-          if (myHP > oppHP) r = 'win';
-          else if (oppHP > myHP) r = 'loss';
-          setBattleResult(r);
-          setBattlePhase('ended');
-          abandonGame(game.id).catch(console.error);
-          return;
-        }
-
-        // Handle mid-game round result via subscription (faster than polling)
-        if (state?.lastResolvedRound === roundRef.current && state?.roundResult) {
-          animateFromRoundResult(state.roundResult);
-        }
-
-        if (!updatedGame.guest_id && !isHost) {
-          setOpponentDisconnected(true);
-        }
-      },
-    );
-
-    return cleanup;
-  }, [game.id, playerId, isHost, animateFromRoundResult]);
-
+  // ─── Таймер хода ───
   useEffect(() => {
     if (battlePhase === 'select') {
       setTimer(TURN_TIME);
@@ -400,92 +310,70 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
     }
   }, [battlePhase, round]);
 
-  const handleOpponentAbandon = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (vsTimerRef.current) clearTimeout(vsTimerRef.current);
-    if (damageTimerRef.current) clearTimeout(damageTimerRef.current);
+  // Автоход при таймауте
+  useEffect(() => {
+    if (timer === 0 && battlePhase === 'select') {
+      const firstCard = playerCardsRemaining[0];
+      if (firstCard) handleSelect(firstCard, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timer, battlePhase]);
 
-    const myHP = playerHPRef.current;
-    const newState: GameState = {
-      phase: 'ended',
-      round,
-      hostHP: isHost ? myHP : 0,
-      guestHP: isHost ? 0 : myHP,
-      hostPillz: isHost ? playerPillzRef.current : 0,
-      guestPillz: isHost ? 0 : playerPillzRef.current,
-    };
-    updateGameState(game.id, newState).catch(console.error);
-    abandonGame(game.id).catch(console.error);
-
-    setBattleResult('win');
-    setBattlePhase('ended');
-  };
-
-  // Opponent move timeout (40s) — if no move received, treat as abandonment
+  // ─── Таймаут оппонента (40с) → abandon ───
   useEffect(() => {
     if (battlePhase !== 'waiting_opponent') {
       setOpponentMoveTimer(0);
       return;
     }
     const start = Date.now();
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const elapsed = Math.floor((Date.now() - start) / 1000);
       setOpponentMoveTimer(elapsed);
-      if (elapsed >= 40) {
-        handleOpponentAbandon();
+      if (elapsed >= OPPONENT_TIMEOUT && !endedRef.current) {
+        clearInterval(interval);
+        try {
+          await abandonGame(playerId, game.id);
+          setPlayerHP(isHost ? (serverStateRef.current.hostHP || TOTAL_HP) : TOTAL_HP);
+          setOpponentHP(isHost ? 0 : 0);
+          finishBattle('win');
+        } catch {}
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [battlePhase]);
-
-  // PvP ставка: при собственной победе победитель забирает банк
-  useEffect(() => {
-    if (battleResult === 'win') {
-      settlePvpStake(playerId, game.id).then((r) => {
-        if (!r.success) console.warn('[pvp] settle stake:', r.error);
-      });
-    }
-  }, [battleResult, playerId, game.id]);
+  }, [battlePhase, playerId, game.id, isHost, finishBattle]);
 
   const handleSelect = useCallback(async (card: Card, pillz: number) => {
     if (battlePhase !== 'select') return;
     if (timerRef.current) clearInterval(timerRef.current);
 
     playCardSwoosh();
-
     setBattlePhase('submitting');
 
     try {
-      await submitMove(game.id, playerId, round, card.id, pillz);
+      if (!card.uid) throw new Error('Карта без uid');
+      await submitMove(game.id, playerId, round, card.uid, pillz);
       setBattlePhase('waiting_opponent');
-      // Polling will pick up both moves and resolve the round
+      // Поллинг подхватит результат, когда сервер срезолвит раунд
     } catch (e) {
       console.error('Failed to submit move:', e);
       setBattlePhase('select');
     }
   }, [battlePhase, game.id, playerId, round]);
 
-  const handleAutoSelect = useCallback(() => {
-    const firstCard = playerCardsRemaining[0];
-    if (firstCard) {
-      handleSelect(firstCard, 0);
-    }
-  }, [playerCardsRemaining, handleSelect]);
+  const handleSurrender = async () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (vsTimerRef.current) clearTimeout(vsTimerRef.current);
+    if (damageTimerRef.current) clearTimeout(damageTimerRef.current);
+    if (endedRef.current) return;
 
-  useEffect(() => {
-    if (timer === 0 && battlePhase === 'select') {
-      handleAutoSelect();
+    try {
+      await surrenderGame(playerId, game.id);
+      finishBattle('loss');
+      onSurrender();
+    } catch (e) {
+      console.error('Surrender failed:', e);
     }
-  }, [timer, battlePhase, handleAutoSelect]);
-
-  useEffect(() => {
-    if (!game.guest_id && isHost && battlePhase === 'waiting') {
-      setBattlePhase('waiting');
-    }
-    if (game.guest_id && battlePhase === 'waiting') {
-      setBattlePhase('select');
-    }
-  }, [game.guest_id, isHost, battlePhase]);
+  };
 
   useEffect(() => {
     return () => {
@@ -495,26 +383,12 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
     };
   }, []);
 
-  const handleSurrender = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (vsTimerRef.current) clearTimeout(vsTimerRef.current);
-    if (damageTimerRef.current) clearTimeout(damageTimerRef.current);
-
-    const newState: GameState = {
-      phase: 'ended',
-      round,
-      hostHP: isHost ? 0 : playerHP,
-      guestHP: isHost ? playerHP : 0,
-      hostPillz: isHost ? 0 : playerPillz,
-      guestPillz: isHost ? playerPillz : 0,
-    };
-    updateGameState(game.id, newState).catch(console.error);
-    abandonGame(game.id).catch(console.error);
-
-    setBattleResult('loss');
-    setBattlePhase('ended');
-    onSurrender();
-  };
+  // ─── Переход «ждём соперника» → «бой» ───
+  useEffect(() => {
+    if (battlePhase === 'waiting' && game.guest_id) {
+      setBattlePhase('select');
+    }
+  }, [game.guest_id, battlePhase]);
 
   const timerColor =
     timer > 15 ? 'text-neon-green' :
@@ -541,7 +415,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
 
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
         <span className="text-xs text-white/60">{t('pvp.roundShort')} {round}/{TOTAL_ROUNDS}</span>
-        <span className="text-[10px] text-neon-red/70 truncate max-w-[120px]">{opponentLabel}: {opponentPillz} {t('battle.pillzShort')}</span>
+        <span className="text-[10px] text-neon-red/70 truncate max-w-[120px]">{opponentLabel}</span>
 
         <button onClick={() => { impactOccurred('heavy'); handleSurrender(); }}
           className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/40 active:text-white/70 active:bg-white/10 transition-all">
@@ -569,7 +443,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
           <div className="text-[9px] text-neon-green font-bold truncate">{youLabel}</div>
           <div className="h-2.5 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
             <div className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'player' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-neon-green to-emerald-400'}`}
-              style={{ width: `${(playerHP / TOTAL_HP) * 100}%`, boxShadow: damageFlash === 'player' ? 'none' : '0 0 8px rgba(0,230,118,0.3)' }} />
+              style={{ width: `${Math.min(100, (playerHP / TOTAL_HP) * 100)}%`, boxShadow: damageFlash === 'player' ? 'none' : '0 0 8px rgba(0,230,118,0.3)' }} />
             {currentResult?.winner === 'opponent' && battlePhase === 'damage' && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-[10px] font-bold text-red-400 animate-damage-float">-{currentResult.damageDealt}</span>
@@ -590,7 +464,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
           <div className="text-[9px] text-neon-red font-bold text-right truncate">{opponentLabel}</div>
           <div className="h-2.5 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
             <div className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'opponent' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-neon-red to-orange-400'}`}
-              style={{ width: `${(opponentHP / TOTAL_HP) * 100}%`, boxShadow: damageFlash === 'opponent' ? 'none' : '0 0 8px rgba(255,61,0,0.3)' }} />
+              style={{ width: `${Math.min(100, (opponentHP / TOTAL_HP) * 100)}%`, boxShadow: damageFlash === 'opponent' ? 'none' : '0 0 8px rgba(255,61,0,0.3)' }} />
             {currentResult?.winner === 'player' && battlePhase === 'damage' && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-[10px] font-bold text-green-400 animate-damage-float">-{currentResult.damageDealt}</span>
@@ -609,17 +483,6 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
         </div>
       </div>
 
-      {battlePhase === 'select' && (
-        <div className="flex justify-center gap-1 pb-1 shrink-0">
-          {opponentCardsRemaining.map((c) => (
-            <div key={c.uid}
-              className="w-8 h-11 rounded bg-gradient-to-b from-gray-700 to-gray-900 border border-gray-600 flex items-center justify-center text-[8px] text-white/30">
-              ???
-            </div>
-          ))}
-        </div>
-      )}
-
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
         {battlePhase === 'waiting' && !game.guest_id && (
           <div className="flex flex-col items-center gap-3 px-4 animate-fade-in">
@@ -630,10 +493,6 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
             </div>
             <div className="text-[10px] text-white/30 text-center">{t('pvp.shareCodeHint')}</div>
           </div>
-        )}
-
-        {battlePhase === 'waiting' && game.guest_id && (
-          <div className="text-sm text-white/50 animate-pulse">{t('pvp.battleStart')}</div>
         )}
 
         {battlePhase === 'select' && (
@@ -652,7 +511,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
               <div className="text-sm text-yellow-400 animate-pulse">{t('pvp.waitingMove')}</div>
               <div className="flex items-center gap-1 text-xs text-white/40">
                 <span>{t('pvp.opponentMoveTimer')}</span>
-                <span className={`font-bold tabular-nums ${opponentMoveTimer > 30 ? 'text-neon-red' : 'text-white/60'}`}>{opponentMoveTimer}s / 40s</span>
+                <span className={`font-bold tabular-nums ${opponentMoveTimer > 30 ? 'text-neon-red' : 'text-white/60'}`}>{opponentMoveTimer}s / {OPPONENT_TIMEOUT}s</span>
               </div>
             </div>
             {currentPlayerCard && (

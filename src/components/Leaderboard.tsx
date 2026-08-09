@@ -32,25 +32,19 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
     return () => { cancelled = true; };
   }, []);
 
-  // Calculate local player stats for display (even if not in Supabase yet)
-  const localRating = wins * 100 - losses * 50;
-  const hasLocalPlayer = entries.some((e) => e.player_id === playerId);
-
   // Merge: show server entries, and add local player if not already present
+  const hasLocalPlayer = entries.some((e) => e.id === playerId);
   const displayEntries = [...entries];
   if (!hasLocalPlayer && (wins > 0 || losses > 0)) {
     displayEntries.push({
-      id: 'local',
-      player_id: playerId,
-      player_name: playerName || playerId.slice(0, 10),
+      id: playerId,
+      name: playerName || playerId.slice(0, 10),
       wins,
       losses,
-      rating: localRating,
-      last_active: new Date().toISOString(),
-      created_at: new Date().toISOString(),
+      streak: 0,
     });
   }
-  displayEntries.sort((a, b) => b.rating - a.rating);
+  displayEntries.sort((a, b) => (b.wins * 100 + b.streak * 25) - (a.wins * 100 + a.streak * 25));
   displayEntries.forEach((e, i) => { (e as any)._rank = i + 1; });
 
   const winRate = (w: number, l: number) => w + l > 0 ? Math.round((w / (w + l)) * 100) : 0;
@@ -74,11 +68,11 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
         ) : displayEntries.length > 0 ? (
           <div className="flex flex-col gap-1.5">
             {displayEntries.map((entry, idx) => {
-              const isPlayer = entry.player_id === playerId;
+              const isPlayer = entry.id === playerId;
               const rank = (entry as any)._rank || idx + 1;
               return (
                 <div
-                  key={entry.player_id}
+                  key={entry.id}
                   className={`flex items-center gap-3 p-2.5 rounded-xl transition-all animate-card-pop ${
                     isPlayer ? 'border border-neon-blue/30' : 'border border-white/5'
                   }`}
@@ -105,9 +99,14 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className={`text-xs font-bold truncate ${isPlayer ? 'text-neon-blue' : 'text-white'}`}>
-                        {entry.player_name}
+                        {entry.name}
                       </span>
                       {isPlayer && <span className="text-[8px] text-neon-blue">{t('leaderboard.you')}</span>}
+                      {entry.streak >= 3 && (
+                        <span className="text-[8px] px-1 py-0.5 rounded bg-an-red/15 text-an-red border border-an-red/20 inline-flex items-center gap-0.5">
+                          🔥{entry.streak}
+                        </span>
+                      )}
                     </div>
                     <div className="flex gap-2 text-[9px] text-white/40">
                       <span className="inline-flex items-center gap-0.5 text-neon-green"><Icon name="check" size={9} stroke={2.4} />{entry.wins}</span>
@@ -118,7 +117,7 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
 
                   {/* Rating */}
                   <div className="text-right shrink-0">
-                    <div className="text-xs font-bold text-white/70">{entry.rating.toLocaleString()}</div>
+                    <div className="text-xs font-bold text-white/70">{(entry.wins * 100 + entry.streak * 25).toLocaleString()}</div>
                     <div className="text-[8px] text-white/30">{t('leaderboard.rating')}</div>
                   </div>
                 </div>

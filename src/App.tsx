@@ -25,7 +25,6 @@ import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import Icon from './components/Icon';
 import type { Game } from './services/pvpService';
-import { updatePlayerStats, mergePlayerRows } from './services/pvpService';
 import { getPlayerBalance } from './services/treasuryService';
 import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
 
@@ -173,11 +172,8 @@ function AppInner() {
     if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }
     else if (result === 'loss') { recordLoss(); haptic.notificationOccurred('error'); }
     else { haptic.notificationOccurred('warning'); }
-    // Update leaderboard
-    const playerName = walletConnection?.walletName || playerId;
-    updatePlayerStats(playerId, playerName, result === 'win').catch(() => {});
     setScreen('menu');
-  }, [recordWin, recordLoss, haptic, walletConnection, playerId]);
+  }, [recordWin, recordLoss, haptic]);
 
   const handleBuyPack = useCallback((packId: string): Card[] | void => {
     const newCards = openPackCards(packId);
@@ -208,16 +204,7 @@ function AppInner() {
   const handleWalletConnected = useCallback((conn: WalletConnection) => {
     setWalletConnection(conn);
     setWalletAddress(conn.walletAddress);
-    // Склеить анонимную статистику (старый p_xxx id) с кошельком
-    mergePlayerRows(anonId, conn.walletAddress).catch(() => {});
-  }, [setWalletAddress, anonId]);
-
-  // Однократная миграция статистики при старте с уже подключённым кошельком
-  useEffect(() => {
-    if (walletConnection && anonId !== walletConnection.walletAddress) {
-      mergePlayerRows(anonId, walletConnection.walletAddress).catch(() => {});
-    }
-  }, [walletConnection, anonId]);
+  }, [setWalletAddress]);
 
   const handleWalletDisconnect = useCallback(() => {
     // Just disconnect wallet session — game progress stays saved
@@ -597,19 +584,16 @@ function AppInner() {
             playerId={playerId}
             playerName={walletConnection?.walletName || playerId}
             isHost={pvpIsHost}
+            myDeck={deck}
             onBattleEnd={(result) => {
               if (result === 'win') { recordWin(); haptic.notificationOccurred('success'); }
               else if (result === 'loss') { recordLoss(); haptic.notificationOccurred('error'); }
               else { haptic.notificationOccurred('warning'); }
-              const pName = walletConnection?.walletName || playerId;
-              updatePlayerStats(playerId, pName, result === 'win').catch(() => {});
               setPvpGame(null);
               setScreen('menu');
             }}
             onSurrender={() => {
               recordLoss();
-              const pName = walletConnection?.walletName || playerId;
-              updatePlayerStats(playerId, pName, false).catch(() => {});
               setPvpGame(null);
               setScreen('menu');
             }}

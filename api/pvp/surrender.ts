@@ -1,16 +1,16 @@
 /**
- * api/pvp/refund.ts — POST: возврат ставки.
+ * api/pvp/surrender.ts — POST: сдаться в PvP.
  *
  * Body: { player, gameId }
  *
- * Возврат возможен ТОЛЬКО пока комната не началась (status='waiting') —
- * после старта боя ставка уходит в банк и расчитывается сервером
- * победителю. Это закрывает «проиграл → отрефанднулся раньше соперника».
+ * Сервер завершает игру в пользу оппонента, расчитывает ставку
+ * (банк — победителю) и обновляет лидерборд. Игрок не может «сдаться
+ * в свою пользу» — исход всегда честный.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase, requireAuth, unauthorized } from '../../api-lib/auth.js';
 import { isValidAddress } from '../../api-lib/validate.js';
-import { getGameRow, isParticipant, isValidGameId } from '../../api-lib/pvp.js';
+import { getGameRow, isParticipant, isValidGameId, stateOf, finalizeMatch } from '../../api-lib/pvp.js';
 
 const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 
@@ -34,22 +34,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const game = await getGameRow(supabase!, gameId);
     if (!game) return res.status(404).json({ error: 'Игра не найдена' });
     if (!isParticipant(game, player)) return res.status(403).json({ error: 'Вы не участник этой игры' });
-    if (game.status !== 'waiting') {
-      return res.status(409).json({ error: 'Комната уже началась — возврат невозможен' });
+    if (game.status === 'finished' || stateOf(game).phase === 'ended') {
+      return res.status(409).json({ error: 'Игра уже завершена' });
     }
 
-    const { data, error } = await supabase!.rpc('refund_stake', {
-      p_game_id: gameId,
-      p_player: player,
-    });
-    if (error) return res.status(500).json({ error: `refund_stake RPC: ${error.message}` });
+    const state = stateOf(game);
+    const isHost = game.host_id === player;
+    const newState: Record<string, unknown> = {
+      ...state,
+      phase: 'ended',
+      // Сдавшийся проигрывает: его HP = 0
+      hostHP: isHost ? 0 : state.hostHP,
+      guestHP: isHost ? state.guestHP : 0,
+    };
 
-    // Хост отменяет пустую комнату — удаляем её из листа открытых
-    if (game.host_id === player && !game.guest_id) {
-      await supabase!.from('games').delete().eq('id', gameId).catch(() => {});
-    }
+    const winner = isHost ? game.guest_id! : game.host_id;
+    await finalizeMatch(supabase!, game, newState, winner, player);
 
-    return res.status(200).json({ success: true, balanceNano: data });
+    return res.status(200).json({ success: true, ended: true, winner });
   } catch (e) {
     return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }

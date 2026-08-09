@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Card } from '../types';
-import { createGame, joinGame, getWaitingGames, abandonGame, cancelGame, getGame, reservePvpStake, refundPvpStake, type Game } from '../services/pvpService';
+import { createGame, joinGame, getWaitingGames, getGame, refundPvpStake, type Game } from '../services/pvpService';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 import Icon from './Icon';
@@ -131,7 +131,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
           creatingRef.current = false; // release create lock before join
           const updated = await joinGame(avail[0].id, playerId, deck, displayName);
           joiningRef.current = false;
-          if (updated && (await reserveOrRollback(updated, false))) { setRandomQueue(false); setRoom(updated); }
+          if (updated) { setRandomQueue(false); setRoom(updated); }
         } else if (!createdOwnRef.current && Date.now() - startTime >= 3000) {
           createdOwnRef.current = true;
           const g = await createGame(playerId, deck, displayName, stake > 0 ? BigInt(Math.round(stake * 1e9)).toString() : '0');
@@ -139,7 +139,8 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         } else {
           creatingRef.current = false; // nothing to do, release lock
         }
-      } catch {
+      } catch (e: any) {
+        if (e?.message) setError(String(e.message));
         creatingRef.current = false;
       }
     };
@@ -153,22 +154,10 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     creatingRef.current = true;
     try {
       setWaiting(true); setError(null);
+      // Резерв ставки делает сервер (create) — клиент только создаёт комнату
       const g = await createGame(playerId, deck, displayName, stake > 0 ? BigInt(Math.round(stake * 1e9)).toString() : '0');
-      if (g && !(await reserveOrRollback(g, true))) return;
       if (g) { setRoom(g); localStorage.setItem('pvp_pending_room_id', g.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); creatingRef.current = false; }
-  };
-
-  const reserveOrRollback = async (g: Game, isHost: boolean): Promise<boolean> => {
-    // Ставка комнаты одна: host платит свою, гость — ту же, что у комнаты
-    const amount = isHost ? stake : (g.stake_nano ? Number(g.stake_nano) / 1e9 : 0);
-    if (amount <= 0) return true;
-    const r = await reservePvpStake(playerId, g.id, amount);
-    if (r.success) return true;
-    setError(r.error || 'Ошибка резерва ставки');
-    setWaiting(false);
-    try { if (isHost) await cancelGame(g.id); else await abandonGame(g.id); } catch {}
-    return false;
   };
 
   const handleRandom = () => { if (deck.length !== 10) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
@@ -179,8 +168,9 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     joiningRef.current = true;
     try {
       setWaiting(true); setError(null);
+      // Резерв ставки гостя делает сервер (join) — сумму из запроса не принять
       const updated = await joinGame(game.id, playerId, deck, displayName);
-      if (updated && (await reserveOrRollback(updated, false))) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
+      if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); joiningRef.current = false; }
   };
 
@@ -194,20 +184,15 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       if (!game) { setError(t('pvp.errorRoomNotFound')); setWaiting(false); return; }
       if (game.host_id === playerId) { setError(t('pvp.errorSelfJoin')); setWaiting(false); return; }
       const updated = await joinGame(joinCode.trim(), playerId, deck, displayName);
-      if (updated && (await reserveOrRollback(updated, false))) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
+      if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); joiningRef.current = false; }
   };
 
   const handleCopy = () => { navigator.clipboard.writeText(room?.id || '').then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
   const handleAbandon = async () => {
     if (room) {
-      try {
-        refundPvpStake(playerId, room.id);
-        await cancelGame(room.id);
-      } catch {
-        // If deletion fails, mark as finished as a fallback
-        try { await abandonGame(room.id); } catch {}
-      }
+      // refund удаляет комнату на сервере (хост, гость ещё не вступил)
+      await refundPvpStake(playerId, room.id);
       localStorage.removeItem('pvp_pending_room_id');
       setRoom(null);
     }
@@ -501,7 +486,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                   <div>
                     <div className="text-sm font-bold text-white truncate max-w-[140px]">{g.host_id === playerId ? displayName : (g.host_name || t('pvp.host'))}</div>
                     <div className="text-[10px] text-white/30 flex items-center gap-2">
-                      <span>{g.host_deck?.length || 0}/10 {t('deck.cards')}</span>
+                      <span>10/10 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />
                       {g.stake_nano && Number(g.stake_nano) > 0 && (
                         <span className="text-an-gold font-bold">🎯 {(Number(g.stake_nano) / 1e9).toFixed(g.stake_nano.length > 10 ? 2 : 0)} NACKL</span>
