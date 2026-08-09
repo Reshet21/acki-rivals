@@ -66,6 +66,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [fallbackNote, setFallbackNote] = useState<string | null>(null);
   const [checkingFallback, setCheckingFallback] = useState(false);
   const [gameBalance, setGameBalance] = useState<number | null>(null);
+  const [lastSpent, setLastSpent] = useState<number | null>(null);
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number>(10);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -118,6 +119,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
           setCheckingFallback(false);
           if (buy.success) {
             if (buy.balanceNackl !== undefined) setGameBalance(buy.balanceNackl);
+            const fbPack = getPackById(fallbackPackId);
+            if (fbPack) setLastSpent(fbPack.nacklPrice);
             const cards = onBuyPack(fallbackPackId);
             setFallbackPackId(null);
             setShowDeposit(false);
@@ -197,6 +200,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
 
       if (result.success) {
         if (result.balanceNackl !== undefined) setGameBalance(result.balanceNackl);
+        setLastSpent(pack.nacklPrice);
         const cards = onBuyPack(packId);
         if (!cards || cards.length === 0) return;
         setOpenedCards(cards);
@@ -238,6 +242,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
     setPhase('shop');
     setOpenedCards([]);
     setRevealIndex(-1);
+    setLastSpent(null);
   };
 
   // ═══ Пополнение игрового баланса ═══
@@ -441,8 +446,15 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
               </div>
             </div>
           </div>
-          <div className="text-sm text-neon-blue font-bold">
-            {nacklBalance !== null ? `${nacklBalance} NACKL` : '—'}
+          <div className="flex flex-col items-end gap-0.5">
+            {lastSpent !== null && (
+              <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: 'rgba(255,110,110,0.95)' }}>
+                −{lastSpent.toFixed(2)} NACKL
+              </span>
+            )}
+            <span className="text-sm text-neon-blue font-bold whitespace-nowrap">
+              {gameBalance !== null ? `${gameBalance.toFixed(2)} NACKL` : '—'}
+            </span>
           </div>
         </div>
 
