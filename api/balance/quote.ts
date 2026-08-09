@@ -22,7 +22,6 @@ import { isValidAddress } from '../../api-lib/validate.js';
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
-const NANO_PER_NACKL = 1_000_000_000n;
 const TAIL_NANO = 10_000_000n; // 0.01 NACKL
 
 function randomTail(): bigint {

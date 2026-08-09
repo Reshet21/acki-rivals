@@ -1,42 +1,5 @@
 {
-  "headers": [
-    {
-      "source": "/",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    }
-  ],
-  "functions": {
-    "api/shop/buy.ts": {
-      "maxDuration": 60,
-      "regions": [
-        "fra1"
-      ]
-    },
-    "api/treasury/*.ts": {
-      "maxDuration": 60,
-      "regions": [
-        "fra1"
-      ]
-    },
-    "api/balance/*.ts": {
-      "maxDuration": 60,
-      "regions": [
-        "fra1"
-      ]
-    }
-  }
+  "rewrites": [
+    { "source": "/api/pvp/(.*)", "destination": "/api/pvp-router" }
+  ]
 }

@@ -48,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!Number.isInteger(pillz) || pillz < 0) return res.status(400).json({ error: 'pillz: целое >= 0' });
 
   const supabase = getSupabase();
-  const auth = await requireAuth(req, res, supabase, player);
+  const auth = await requireAuth(req, supabase, player);
   if (unauthorized(res, auth)) return;
 
   try {

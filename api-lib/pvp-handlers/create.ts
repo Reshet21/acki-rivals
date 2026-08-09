@@ -40,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!deck) return res.status(400).json({ error: 'deck: ровно 10 валидных карт из каталога с уникальными uid' });
 
   const supabase = getSupabase();
-  const auth = await requireAuth(req, res, supabase, player);
+  const auth = await requireAuth(req, supabase, player);
   if (unauthorized(res, auth)) return;
 
   try {

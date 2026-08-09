@@ -30,7 +30,6 @@ export interface AuthResult {
  */
 export async function requireAuth(
   req: VercelRequest,
-  res: VercelResponse,
   client: SupabaseClient | null,
   player: string,
 ): Promise<AuthResult> {
@@ -61,7 +60,7 @@ export async function requireAuth(
     return { ok: false, status: 401, error: 'Сессия не найдена. Перерегистрируйте токен (POST /api/auth/register)' };
   }
 
-  return { ok: true, player };
+  return { ok: true, player, status: 200 };
 }
 
 export function unauthorized(res: VercelResponse, result: AuthResult): boolean {

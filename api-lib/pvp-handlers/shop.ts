@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'player: ожидается "0:hex64" или "p_xxx"' });
   }
 
-  const auth = await requireAuth(req, res, supabase, player);
+  const auth = await requireAuth(req, supabase, player);
   if (unauthorized(res, auth)) return;
 
   const item = SHOP_ITEMS.find((i) => i.id === itemId);
