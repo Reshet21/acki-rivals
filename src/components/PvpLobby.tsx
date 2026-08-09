@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Card } from '../types';
-import { createGame, joinGame, getWaitingGames, abandonGame, cancelGame, getGame, type Game } from '../services/pvpService';
+import { createGame, joinGame, getWaitingGames, abandonGame, cancelGame, getGame, reservePvpStake, refundPvpStake, type Game } from '../services/pvpService';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 import Icon from './Icon';
@@ -28,6 +28,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   const [openRooms, setOpenRooms] = useState<Game[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [joinCode, setJoinCode] = useState('');
+  const [stake, setStake] = useState(0);
   const [randomQueue, setRandomQueue] = useState(false);
   const [searchTimer, setSearchTimer] = useState(0);
   const [menuItemsRevealed, setMenuItemsRevealed] = useState(false);
@@ -130,7 +131,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
           creatingRef.current = false; // release create lock before join
           const updated = await joinGame(avail[0].id, playerId, deck, displayName);
           joiningRef.current = false;
-          if (updated) { setRandomQueue(false); setRoom(updated); }
+          if (updated && (await reserveOrRollback(updated, false))) { setRandomQueue(false); setRoom(updated); }
         } else if (!createdOwnRef.current && Date.now() - startTime >= 3000) {
           createdOwnRef.current = true;
           const g = await createGame(playerId, deck, displayName);
@@ -153,8 +154,19 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     try {
       setWaiting(true); setError(null);
       const g = await createGame(playerId, deck, displayName);
+      if (g && !(await reserveOrRollback(g, true))) return;
       if (g) { setRoom(g); localStorage.setItem('pvp_pending_room_id', g.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); creatingRef.current = false; }
+  };
+
+  const reserveOrRollback = async (g: Game, isHost: boolean): Promise<boolean> => {
+    if (stake <= 0) return true;
+    const r = await reservePvpStake(playerId, g.id, stake);
+    if (r.success) return true;
+    setError(r.error || 'Ошибка резерва ставки');
+    setWaiting(false);
+    try { if (isHost) await cancelGame(g.id); else await abandonGame(g.id); } catch {}
+    return false;
   };
 
   const handleRandom = () => { if (deck.length !== 8) return; setRandomQueue(true); setSearchTimer(0); setTab('menu'); };
@@ -166,7 +178,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
     try {
       setWaiting(true); setError(null);
       const updated = await joinGame(game.id, playerId, deck, displayName);
-      if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
+      if (updated && (await reserveOrRollback(updated, false))) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); joiningRef.current = false; }
   };
 
@@ -180,7 +192,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       if (!game) { setError(t('pvp.errorRoomNotFound')); setWaiting(false); return; }
       if (game.host_id === playerId) { setError(t('pvp.errorSelfJoin')); setWaiting(false); return; }
       const updated = await joinGame(joinCode.trim(), playerId, deck, displayName);
-      if (updated) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
+      if (updated && (await reserveOrRollback(updated, false))) { setRoom(updated); localStorage.setItem('pvp_pending_room_id', updated.id); setTab('menu'); }
     } catch (e: any) { setError(e.message); } finally { setWaiting(false); joiningRef.current = false; }
   };
 
@@ -188,6 +200,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   const handleAbandon = async () => {
     if (room) {
       try {
+        refundPvpStake(playerId, room.id);
         await cancelGame(room.id);
       } catch {
         // If deletion fails, mark as finished as a fallback
@@ -384,6 +397,33 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       <div className="flex-1 min-h-0 overflow-y-auto p-4 relative z-10">
         {tab === 'menu' && (
           <div className="flex flex-col gap-3 animate-fade-in">
+            {/* Stake input */}
+            <div className="w-full px-3 py-2.5" style={{ borderRadius: 9, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-white/60">🎯 {t('pvp.stake')}</span>
+                <div className="flex items-center gap-1.5">
+                  {[0, 5, 10, 25].map((v) => (
+                    <button key={v} onClick={() => setStake(v)}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${stake === v ? 'text-black' : 'text-white/50'}`}
+                      style={stake === v ? { background: '#ffd700' } : { background: 'rgba(255,255,255,0.08)' }}>
+                      {v === 0 ? t('pvp.noStake') : v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="number" min={0} step={1}
+                  value={stake || ''}
+                  onChange={(e) => setStake(Math.max(0, Number(e.target.value) || 0))}
+                  placeholder={t('pvp.stakeCustom')}
+                  className="w-full px-3 py-1.5 rounded-md text-sm font-bold text-white placeholder-white/25 outline-none"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+                <span className="text-xs text-white/40 shrink-0">NACKL</span>
+              </div>
+            </div>
+
             {/* Random Battle */}
             <button onClick={() => { impactOccurred('medium'); handleRandom(); }} disabled={waiting}
               className={`w-full py-3 font-bold text-base flex items-center justify-center gap-3 active:scale-[0.97] disabled:opacity-50 transition-all ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}

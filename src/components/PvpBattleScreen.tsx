@@ -13,6 +13,7 @@ import {
   updateGameState,
   subscribeToGame,
   abandonGame,
+  settlePvpStake,
   type Game,
   type GameState,
   type Move,
@@ -436,6 +437,15 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, on
     }, 1000);
     return () => clearInterval(interval);
   }, [battlePhase]);
+
+  // PvP ставка: при собственной победе победитель забирает банк
+  useEffect(() => {
+    if (battleResult === 'win') {
+      settlePvpStake(playerId, game.id).then((r) => {
+        if (!r.success) console.warn('[pvp] settle stake:', r.error);
+      });
+    }
+  }, [battleResult, playerId, game.id]);
 
   const handleSelect = useCallback(async (card: Card, pillz: number) => {
     if (battlePhase !== 'select') return;

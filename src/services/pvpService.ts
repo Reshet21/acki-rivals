@@ -260,6 +260,65 @@ export async function cancelGame(gameId: string): Promise<void> {
   if (error) throw error;
 }
 
+// ─── PvP ставки (игровой баланс) ─────────────────────────
+
+export async function reservePvpStake(
+  player: string,
+  gameId: string,
+  stakeNackl: number,
+): Promise<{ success: boolean; balanceNackl?: number; error?: string }> {
+  if (stakeNackl <= 0) return { success: true };
+  try {
+    const res = await fetch('/api/pvp/reserve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player, gameId, stakeNano: BigInt(Math.round(stakeNackl * 1e9)).toString() }),
+    });
+    const json = (await res.json()) as { success: boolean; balanceNano?: string; error?: string };
+    if (res.status === 402) {
+      return { success: false, error: json.error || 'Недостаточно средств' };
+    }
+    if (res.ok && json.success) {
+      return { success: true, balanceNackl: json.balanceNano ? Number(json.balanceNano) / 1e9 : undefined };
+    }
+    return { success: false, error: json.error || 'Ошибка резерва ставки' };
+  } catch {
+    return { success: false, error: 'Сеть недоступна' };
+  }
+}
+
+export async function refundPvpStake(player: string, gameId: string): Promise<void> {
+  try {
+    await fetch('/api/pvp/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player, gameId }),
+    });
+  } catch {
+    // возврат — best-effort
+  }
+}
+
+export async function settlePvpStake(
+  winner: string,
+  gameId: string,
+): Promise<{ success: boolean; balanceNackl?: number; error?: string }> {
+  try {
+    const res = await fetch('/api/pvp/settle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ winner, gameId }),
+    });
+    const json = (await res.json()) as { success: boolean; balanceNano?: string; error?: string };
+    if (res.ok && json.success) {
+      return { success: true, balanceNackl: json.balanceNano ? Number(json.balanceNano) / 1e9 : undefined };
+    }
+    return { success: false, error: json.error || 'Ошибка расчёта ставки' };
+  } catch {
+    return { success: false, error: 'Сеть недоступна' };
+  }
+}
+
 // ─── Leaderboard ─────────────────────────────────────────
 
 export async function updatePlayerStats(
