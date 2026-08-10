@@ -23,14 +23,16 @@ import SettingsScreen from './components/SettingsScreen';
 import Marketplace from './components/Marketplace';
 import ChatScreen from './components/ChatScreen';
 import ClansScreen from './components/ClansScreen';
+import PmScreen from './components/PmScreen';
 import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import Icon from './components/Icon';
 import type { Game } from './services/pvpService';
 import { getPlayerBalance } from './services/treasuryService';
+import { fetchPmUnread } from './services/chatService';
 import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard' | 'chat' | 'clans';
+type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard' | 'chat' | 'clans' | 'pm';
 
 /** Красивый формат баланса: "20047.2481" → "20 047.25"; null → "—" */
 function fmtBal(v: string | number | null | undefined): string {
@@ -80,6 +82,21 @@ function AppInner() {
   const playerId = walletAddress ?? anonId;
 
   const [screen, setScreen] = useState<Screen>('menu');
+  const [pmUnread, setPmUnread] = useState(0);
+  const [pmTarget, setPmTarget] = useState<{ player: string; name: string } | null>(null);
+
+  // Поллинг непрочитанных ЛС (бейдж на кнопке в меню)
+  useEffect(() => {
+    if (!playerId) return;
+    let cancelled = false;
+    const load = async () => {
+      const u = await fetchPmUnread(playerId);
+      if (!cancelled) setPmUnread(u);
+    };
+    load();
+    const i = setInterval(load, 10000);
+    return () => { cancelled = true; clearInterval(i); };
+  }, [playerId, screen]);
 
   // Background variant based on current screen
   const bgVariant = screen === 'battle' ? 'battle' :
@@ -445,19 +462,31 @@ function AppInner() {
                 </button>
               </div>
 
-              {/* Chat & Clans - Social */}
-              <div className="w-full max-w-xs grid grid-cols-2 gap-2 animate-slide-up" style={{ animationDelay: '0.28s' }}>
+              {/* Chat & Clans & PM - Social */}
+              <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.28s' }}>
                 <button onClick={() => { selectionChanged(); setScreen('chat'); }}
-                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  className="relative py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                   style={{ borderRadius: 9, background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.12)' }}>
                   <Icon name="cards" size={22} style={{ color: 'rgba(0,212,255,0.8)' }} />
                   <span style={{ color: 'rgba(0,212,255,0.8)' }}>{t('menu.chat')}</span>
                 </button>
                 <button onClick={() => { selectionChanged(); setScreen('clans'); }}
-                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  className="relative py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                   style={{ borderRadius: 9, background: 'rgba(255,100,0,0.04)', border: '1px solid rgba(255,100,0,0.12)' }}>
                   <Icon name="castle" size={22} style={{ color: 'rgba(255,140,60,0.8)' }} />
                   <span style={{ color: 'rgba(255,140,60,0.8)' }}>{t('menu.clans')}</span>
+                </button>
+                <button onClick={() => { selectionChanged(); setScreen('pm'); setPmUnread(0); }}
+                  className="relative py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  style={{ borderRadius: 9, background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                  <div className="relative">
+                    <Icon name="user" size={22} style={{ color: 'rgba(167,139,250,0.9)' }} />
+                    {pmUnread > 0 && (
+                      <span className="absolute -top-1.5 -right-2 px-1.5 min-w-[17px] h-[17px] flex items-center justify-center rounded-full text-[10px] font-black text-black"
+                        style={{ background: '#00d4ff', boxShadow: '0 0 8px rgba(0,212,255,0.6)' }}>{pmUnread}</span>
+                    )}
+                  </div>
+                  <span style={{ color: 'rgba(167,139,250,0.9)' }}>{t('menu.pm')}</span>
                 </button>
               </div>
             </div>
@@ -524,6 +553,7 @@ function AppInner() {
             collection={collection}
             onAddCard={addCard}
             onRemoveCard={removeCard}
+            onOpenPm={(recipient, name) => { setPmTarget({ player: recipient, name }); setScreen('pm'); }}
             onBack={() => setScreen('menu')}
           />
         </div>
@@ -534,6 +564,16 @@ function AppInner() {
           <ClansScreen
             playerId={playerId}
             onBack={() => setScreen('menu')}
+          />
+        </div>
+      )}
+
+      {screen === 'pm' && (
+        <div key="pm" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
+          <PmScreen
+            playerId={playerId}
+            initialWith={pmTarget}
+            onBack={() => { setPmTarget(null); setScreen('menu'); }}
           />
         </div>
       )}

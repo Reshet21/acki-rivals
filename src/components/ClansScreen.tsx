@@ -4,7 +4,8 @@ import { useI18n } from '../i18n';
 import Icon from './Icon';
 import {
   listClans, fetchMyClan, createClan, joinClan, leaveClan, kickMember,
-  type ClanSummary, type ClanMember,
+  fetchInvites, acceptInvite, declineInvite, cancelInvite,
+  type ClanSummary, type ClanMember, type ClanInvite,
 } from '../services/chatService';
 
 interface Props {
@@ -24,17 +25,20 @@ export default function ClansScreen({ playerId, onBack }: Props) {
   const [clanName, setClanName] = useState('');
   const [clanTag, setClanTag] = useState('');
   const [actionTarget, setActionTarget] = useState<string | null>(null);
+  const [invites, setInvites] = useState<{ incoming: ClanInvite[]; outgoing: ClanInvite[] }>({ incoming: [], outgoing: [] });
 
   const reload = useCallback(async () => {
     setBusy(true);
     setError(null);
-    const [listResult, myResult] = await Promise.all([
+    const [listResult, myResult, invitesResult] = await Promise.all([
       listClans(playerId),
       fetchMyClan(playerId),
+      fetchInvites(playerId),
     ]);
     setBusy(false);
     setClans(listResult.clans);
     setMyClan({ clan: myResult.clan, members: myResult.members || [], myRole: myResult.myRole });
+    setInvites(invitesResult);
   }, [playerId]);
 
   useEffect(() => {
@@ -99,6 +103,32 @@ export default function ClansScreen({ playerId, onBack }: Props) {
   const canKick = (role?: string) =>
     myClan.myRole === 'owner' || (myClan.myRole === 'admin' && role !== 'admin' && role !== 'owner');
 
+  const handleInviteAction = async (inviteId: string, accept: boolean) => {
+    impactOccurred('medium');
+    setActionTarget(inviteId);
+    setError(null);
+    const result = accept ? await acceptInvite(playerId, inviteId) : await declineInvite(playerId, inviteId);
+    setActionTarget(null);
+    if (!result.ok) {
+      setError(result.error || (accept ? 'Ошибка принятия' : 'Ошибка отклонения'));
+      return;
+    }
+    reload();
+  };
+
+  const handleInviteCancel = async (inviteId: string) => {
+    impactOccurred('medium');
+    setActionTarget(inviteId);
+    setError(null);
+    const result = await cancelInvite(playerId, inviteId);
+    setActionTarget(null);
+    if (!result.ok) {
+      setError(result.error || 'Ошибка отмены');
+      return;
+    }
+    reload();
+  };
+
   return (
     <div className="flex flex-col h-full max-w-md mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
       {/* Header */}
@@ -122,6 +152,39 @@ export default function ClansScreen({ playerId, onBack }: Props) {
       {error && (
         <div className="mb-2 px-3 py-2 rounded-xl text-[11px] font-medium" style={{ background: 'rgba(255,80,80,0.12)', border: '1px solid rgba(255,80,80,0.25)', color: '#ff9b9b' }}>
           {error}
+        </div>
+      )}
+
+      {!myClan.clan && invites.incoming.length > 0 && (
+        <div className="mb-3">
+          <div className="text-[10px] uppercase tracking-wider text-neon-blue/70 mb-1.5 flex items-center gap-1.5">
+            <Icon name="gift" size={11} /> {t('clan.invitesIncoming')} ({invites.incoming.length})
+          </div>
+          <div className="space-y-1.5">
+            {invites.incoming.map((inv) => (
+              <div key={inv.id} className="flex items-center gap-2.5 px-3 py-2 rounded-2xl border border-neon-blue/25" style={{ background: 'rgba(0,212,255,0.06)' }}>
+                <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.25)' }}>
+                  <Icon name="castle" size={14} style={{ color: '#00d4ff' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-bold text-white truncate flex items-center gap-1.5">
+                    {inv.clan_name}
+                    {inv.clan_tag && <span className="px-1 py-0.5 rounded text-[9px] font-black tracking-widest" style={{ background: 'rgba(255,215,0,0.12)', color: '#FFD700' }}>{inv.clan_tag}</span>}
+                  </div>
+                  <div className="text-[10px] text-white/35 truncate">{t('clan.invitedBy')} {inv.inviter}</div>
+                </div>
+                <button onClick={() => handleInviteAction(inv.id, false)} disabled={actionTarget === inv.id}
+                  className="shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-white/[0.05] border border-white/[0.1] text-white/50 active:scale-90 transition-all disabled:opacity-40">
+                  {t('clan.decline')}
+                </button>
+                <button onClick={() => handleInviteAction(inv.id, true)} disabled={actionTarget === inv.id}
+                  className="shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-black text-white active:scale-90 transition-all disabled:opacity-40"
+                  style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.6), rgba(139,92,246,0.6))' }}>
+                  {actionTarget === inv.id ? t('pvp.loading') : t('clan.accept')}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -153,8 +216,33 @@ export default function ClansScreen({ playerId, onBack }: Props) {
             </div>
           </div>
 
+          {/* Outgoing invites */}
+          {invites.outgoing.length > 0 && (
+            <div className="mt-3">
+              <div className="text-[10px] uppercase tracking-wider text-white/25 mb-1.5">{t('clan.invitesOutgoing')}</div>
+              <div className="space-y-1.5">
+                {invites.outgoing.map((inv) => (
+                  <div key={inv.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                    <div className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black"
+                      style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff' }}>
+                      {(inv.invitee || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12px] font-bold text-white truncate font-mono">{inv.invitee}</div>
+                      <div className="text-[10px] text-white/35">{inv.status === 'declined' ? t('clan.inviteDeclined') : t('clan.invitePending')}</div>
+                    </div>
+                    <button onClick={() => handleInviteCancel(inv.id)} disabled={actionTarget === inv.id || inv.status !== 'pending'}
+                      className="shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-red-500/15 border border-red-500/25 text-red-300 active:scale-90 transition-all disabled:opacity-40">
+                      {t('clan.inviteCancel')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Members */}
-          <div className="text-[10px] uppercase tracking-wider text-white/25 mb-1.5">{t('clan.members')}</div>
+          <div className="text-[10px] uppercase tracking-wider text-white/25 mb-1.5 mt-3">{t('clan.members')}</div>
           <div className="space-y-1.5">
             {myClan.members.map((m) => (
               <div key={m.player} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">

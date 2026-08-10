@@ -276,6 +276,242 @@ export async function leaveClan(req: VercelRequest, res: VercelResponse) {
   }
 }
 
+// ─── POST /api/clan/invite ──────────────────────────────
+export async function inviteToClan(req: VercelRequest, res: VercelResponse) {
+  const body = req.body || {};
+  const player = String(body.player || '').trim();
+  const targetPlayer = String(body.targetPlayer || '').trim();
+
+  const supabase = getSupabase();
+  const auth = await requireAuth(req, supabase, player);
+  if (unauthorized(res, auth)) return;
+
+  try {
+    if (!targetPlayer) return res.status(400).json({ error: 'targetPlayer обязателен' });
+    if (targetPlayer === player) return res.status(400).json({ error: 'Нельзя пригласить себя' });
+
+    const { data: me } = await supabase!
+      .from('clan_members')
+      .select('clan_id, role')
+      .eq('player', player)
+      .limit(1);
+    if (!me || me.length === 0) return res.status(403).json({ error: 'Вы не состоите в клане' });
+    const myClanId = me[0].clan_id;
+
+    const { data: targetMember } = await supabase!
+      .from('clan_members')
+      .select('clan_id')
+      .eq('player', targetPlayer)
+      .limit(1);
+    if (targetMember && targetMember.length > 0) {
+      return res.status(409).json({ error: 'Игрок уже состоит в клане' });
+    }
+
+    const { count } = await supabase!
+      .from('clan_members')
+      .select('player', { count: 'exact', head: true })
+      .eq('clan_id', myClanId);
+    if ((count || 0) >= CLAN_MEMBER_LIMIT) {
+      return res.status(409).json({ error: `Клан заполнен (${CLAN_MEMBER_LIMIT} участников)` });
+    }
+
+    const { data: invite, error: invErr } = await supabase!
+      .from('clan_invites')
+      .insert({ clan_id: myClanId, inviter: player, invitee: targetPlayer })
+      .select('id, clan_id, inviter, invitee, status, created_at')
+      .single();
+    if (invErr) {
+      if (invErr.code === '23505') {
+        return res.status(409).json({ error: 'Игроку уже отправлено приглашение' });
+      }
+      return res.status(500).json({ error: `clan_invites: ${invErr.message}` });
+    }
+
+    return res.status(200).json({ success: true, invite });
+  } catch (e) {
+    return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
+  }
+}
+
+// ─── POST /api/clan/invites ─────────────────────────────
+// Входящие (для меня) + исходящие моего клана (owner/admin видят все).
+export async function listInvites(req: VercelRequest, res: VercelResponse) {
+  const body = req.body || {};
+  const player = String(body.player || '').trim();
+
+  const supabase = getSupabase();
+  const auth = await requireAuth(req, supabase, player);
+  if (unauthorized(res, auth)) return;
+
+  try {
+    const { data: incoming, error: inErr } = await supabase!
+      .from('clan_invites')
+      .select('id, clan_id, inviter, invitee, status, created_at')
+      .eq('invitee', player)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (inErr) return res.status(500).json({ error: `clan_invites: ${inErr.message}` });
+
+    const clanIds = [...new Set((incoming || []).map((i: any) => i.clan_id))];
+    const { data: clans } = clanIds.length > 0
+      ? await supabase!.from('clans').select('id, name, tag, owner').in('id', clanIds)
+      : { data: [] };
+    const clanById = new Map((clans || []).map((c: any) => [c.id, c]));
+
+    const incomingFull = (incoming || []).map((i: any) => ({
+      ...i,
+      clan_name: clanById.get(i.clan_id)?.name || 'Клан',
+      clan_tag: clanById.get(i.clan_id)?.tag || '',
+      inviter_name: i.inviter,
+    }));
+
+    const outgoing: any[] = [];
+    const { data: me } = await supabase!
+      .from('clan_members')
+      .select('clan_id, role')
+      .eq('player', player)
+      .limit(1);
+    if (me && me.length > 0) {
+      let q = supabase!
+        .from('clan_invites')
+        .select('id, clan_id, inviter, invitee, status, created_at')
+        .eq('clan_id', me[0].clan_id)
+        .in('status', ['pending', 'declined'])
+        .order('created_at', { ascending: false })
+        .limit(50);
+      const { data: outgoingRows, error: outErr } = await q;
+      if (outErr) return res.status(500).json({ error: `clan_invites: ${outErr.message}` });
+      outgoing.push(...(outgoingRows || []));
+    }
+
+    return res.status(200).json({ success: true, incoming: incomingFull, outgoing });
+  } catch (e) {
+    return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
+  }
+}
+
+// ─── POST /api/clan/invite_accept ───────────────────────
+export async function acceptInvite(req: VercelRequest, res: VercelResponse) {
+  const body = req.body || {};
+  const player = String(body.player || '').trim();
+  const inviteId = String(body.inviteId || '').trim();
+
+  const supabase = getSupabase();
+  const auth = await requireAuth(req, supabase, player);
+  if (unauthorized(res, auth)) return;
+
+  try {
+    const existing = await getMyClanId(supabase, player);
+    if (existing) return res.status(409).json({ error: 'Вы уже в клане' });
+
+    const { data: invite, error: invErr } = await supabase!
+      .from('clan_invites')
+      .select('id, clan_id, invitee, status')
+      .eq('id', inviteId)
+      .single();
+    if (invErr || !invite) return res.status(404).json({ error: 'Приглашение не найдено' });
+    if (invite.invitee !== player) return res.status(403).json({ error: 'Это не ваше приглашение' });
+    if (invite.status !== 'pending') return res.status(409).json({ error: 'Приглашение уже обработано' });
+
+    const { count } = await supabase!
+      .from('clan_members')
+      .select('player', { count: 'exact', head: true })
+      .eq('clan_id', invite.clan_id);
+    if ((count || 0) >= CLAN_MEMBER_LIMIT) {
+      await supabase!.from('clan_invites').update({ status: 'declined', resolved_at: new Date().toISOString() }).eq('id', inviteId);
+      return res.status(409).json({ error: `Клан заполнен (${CLAN_MEMBER_LIMIT} участников)` });
+    }
+
+    const { error: joinErr } = await supabase!
+      .from('clan_members')
+      .insert({ clan_id: invite.clan_id, player, role: 'member' });
+    if (joinErr) {
+      if (joinErr.code === '23505') return res.status(409).json({ error: 'Вы уже в клане' });
+      return res.status(500).json({ error: `clan_members: ${joinErr.message}` });
+    }
+
+    await supabase!.from('clan_invites').update({ status: 'accepted', resolved_at: new Date().toISOString() }).eq('id', inviteId);
+    const { data: clan } = await supabase!.from('clans').select('name, tag').eq('id', invite.clan_id).single();
+    return res.status(200).json({ success: true, clan });
+  } catch (e) {
+    return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
+  }
+}
+
+// ─── POST /api/clan/invite_decline ──────────────────────
+export async function declineInvite(req: VercelRequest, res: VercelResponse) {
+  const body = req.body || {};
+  const player = String(body.player || '').trim();
+  const inviteId = String(body.inviteId || '').trim();
+
+  const supabase = getSupabase();
+  const auth = await requireAuth(req, supabase, player);
+  if (unauthorized(res, auth)) return;
+
+  try {
+    const { data: invite, error: invErr } = await supabase!
+      .from('clan_invites')
+      .select('id, invitee, status')
+      .eq('id', inviteId)
+      .single();
+    if (invErr || !invite) return res.status(404).json({ error: 'Приглашение не найдено' });
+    if (invite.invitee !== player) return res.status(403).json({ error: 'Это не ваше приглашение' });
+    if (invite.status !== 'pending') return res.status(409).json({ error: 'Приглашение уже обработано' });
+
+    const { error } = await supabase!
+      .from('clan_invites')
+      .update({ status: 'declined', resolved_at: new Date().toISOString() })
+      .eq('id', inviteId);
+    if (error) return res.status(500).json({ error: `clan_invites: ${error.message}` });
+
+    return res.status(200).json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
+  }
+}
+
+// ─── POST /api/clan/invite_cancel ───────────────────────
+export async function cancelInvite(req: VercelRequest, res: VercelResponse) {
+  const body = req.body || {};
+  const player = String(body.player || '').trim();
+  const inviteId = String(body.inviteId || '').trim();
+
+  const supabase = getSupabase();
+  const auth = await requireAuth(req, supabase, player);
+  if (unauthorized(res, auth)) return;
+
+  try {
+    const { data: invite, error: invErr } = await supabase!
+      .from('clan_invites')
+      .select('id, clan_id, inviter, invitee, status')
+      .eq('id', inviteId)
+      .single();
+    if (invErr || !invite) return res.status(404).json({ error: 'Приглашение не найдено' });
+
+    const { data: me } = await supabase!
+      .from('clan_members')
+      .select('clan_id, role')
+      .eq('player', player)
+      .limit(1);
+    const isOwner = me && me.length > 0 && me[0].clan_id === invite.clan_id && me[0].role === 'owner';
+    if (invite.inviter !== player && !isOwner) {
+      return res.status(403).json({ error: 'Отозвать может только пригласивший или владелец' });
+    }
+    if (invite.status !== 'pending') return res.status(409).json({ error: 'Приглашение уже обработано' });
+
+    const { error } = await supabase!
+      .from('clan_invites')
+      .update({ status: 'cancelled', resolved_at: new Date().toISOString() })
+      .eq('id', inviteId);
+    if (error) return res.status(500).json({ error: `clan_invites: ${error.message}` });
+
+    return res.status(200).json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
+  }
+}
+
 // ─── POST /api/clan/kick ────────────────────────────────
 export async function kickFromClan(req: VercelRequest, res: VercelResponse) {
   const body = req.body || {};

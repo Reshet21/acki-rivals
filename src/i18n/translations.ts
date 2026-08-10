@@ -547,6 +547,7 @@ const translations: Record<string, Record<string, string>> = {
     // Menu social
     'menu.chat': 'Чат',
     'menu.clans': 'Кланы',
+    'menu.pm': 'ЛС',
     // Chat
     'chat.title': '💬 Чат',
     'chat.global': 'Глобальный',
@@ -569,6 +570,15 @@ const translations: Record<string, Record<string, string>> = {
     'chat.you': 'Вы',
     'chat.replyPrefix': 'Ответ на',
     'chat.replyingTo': 'В ответ на',
+    'chat.pm': 'Написать в ЛС',
+    'chat.invite': 'Пригласить в клан',
+    'chat.invited': 'Приглашён',
+    'chat.inviteNoClan': 'Сначала вступи в клан',
+    // PM (личные сообщения)
+    'pm.title': '✉️ Личные сообщения',
+    'pm.empty': 'Пока нет диалогов. Нажми на игрока в чате — и напиши ему!',
+    'pm.emptyChat': 'Нет сообщений. Напиши первым!',
+    'pm.placeholder': 'Сообщение...',
     // Clans
     'clan.title': '🏰 Кланы',
     'clan.create': 'Создать клан',
@@ -587,6 +597,14 @@ const translations: Record<string, Record<string, string>> = {
     'clan.noClansHint': 'Создай первый клан!',
     'clan.namePlaceholder': 'Название (2-24)',
     'clan.tagPlaceholder': 'Тег (2-5, A-Z0-9)',
+    'clan.invitesIncoming': 'Приглашения в кланы',
+    'clan.invitesOutgoing': 'Исходящие приглашения',
+    'clan.invitedBy': 'Приглашает',
+    'clan.accept': 'Принять',
+    'clan.decline': 'Отклонить',
+    'clan.inviteCancel': 'Отозвать',
+    'clan.invitePending': 'ожидает ответа',
+    'clan.inviteDeclined': 'отклонено',
   },
   en: {
     'menu.title': 'ACKI RIVALS',
@@ -1132,6 +1150,7 @@ const translations: Record<string, Record<string, string>> = {
     // Menu social
     'menu.chat': 'Chat',
     'menu.clans': 'Clans',
+    'menu.pm': 'DM',
     // Chat
     'chat.title': '💬 Chat',
     'chat.global': 'Global',
@@ -1154,6 +1173,15 @@ const translations: Record<string, Record<string, string>> = {
     'chat.you': 'You',
     'chat.replyPrefix': 'Replying to',
     'chat.replyingTo': 'In reply to',
+    'chat.pm': 'Send a direct message',
+    'chat.invite': 'Invite to clan',
+    'chat.invited': 'Invited',
+    'chat.inviteNoClan': 'Join a clan first',
+    // PM (direct messages)
+    'pm.title': '✉️ Direct messages',
+    'pm.empty': 'No conversations yet. Tap a player in chat to message them!',
+    'pm.emptyChat': 'No messages yet. Say hi!',
+    'pm.placeholder': 'Message...',
     // Clans
     'clan.title': '🏰 Clans',
     'clan.create': 'Create clan',
@@ -1172,6 +1200,14 @@ const translations: Record<string, Record<string, string>> = {
     'clan.noClansHint': 'Create the first clan!',
     'clan.namePlaceholder': 'Name (2-24)',
     'clan.tagPlaceholder': 'Tag (2-5, A-Z0-9)',
+    'clan.invitesIncoming': 'Clan invitations',
+    'clan.invitesOutgoing': 'Pending invites',
+    'clan.invitedBy': 'Invited by',
+    'clan.accept': 'Accept',
+    'clan.decline': 'Decline',
+    'clan.inviteCancel': 'Revoke',
+    'clan.invitePending': 'awaiting reply',
+    'clan.inviteDeclined': 'declined',
   },
   es: {
     'menu.title': 'ACKI RIVALS',

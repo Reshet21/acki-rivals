@@ -215,3 +215,161 @@ export async function kickMember(
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
+
+// ─── Приглашения в клан ─────────────────────────────────
+
+export interface ClanInvite {
+  id: string;
+  clan_id: string;
+  inviter: string;
+  invitee: string;
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+  created_at: string;
+  clan_name?: string;
+  clan_tag?: string;
+  inviter_name?: string;
+}
+
+export async function inviteToClan(
+  playerId: string,
+  targetPlayer: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await ensureSession(playerId);
+    await apiCall<{ success: boolean }>('/api/clan/invite', { player: playerId, targetPlayer });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function fetchInvites(
+  playerId: string,
+): Promise<{ incoming: ClanInvite[]; outgoing: ClanInvite[] }> {
+  try {
+    await ensureSession(playerId);
+    const json = await apiCall<{ success: boolean; incoming: ClanInvite[]; outgoing: ClanInvite[] }>('/api/clan/invites', {
+      player: playerId,
+    });
+    return { incoming: json.incoming || [], outgoing: json.outgoing || [] };
+  } catch (e) {
+    console.error('[chatService] fetchInvites:', e);
+    return { incoming: [], outgoing: [] };
+  }
+}
+
+export async function acceptInvite(
+  playerId: string,
+  inviteId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await ensureSession(playerId);
+    await apiCall<{ success: boolean }>('/api/clan/invite_accept', { player: playerId, inviteId });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function declineInvite(
+  playerId: string,
+  inviteId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await ensureSession(playerId);
+    await apiCall<{ success: boolean }>('/api/clan/invite_decline', { player: playerId, inviteId });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function cancelInvite(
+  playerId: string,
+  inviteId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await ensureSession(playerId);
+    await apiCall<{ success: boolean }>('/api/clan/invite_cancel', { player: playerId, inviteId });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+// ─── Личные сообщения ───────────────────────────────────
+
+export interface PmMessage {
+  id: number;
+  sender: string;
+  recipient: string;
+  text: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface Conversation {
+  player: string;
+  name: string;
+  last_text: string;
+  last_at: string;
+  unread: number;
+}
+
+export async function sendPm(
+  playerId: string,
+  recipient: string,
+  text: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await ensureSession(playerId);
+    await apiCall<{ success: boolean }>('/api/pm/send', { player: playerId, recipient, text });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function fetchPmHistory(
+  playerId: string,
+  withPlayer: string,
+  afterId = 0,
+): Promise<PmMessage[]> {
+  try {
+    await ensureSession(playerId);
+    const json = await apiCall<{ success: boolean; messages: PmMessage[] }>('/api/pm/list', {
+      player: playerId,
+      with: withPlayer,
+      afterId: afterId > 0 ? afterId : undefined,
+    });
+    return json.messages || [];
+  } catch (e) {
+    console.error('[chatService] fetchPmHistory:', e);
+    return [];
+  }
+}
+
+export async function fetchConversations(playerId: string): Promise<Conversation[]> {
+  try {
+    await ensureSession(playerId);
+    const json = await apiCall<{ success: boolean; conversations: Conversation[] }>('/api/pm/conversations', {
+      player: playerId,
+    });
+    return json.conversations || [];
+  } catch (e) {
+    console.error('[chatService] fetchConversations:', e);
+    return [];
+  }
+}
+
+export async function fetchPmUnread(playerId: string): Promise<number> {
+  try {
+    await ensureSession(playerId);
+    const json = await apiCall<{ success: boolean; unread: number }>('/api/pm/summary', {
+      player: playerId,
+    });
+    return json.unread || 0;
+  } catch (e) {
+    return 0;
+  }
+}

@@ -4,7 +4,7 @@ import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 import Icon from './Icon';
 import CardComponent from './CardComponent';
-import { fetchMessages, sendText, sendListing, fetchMyClan, type ChatMessage, type ChatQuery } from '../services/chatService';
+import { fetchMessages, sendText, sendListing, fetchMyClan, inviteToClan, type ChatMessage, type ChatQuery } from '../services/chatService';
 import { createListing, buyListing } from '../services/marketplaceService';
 
 interface Props {
@@ -13,12 +13,13 @@ interface Props {
   collection: Card[];
   onAddCard: (card: Card) => void;
   onRemoveCard: (cardUid: string) => void;
+  onOpenPm: (recipientId: string, recipientName: string) => void;
   onBack: () => void;
 }
 
 type Tab = 'global' | 'trade' | 'clan';
 
-export default function ChatScreen({ playerId, playerName, collection, onAddCard, onRemoveCard, onBack }: Props) {
+export default function ChatScreen({ playerId, playerName, collection, onAddCard, onRemoveCard, onOpenPm, onBack }: Props) {
   const displayName = playerName || playerId;
   const { impactOccurred, selectionChanged } = useHaptic();
   const { t } = useI18n();
@@ -36,6 +37,7 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
   const [buyBusy, setBuyBusy] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [loadedIds, setLoadedIds] = useState<Set<number>>(new Set());
+  const [invitedPlayers, setInvitedPlayers] = useState<Set<string>>(new Set());
 
   const lastIdRef = useRef(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -195,6 +197,27 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
     setReplyTo(m);
   };
 
+  const startPm = (m: ChatMessage) => {
+    impactOccurred('light');
+    onOpenPm(m.player, m.player_name);
+  };
+
+  const handleInvite = async (m: ChatMessage) => {
+    if (!myClanId) {
+      setError(t('chat.inviteNoClan'));
+      return;
+    }
+    impactOccurred('medium');
+    setError(null);
+    const result = await inviteToClan(playerId, m.player);
+    if (!result.ok) {
+      setError(result.error || 'Ошибка приглашения');
+      return;
+    }
+    selectionChanged();
+    setInvitedPlayers((prev) => new Set(prev).add(m.player));
+  };
+
   const replyQuote = (m: ChatMessage) => {
     if (!m.reply_to) return null;
     return (
@@ -277,6 +300,20 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
                   className="ml-auto shrink-0 px-1.5 py-0.5 rounded-md text-[10px] text-white/30 bg-white/[0.04] active:scale-90 transition-all hover:text-white/60">
                   ↩
                 </button>
+                {m.player !== playerId && (
+                  <button onClick={() => startPm(m)} title={t('chat.pm')}
+                    className="shrink-0 px-1.5 py-0.5 rounded-md text-white/30 bg-white/[0.04] active:scale-90 transition-all hover:text-white/60">
+                    <Icon name="user" size={12} />
+                  </button>
+                )}
+                {m.player !== playerId && myClanId && (
+                  <button onClick={() => handleInvite(m)} disabled={invitedPlayers.has(m.player)}
+                    title={invitedPlayers.has(m.player) ? t('chat.invited') : t('chat.invite')}
+                    className={`shrink-0 px-1.5 py-0.5 rounded-md text-white/30 bg-white/[0.04] active:scale-90 transition-all hover:text-white/60 ${invitedPlayers.has(m.player) ? 'opacity-60' : ''}`}
+                    style={invitedPlayers.has(m.player) ? { color: 'rgba(74,222,128,0.7)' } : undefined}>
+                    {invitedPlayers.has(m.player) ? <Icon name="check" size={12} /> : <Icon name="castle" size={12} />}
+                  </button>
+                )}
               </div>
               {replyQuote(m)}
               {m.text && <div className="text-[13px] leading-snug break-words" style={{ color: 'rgba(255,255,255,0.85)' }}>{m.text}</div>}
