@@ -8,6 +8,7 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './auth.js';
+import { computeClanStats } from './clan.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -34,7 +35,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       streak: p.streak,
     }));
 
-    return res.status(200).json({ success: true, users });
+    // Топ кланов: сумма rating участников
+    const { data: clans } = await supabase!
+      .from('clans')
+      .select('*')
+      .limit(100);
+    const topClans = await computeClanStats(clans || []);
+    topClans.sort((a, b) => b.rating - a.rating || a.created_at.localeCompare(b.created_at));
+
+    return res.status(200).json({ success: true, users, topClans: topClans.slice(0, 10) });
   } catch (e) {
     return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }

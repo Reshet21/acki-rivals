@@ -21,6 +21,8 @@ import InfoScreen from './components/InfoScreen';
 import Leaderboard from './components/Leaderboard';
 import SettingsScreen from './components/SettingsScreen';
 import Marketplace from './components/Marketplace';
+import ChatScreen from './components/ChatScreen';
+import ClansScreen from './components/ClansScreen';
 import AnimatedBackground from './components/AnimatedBackground';
 import StarfieldCanvas from './components/StarfieldCanvas';
 import Icon from './components/Icon';
@@ -28,7 +30,7 @@ import type { Game } from './services/pvpService';
 import { getPlayerBalance } from './services/treasuryService';
 import { getStoredEpkKey, zkLoginFullFlow, type OAuthProvider } from './services/zkLoginService';
 
-type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard';
+type Screen = 'menu' | 'battle' | 'shop' | 'marketplace' | 'wallet' | 'mining' | 'deck' | 'upgrade' | 'pvp' | 'pvp_battle' | 'info' | 'settings' | 'leaderboard' | 'chat' | 'clans';
 
 /** Красивый формат баланса: "20047.2481" → "20 047.25"; null → "—" */
 function fmtBal(v: string | number | null | undefined): string {
@@ -442,6 +444,22 @@ function AppInner() {
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.mining')}</span>
                 </button>
               </div>
+
+              {/* Chat & Clans - Social */}
+              <div className="w-full max-w-xs grid grid-cols-2 gap-2 animate-slide-up" style={{ animationDelay: '0.28s' }}>
+                <button onClick={() => { selectionChanged(); setScreen('chat'); }}
+                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  style={{ borderRadius: 9, background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.12)' }}>
+                  <Icon name="cards" size={22} style={{ color: 'rgba(0,212,255,0.8)' }} />
+                  <span style={{ color: 'rgba(0,212,255,0.8)' }}>{t('menu.chat')}</span>
+                </button>
+                <button onClick={() => { selectionChanged(); setScreen('clans'); }}
+                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
+                  style={{ borderRadius: 9, background: 'rgba(255,100,0,0.04)', border: '1px solid rgba(255,100,0,0.12)' }}>
+                  <Icon name="castle" size={22} style={{ color: 'rgba(255,140,60,0.8)' }} />
+                  <span style={{ color: 'rgba(255,140,60,0.8)' }}>{t('menu.clans')}</span>
+                </button>
+              </div>
             </div>
             {/* Bottom Navigation - Premium Tab Bar (sticky at the bottom) */}
             <div className="shrink-0 px-5 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] animate-slide-up" style={{ animationDelay: '0.3s' }}>
@@ -493,6 +511,28 @@ function AppInner() {
             collection={collection}
             onAddCard={addCard}
             onRemoveCard={removeCard}
+            onBack={() => setScreen('menu')}
+          />
+        </div>
+      )}
+
+      {screen === 'chat' && (
+        <div key="chat" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
+          <ChatScreen
+            playerId={playerId}
+            playerName={walletConnection?.walletName || undefined}
+            collection={collection}
+            onAddCard={addCard}
+            onRemoveCard={removeCard}
+            onBack={() => setScreen('menu')}
+          />
+        </div>
+      )}
+
+      {screen === 'clans' && (
+        <div key="clans" className="relative z-10 flex-1 flex items-center justify-center animate-page-enter">
+          <ClansScreen
+            playerId={playerId}
             onBack={() => setScreen('menu')}
           />
         </div>
