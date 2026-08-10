@@ -34,7 +34,8 @@ export async function sendPm(req: VercelRequest, res: VercelResponse) {
   if (unauthorized(res, auth)) return;
 
   try {
-    // Получатель должен существовать: в players или в clan_members
+    // Получатель должен существовать: в players, в clan_members или хоть раз
+    // писал в чат (анонимы без кошелька до первого PvP-матча не в players).
     const { data: p } = await supabase!
       .from('players')
       .select('player_id')
@@ -45,10 +46,13 @@ export async function sendPm(req: VercelRequest, res: VercelResponse) {
       .select('player')
       .eq('player', recipient)
       .limit(1);
-    if (!p || p.length === 0) {
-      if (!cm || cm.length === 0) {
-        return res.status(404).json({ error: 'Игрок не найден' });
-      }
+    const { data: cmRow } = await supabase!
+      .from('chat_messages')
+      .select('player')
+      .eq('player', recipient)
+      .limit(1);
+    if ((!p || p.length === 0) && (!cm || cm.length === 0) && (!cmRow || cmRow.length === 0)) {
+      return res.status(404).json({ error: 'Игрок не найден' });
     }
 
     const { data: message, error: mErr } = await supabase!
