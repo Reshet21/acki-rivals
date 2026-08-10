@@ -162,6 +162,7 @@ export async function listConversations(req: VercelRequest, res: VercelResponse)
 }
 
 // ─── POST /api/pm/summary ───────────────────────────────
+// unread + последнее непрочитанное сообщение (для уведомления).
 export async function pmSummary(req: VercelRequest, res: VercelResponse) {
   const body = req.body || {};
   const player = String(body.player || '').trim();
@@ -178,7 +179,30 @@ export async function pmSummary(req: VercelRequest, res: VercelResponse) {
       .is('read_at', null);
     if (error) return res.status(500).json({ error: `private_messages: ${error.message}` });
 
-    return res.status(200).json({ success: true, unread: count || 0 });
+    const { data: latestRows } = await supabase!
+      .from('private_messages')
+      .select('id, sender, text, created_at')
+      .eq('recipient', player)
+      .is('read_at', null)
+      .order('id', { ascending: false })
+      .limit(1);
+    const latest = latestRows && latestRows.length > 0 ? latestRows[0] : null;
+
+    let name: string | null = null;
+    if (latest) {
+      const { data: p } = await supabase!
+        .from('players')
+        .select('player_name')
+        .eq('player_id', latest.sender)
+        .limit(1);
+      if (p && p.length > 0) name = p[0].player_name;
+    }
+
+    return res.status(200).json({
+      success: true,
+      unread: count || 0,
+      latest: latest ? { id: latest.id, player: latest.sender, name, text: latest.text, created_at: latest.created_at } : null,
+    });
   } catch (e) {
     return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }

@@ -579,6 +579,8 @@ const translations: Record<string, Record<string, string>> = {
     'pm.empty': 'Пока нет диалогов. Нажми на игрока в чате — и напиши ему!',
     'pm.emptyChat': 'Нет сообщений. Напиши первым!',
     'pm.placeholder': 'Сообщение...',
+    'pm.notification': '✉️ Новое сообщение от',
+    'pm.open': 'Открыть',
     // Clans
     'clan.title': '🏰 Кланы',
     'clan.create': 'Создать клан',
@@ -1182,6 +1184,8 @@ const translations: Record<string, Record<string, string>> = {
     'pm.empty': 'No conversations yet. Tap a player in chat to message them!',
     'pm.emptyChat': 'No messages yet. Say hi!',
     'pm.placeholder': 'Message...',
+    'pm.notification': '✉️ New message from',
+    'pm.open': 'Open',
     // Clans
     'clan.title': '🏰 Clans',
     'clan.create': 'Create clan',

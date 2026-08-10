@@ -362,14 +362,19 @@ export async function fetchConversations(playerId: string): Promise<Conversation
   }
 }
 
-export async function fetchPmUnread(playerId: string): Promise<number> {
+export interface PmUnreadInfo {
+  unread: number;
+  latest: { id: number; player: string; name: string | null; text: string; created_at: string } | null;
+}
+
+export async function fetchPmUnread(playerId: string): Promise<PmUnreadInfo> {
   try {
     await ensureSession(playerId);
-    const json = await apiCall<{ success: boolean; unread: number }>('/api/pm/summary', {
+    const json = await apiCall<{ success: boolean; unread: number; latest: PmUnreadInfo['latest'] }>('/api/pm/summary', {
       player: playerId,
     });
-    return json.unread || 0;
+    return { unread: json.unread || 0, latest: json.latest || null };
   } catch (e) {
-    return 0;
+    return { unread: 0, latest: null };
   }
 }

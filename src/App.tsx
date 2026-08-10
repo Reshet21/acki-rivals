@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useGameState } from './hooks/useGameState';
 import { openPack as openPackCards } from './utils/packGenerator';
 import type { Card } from './types';
@@ -83,20 +83,44 @@ function AppInner() {
 
   const [screen, setScreen] = useState<Screen>('menu');
   const [pmUnread, setPmUnread] = useState(0);
+  const [pmToast, setPmToast] = useState<{ player: string; name: string | null; text: string } | null>(null);
   const [pmTarget, setPmTarget] = useState<{ player: string; name: string } | null>(null);
+  const prevUnreadRef = useRef(0);
 
-  // Поллинг непрочитанных ЛС (бейдж на кнопке в меню)
+  // Поллинг непрочитанных ЛС: бейдж на кнопке меню + тост-уведомление на любом экране
   useEffect(() => {
     if (!playerId) return;
     let cancelled = false;
     const load = async () => {
       const u = await fetchPmUnread(playerId);
-      if (!cancelled) setPmUnread(u);
+      if (cancelled) return;
+      setPmUnread(u.unread);
+      if (u.latest && u.unread > prevUnreadRef.current && screen !== 'pm') {
+        setPmToast(u.latest);
+      }
+      prevUnreadRef.current = u.unread;
     };
     load();
-    const i = setInterval(load, 10000);
+    const i = setInterval(load, 7000);
     return () => { cancelled = true; clearInterval(i); };
   }, [playerId, screen]);
+
+  // Авто-скрытие тоста
+  useEffect(() => {
+    if (!pmToast) return;
+    const tm = setTimeout(() => setPmToast(null), 6000);
+    return () => clearTimeout(tm);
+  }, [pmToast]);
+
+  const openPmFromToast = () => {
+    if (!pmToast) return;
+    selectionChanged();
+    setPmTarget({ player: pmToast.player, name: pmToast.name || pmToast.player });
+    setPmToast(null);
+    setPmUnread(0);
+    prevUnreadRef.current = 0;
+    setScreen('pm');
+  };
 
   // Background variant based on current screen
   const bgVariant = screen === 'battle' ? 'battle' :
@@ -702,6 +726,28 @@ function AppInner() {
             losses={battlesLost}
             onBack={() => setScreen('menu')}
           />
+        </div>
+      )}
+
+      {/* PM notification toast */}
+      {pmToast && (
+        <div className="absolute top-3 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+          <button onClick={openPmFromToast}
+            className="pointer-events-auto w-full max-w-md flex items-center gap-3 px-4 py-3 rounded-2xl border border-neon-purple/30 animate-slide-down active:scale-[0.98] transition-all text-left"
+            style={{ background: 'rgba(15,12,30,0.95)', boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 16px rgba(139,92,246,0.25)', backdropFilter: 'blur(12px)' }}>
+            <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.2), rgba(139,92,246,0.2))', border: '1px solid rgba(139,92,246,0.35)' }}>
+              <Icon name="user" size={16} style={{ color: '#a78bfa' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-bold truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                {t('pm.notification')} {pmToast.name || pmToast.player}
+              </div>
+              <div className="text-[12px] text-white/50 truncate">{pmToast.text}</div>
+            </div>
+            <span className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-black text-black" style={{ background: 'linear-gradient(135deg, #00d4ff, #a78bfa)' }}>
+              {t('pm.open')}
+            </span>
+          </button>
         </div>
       )}
     </div>
