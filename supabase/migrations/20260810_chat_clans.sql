@@ -34,6 +34,8 @@ alter table clan_members drop constraint if exists clan_members_player_fkey;
 create index if not exists idx_clan_members_clan on clan_members(clan_id);
 
 -- ═══ ЧАТ ═══
+-- Листинг: при продаже/отмене FK обнуляет listing_id (on delete set null),
+-- а card/price остаются в сообщении — клиент помечает его «Продано».
 create table if not exists chat_messages (
   id bigserial primary key,
   player text not null,
@@ -44,8 +46,14 @@ create table if not exists chat_messages (
   card jsonb,
   price_nackl numeric,
   created_at timestamptz default now(),
-  check (text is not null or listing_id is not null)
+  check (text is not null or listing_id is not null or card is not null)
 );
+
+-- Фикс для уже применённой миграции: без card в CHECK отмена листинга
+-- (ON DELETE SET NULL) нарушала constraint.
+alter table chat_messages drop constraint if exists chat_messages_check;
+alter table chat_messages add constraint chat_messages_check
+  check (text is not null or listing_id is not null or card is not null);
 
 create index if not exists idx_chat_global on chat_messages((clan_id is null), id desc);
 create index if not exists idx_chat_clan on chat_messages(clan_id, id desc);
