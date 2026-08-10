@@ -34,6 +34,7 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
   const [saleBusy, setSaleBusy] = useState(false);
   const [buyTarget, setBuyTarget] = useState<ChatMessage | null>(null);
   const [buyBusy, setBuyBusy] = useState(false);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [loadedIds, setLoadedIds] = useState<Set<number>>(new Set());
 
   const lastIdRef = useRef(0);
@@ -116,13 +117,14 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
     impactOccurred('light');
     setSending(true);
     setError(null);
-    const result = await sendText(playerId, text, queryForTab);
+    const result = await sendText(playerId, text, queryForTab, replyTo?.id);
     setSending(false);
     if (!result.ok) {
       setError(result.error || 'Ошибка отправки');
       return;
     }
     setInput('');
+    setReplyTo(null);
     await fullReload(queryForTab);
   };
 
@@ -151,13 +153,14 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
       return;
     }
     onRemoveCard(saleCard.uid);
-    const result = await sendListing(playerId, listing.id, queryForTab);
+    const result = await sendListing(playerId, listing.id, queryForTab, replyTo?.id);
     setSaleBusy(false);
     if (!result.ok) {
       setError(result.error || 'Ошибка публикации в чат');
       return;
     }
     setPickerOpen(false);
+    setReplyTo(null);
     await fullReload(queryForTab);
   };
 
@@ -182,6 +185,29 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
 
   const fmtPrice = (v: string | null) =>
     v ? Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) : '';
+
+  const scrollToMsg = (msgId: number) => {
+    document.getElementById(`chat-msg-${msgId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const startReply = (m: ChatMessage) => {
+    impactOccurred('light');
+    setReplyTo(m);
+  };
+
+  const replyQuote = (m: ChatMessage) => {
+    if (!m.reply_to) return null;
+    return (
+      <button onClick={() => scrollToMsg(m.reply_to!)}
+        className="w-full text-left px-2 py-1.5 mb-1.5 rounded-lg border-l-2 bg-white/[0.03] border-l-neon-blue/60 active:scale-[0.99] transition-all"
+        style={{ borderLeftColor: 'rgba(0,212,255,0.5)' }}>
+        <div className="text-[9px] font-bold truncate" style={{ color: '#00d4ff' }}>
+          {t('chat.replyPrefix')} {m.reply_player_name || t('chat.you')}
+        </div>
+        <div className="text-[10px] truncate text-white/40">{m.reply_text}</div>
+      </button>
+    );
+  };
 
   return (
     <div className="flex flex-col h-full max-w-md mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
@@ -241,13 +267,18 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
             <div className="text-center py-10 text-xs text-white/25">{t('chat.empty')}</div>
           )}
           {messages.map((m) => (
-            <div key={m.id} className="px-3 py-2 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+            <div key={m.id} id={`chat-msg-${m.id}`} className="px-3 py-2 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[10px] font-bold truncate" style={{ color: m.player === playerId ? '#00d4ff' : 'rgba(255,215,0,0.8)' }}>
                   {m.player === playerId ? t('chat.you') : m.player_name}
                 </span>
                 <span className="text-[9px] text-white/25 shrink-0">{fmtTime(m.created_at)}</span>
+                <button onClick={() => startReply(m)}
+                  className="ml-auto shrink-0 px-1.5 py-0.5 rounded-md text-[10px] text-white/30 bg-white/[0.04] active:scale-90 transition-all hover:text-white/60">
+                  ↩
+                </button>
               </div>
+              {replyQuote(m)}
               {m.text && <div className="text-[13px] leading-snug break-words" style={{ color: 'rgba(255,255,255,0.85)' }}>{m.text}</div>}
               {m.listing_id && m.card && (
                 <div className="mt-1 flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.07] p-2">
@@ -283,6 +314,21 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Reply bar */}
+      {replyTo && (
+        <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-xl bg-white/[0.04] border border-neon-blue/25">
+          <Icon name="back" size={13} style={{ color: '#00d4ff', transform: 'scaleX(-1)' }} />
+          <div className="flex-1 min-w-0">
+            <span className="text-[10px] font-bold" style={{ color: '#00d4ff' }}>{t('chat.replyingTo')} {replyTo.player_name}</span>
+            <span className="text-[10px] text-white/40 truncate block">{replyTo.text || (replyTo.card ? `${replyTo.card.name} · ${fmtPrice(replyTo.price_nackl)} NACKL` : '')}</span>
+          </div>
+          <button onClick={() => { selectionChanged(); setReplyTo(null); }}
+            className="shrink-0 p-1 rounded-md bg-white/[0.05] active:scale-90 transition-all">
+            <Icon name="close" size={12} style={{ color: 'rgba(255,255,255,0.5)' }} />
+          </button>
         </div>
       )}
 

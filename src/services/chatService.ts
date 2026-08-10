@@ -21,6 +21,9 @@ export interface ChatMessage {
   price_nackl: string | null;
   created_at: string;
   sold?: boolean;
+  reply_to: number | null;
+  reply_player_name: string | null;
+  reply_text: string | null;
 }
 
 export interface ClanSummary {
@@ -99,6 +102,7 @@ export async function sendText(
   playerId: string,
   text: string,
   query: ChatQuery,
+  replyToId?: number,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     await ensureSession(playerId);
@@ -106,6 +110,7 @@ export async function sendText(
       player: playerId,
       text,
       clanId: query.channel === 'clan' ? query.clanId || undefined : undefined,
+      replyToId: replyToId || undefined,
     });
     return { ok: true };
   } catch (e) {
@@ -117,6 +122,7 @@ export async function sendListing(
   playerId: string,
   listingId: string,
   query: ChatQuery,
+  replyToId?: number,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     await ensureSession(playerId);
@@ -124,6 +130,7 @@ export async function sendListing(
       player: playerId,
       listingId,
       clanId: query.channel === 'clan' ? query.clanId || undefined : undefined,
+      replyToId: replyToId || undefined,
     });
     return { ok: true };
   } catch (e) {

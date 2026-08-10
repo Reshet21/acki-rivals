@@ -567,6 +567,8 @@ const translations: Record<string, Record<string, string>> = {
     'chat.yourListing': 'Ваш листинг',
     'chat.buyFrom': 'Продаёт',
     'chat.you': 'Вы',
+    'chat.replyPrefix': 'Ответ на',
+    'chat.replyingTo': 'В ответ на',
     // Clans
     'clan.title': '🏰 Кланы',
     'clan.create': 'Создать клан',
@@ -1150,6 +1152,8 @@ const translations: Record<string, Record<string, string>> = {
     'chat.yourListing': 'Your listing',
     'chat.buyFrom': 'Sold by',
     'chat.you': 'You',
+    'chat.replyPrefix': 'Replying to',
+    'chat.replyingTo': 'In reply to',
     // Clans
     'clan.title': '🏰 Clans',
     'clan.create': 'Create clan',

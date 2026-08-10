@@ -25,6 +25,9 @@ export interface ChatMessage {
   card: any;
   price_nackl: string | null;
   created_at: string;
+  reply_to: number | null;
+  reply_player_name: string | null;
+  reply_text: string | null;
 }
 
 async function getPlayerName(supabase: any, player: string): Promise<string> {
@@ -105,7 +108,7 @@ export async function listChat(req: VercelRequest, res: VercelResponse) {
 }
 
 // ─── POST /api/chat/post ────────────────────────────────
-// Body: { player, text?, clanId?, listingId? }
+// Body: { player, text?, clanId?, listingId?, replyToId? }
 // Канал определяется сервером: listingId -> trade, clanId -> clan,
 // текст -> global. Торговую позицию в глобальный чат отправить нельзя.
 export async function postChat(req: VercelRequest, res: VercelResponse) {
@@ -114,6 +117,7 @@ export async function postChat(req: VercelRequest, res: VercelResponse) {
   const clanId = String(body.clanId || '').trim() || null;
   const text = typeof body.text === 'string' ? body.text.trim() : '';
   const listingId = String(body.listingId || '').trim() || null;
+  const replyToId = Number(body.replyToId) || 0;
 
   if (!text && !listingId) {
     return res.status(400).json({ error: 'text или listingId обязательны' });
@@ -154,6 +158,26 @@ export async function postChat(req: VercelRequest, res: VercelResponse) {
 
     const playerName = await getPlayerName(supabase, player);
 
+    // Снапшот ответа: оригинал должен быть в том же канале (clan — тот же клан)
+    let replyPlayerName: string | null = null;
+    let replyText: string | null = null;
+    if (replyToId > 0) {
+      const { data: orig, error: rErr } = await supabase!
+        .from('chat_messages')
+        .select('id, player_name, text, card, channel, clan_id')
+        .eq('id', replyToId)
+        .single();
+      if (rErr || !orig) {
+        return res.status(404).json({ error: 'Сообщение, на которое отвечаете, не найдено' });
+      }
+      if (orig.channel !== channel || (channel === 'clan' && orig.clan_id !== clanId)) {
+        return res.status(400).json({ error: 'Нельзя ответить на сообщение из другого канала' });
+      }
+      replyPlayerName = orig.player_name || 'Игрок';
+      replyText = orig.text || (orig.card ? `Карта: ${orig.card.name || ''}`.trim() : '');
+      if (!replyText) replyText = '…';
+    }
+
     let card: any = null;
     let priceNackl: string | null = null;
     if (listingId) {
@@ -183,6 +207,9 @@ export async function postChat(req: VercelRequest, res: VercelResponse) {
         listing_id: listingId,
         card,
         price_nackl: priceNackl,
+        reply_to: replyToId > 0 ? replyToId : null,
+        reply_player_name: replyPlayerName,
+        reply_text: replyText,
       })
       .select()
       .single();
