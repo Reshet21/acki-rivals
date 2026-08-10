@@ -89,7 +89,12 @@ export async function listChat(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       success: true,
-      messages: messages.map((m: any) => ({ ...m, sold: m.listing_id ? soldIds.has(m.listing_id) : false })),
+      messages: messages.map((m: any) => {
+        // Карточка без активного listing_id (обнулён при продаже/отмене) = продано
+        const isCardMsg = Boolean(m.card);
+        const sold = isCardMsg ? (m.listing_id ? soldIds.has(m.listing_id) : true) : false;
+        return { ...m, sold };
+      }),
     });
   } catch (e) {
     return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
