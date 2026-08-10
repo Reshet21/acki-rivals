@@ -16,15 +16,20 @@ create table if not exists clans (
   check (char_length(tag) between 2 and 5)
 );
 
--- Один игрок = один клан (unique(player))
+-- Один игрок = один клан (unique(player)).
+-- FK на players НЕТ: запись в players создаётся только после первого PvP-матча,
+-- а в клан должен вступать любой игрок (имя/рейтинг берутся из players по наличию).
 create table if not exists clan_members (
   clan_id uuid not null references clans(id) on delete cascade,
-  player text not null references players(player_id) on delete cascade,
+  player text not null,
   role text not null default 'member' check (role in ('owner', 'admin', 'member')),
   joined_at timestamptz default now(),
   primary key (clan_id, player),
   unique (player)
 );
+
+-- Фикс для уже применённой миграции (FK на players ломал вступление новых игроков)
+alter table clan_members drop constraint if exists clan_members_player_fkey;
 
 create index if not exists idx_clan_members_clan on clan_members(clan_id);
 
