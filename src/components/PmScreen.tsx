@@ -26,6 +26,7 @@ export default function PmScreen({ playerId, initialWith, onBack }: Props) {
   const [sending, setSending] = useState(false);
 
   const lastIdRef = useRef(0);
+  const loadedIdsRef = useRef<Set<number>>(new Set());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const stickBottomRef = useRef(true);
@@ -43,6 +44,7 @@ export default function PmScreen({ playerId, initialWith, onBack }: Props) {
   const fullReload = useCallback(async (withPlayer: string) => {
     const msgs = await fetchPmHistory(playerId, withPlayer, 0);
     setMessages(msgs);
+    loadedIdsRef.current = new Set(msgs.map((m) => m.id));
     lastIdRef.current = msgs.length > 0 ? msgs[msgs.length - 1].id : 0;
     if (msgs.length > 0) setConversations((prev) => prev.map((c) => (c.player === withPlayer ? { ...c, unread: 0 } : c)));
   }, [playerId]);
@@ -51,6 +53,7 @@ export default function PmScreen({ playerId, initialWith, onBack }: Props) {
     selectionChanged();
     setWith({ player: c.player, name: c.name });
     setMessages([]);
+    loadedIdsRef.current = new Set();
     lastIdRef.current = 0;
     setView('chat');
     fullReload(c.player);
@@ -71,8 +74,13 @@ export default function PmScreen({ playerId, initialWith, onBack }: Props) {
       pollRef.current = setInterval(async () => {
         const msgs = await fetchPmHistory(playerId, with_.player, lastIdRef.current);
         if (msgs.length === 0) return;
-        setMessages((prev) => [...prev, ...msgs]);
-        lastIdRef.current = Math.max(lastIdRef.current, ...msgs.map((m) => m.id));
+        // Дедупликация: поллинг и fullReload могут пересечься (гонка),
+        // один и тот же id не должен попасть в список дважды.
+        const fresh = msgs.filter((m) => !loadedIdsRef.current.has(m.id));
+        if (fresh.length === 0) return;
+        setMessages((prev) => [...prev, ...fresh]);
+        fresh.forEach((m) => loadedIdsRef.current.add(m.id));
+        lastIdRef.current = Math.max(lastIdRef.current, ...fresh.map((m) => m.id));
         setConversations((prev) => prev.map((c) => (c.player === with_.player ? { ...c, unread: 0 } : c)));
       }, 2500);
     }

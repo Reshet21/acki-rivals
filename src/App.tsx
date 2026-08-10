@@ -85,9 +85,11 @@ function AppInner() {
   const [pmUnread, setPmUnread] = useState(0);
   const [pmToast, setPmToast] = useState<{ player: string; name: string | null; text: string } | null>(null);
   const [pmTarget, setPmTarget] = useState<{ player: string; name: string } | null>(null);
-  const prevUnreadRef = useRef(0);
+  const shownToastIdRef = useRef(0);
 
-  // Поллинг непрочитанных ЛС: бейдж на кнопке меню + тост-уведомление на любом экране
+  // Поллинг непрочитанных ЛС: бейдж на кнопке меню + тост-уведомление на любом экране.
+  // Тост показывается по id последнего непрочитанного сообщения (а не по росту счётчика) —
+  // срабатывает даже если сообщение пришло до загрузки страницы.
   useEffect(() => {
     if (!playerId) return;
     let cancelled = false;
@@ -95,13 +97,13 @@ function AppInner() {
       const u = await fetchPmUnread(playerId);
       if (cancelled) return;
       setPmUnread(u.unread);
-      if (u.latest && u.unread > prevUnreadRef.current && screen !== 'pm') {
+      if (u.latest && u.latest.id !== shownToastIdRef.current && screen !== 'pm') {
+        shownToastIdRef.current = u.latest.id;
         setPmToast(u.latest);
       }
-      prevUnreadRef.current = u.unread;
     };
     load();
-    const i = setInterval(load, 7000);
+    const i = setInterval(load, 2500);
     return () => { cancelled = true; clearInterval(i); };
   }, [playerId, screen]);
 
@@ -118,7 +120,6 @@ function AppInner() {
     setPmTarget({ player: pmToast.player, name: pmToast.name || pmToast.player });
     setPmToast(null);
     setPmUnread(0);
-    prevUnreadRef.current = 0;
     setScreen('pm');
   };
 
