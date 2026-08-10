@@ -85,6 +85,7 @@ function AppInner() {
   const [pmUnread, setPmUnread] = useState(0);
   const [pmToast, setPmToast] = useState<{ player: string; name: string | null; text: string } | null>(null);
   const [pmTarget, setPmTarget] = useState<{ player: string; name: string } | null>(null);
+  const [pmBackScreen, setPmBackScreen] = useState<Screen | null>(null);
   const shownToastIdRef = useRef(0);
 
   // Поллинг непрочитанных ЛС: бейдж на кнопке меню + тост-уведомление на любом экране.
@@ -119,6 +120,15 @@ function AppInner() {
     selectionChanged();
     setPmTarget({ player: pmToast.player, name: pmToast.name || pmToast.player });
     setPmToast(null);
+    setPmUnread(0);
+    setPmBackScreen(screen);
+    setScreen('pm');
+  };
+
+  const openPm = (recipient: string, name: string, backScreen: Screen | null) => {
+    selectionChanged();
+    setPmTarget({ player: recipient, name });
+    setPmBackScreen(backScreen);
     setPmUnread(0);
     setScreen('pm');
   };
@@ -501,7 +511,7 @@ function AppInner() {
                   <Icon name="castle" size={22} style={{ color: 'rgba(255,140,60,0.8)' }} />
                   <span style={{ color: 'rgba(255,140,60,0.8)' }}>{t('menu.clans')}</span>
                 </button>
-                <button onClick={() => { selectionChanged(); setScreen('pm'); setPmUnread(0); }}
+                <button onClick={() => { selectionChanged(); setScreen('pm'); setPmUnread(0); setPmBackScreen(null); }}
                   className="relative py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
                   style={{ borderRadius: 9, background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
                   <div className="relative">
@@ -578,7 +588,7 @@ function AppInner() {
             collection={collection}
             onAddCard={addCard}
             onRemoveCard={removeCard}
-            onOpenPm={(recipient, name) => { setPmTarget({ player: recipient, name }); setScreen('pm'); }}
+            onOpenPm={(recipient, name) => openPm(recipient, name, 'chat')}
             onBack={() => setScreen('menu')}
           />
         </div>
@@ -598,7 +608,7 @@ function AppInner() {
           <PmScreen
             playerId={playerId}
             initialWith={pmTarget}
-            onBack={() => { setPmTarget(null); setScreen('menu'); }}
+            onBack={() => { setPmTarget(null); setScreen(pmBackScreen || 'menu'); setPmBackScreen(null); }}
           />
         </div>
       )}
