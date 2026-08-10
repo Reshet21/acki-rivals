@@ -1,7 +1,20 @@
 {
   "rewrites": [
-    { "source": "/api/pvp/(.*)", "destination": "/api/pvp-router" },
-    { "source": "/api/chat/(.*)", "destination": "/api/chat-router" },
-    { "source": "/api/clan/(.*)", "destination": "/api/chat-router" }
+    {
+      "source": "/api/pvp/(.*)",
+      "destination": "/api/pvp-router"
+    },
+    {
+      "source": "/api/chat/(.*)",
+      "destination": "/api/chat-router"
+    },
+    {
+      "source": "/api/clan/(.*)",
+      "destination": "/api/chat-router"
+    },
+    {
+      "source": "/api/pm/(.*)",
+      "destination": "/api/chat-router"
+    }
   ]
 }
