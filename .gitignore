@@ -7,3 +7,17 @@ acki-rivals.zip
 api/lib/eversdk-wasm-b64.ts
 dist-api/
 .vercel
+
+# --- защита от утечек ---
+.env*
+!*.env.example
+*.keys.json
+*_keys.json
+.agent-sync/
+STATE.md
+ERROR_REPORT.md
+LOOP.md
+loop-*.md
+AGENTS.md
+.claude/
+.agent-sync
