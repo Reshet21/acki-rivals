@@ -4,7 +4,7 @@ import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 import Icon from './Icon';
 import CardComponent from './CardComponent';
-import { fetchMessages, sendText, sendListing, fetchMyClan, type ChatMessage } from '../services/chatService';
+import { fetchMessages, sendText, sendListing, fetchMyClan, type ChatMessage, type ChatQuery } from '../services/chatService';
 import { createListing, buyListing } from '../services/marketplaceService';
 
 interface Props {
@@ -16,15 +16,14 @@ interface Props {
   onBack: () => void;
 }
 
-type Tab = 'global' | 'clan';
+type Tab = 'global' | 'trade' | 'clan';
 
 export default function ChatScreen({ playerId, playerName, collection, onAddCard, onRemoveCard, onBack }: Props) {
   const displayName = playerName || playerId;
   const { impactOccurred, selectionChanged } = useHaptic();
   const { t } = useI18n();
 
-  const [tab, setTab] = useState<Tab>('global');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [tab, setTab] = useState<Tab>('global');  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -42,13 +41,19 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
   const listRef = useRef<HTMLDivElement | null>(null);
   const stickBottomRef = useRef(true);
 
-  const clanIdForTab = tab === 'clan' ? myClanId : null;
+  const queryForTab: ChatQuery = tab === 'clan'
+    ? { channel: 'clan', clanId: myClanId }
+    : { channel: tab };
+
+  // Продажа карт: в торговом канале и в клановом (если есть клан).
+  // В глобальный чат торговые позиции уходят (сервер ставит канал 'trade').
+  const canSell = tab !== 'global' && (tab !== 'clan' || !!myClanId);
 
   const sortMessages = (msgs: ChatMessage[]) =>
     [...msgs].sort((a, b) => a.id - b.id);
 
-  const fullReload = useCallback(async (clanId: string | null) => {
-    const msgs = await fetchMessages(playerId, clanId, 0);
+  const fullReload = useCallback(async (query: ChatQuery) => {
+    const msgs = await fetchMessages(playerId, query, 0);
     setMessages(sortMessages(msgs));
     const ids = new Set<number>(msgs.map((m) => m.id));
     setLoadedIds(ids);
@@ -62,7 +67,7 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
       const info = await fetchMyClan(playerId);
       if (cancelled) return;
       setMyClanId(info.clan ? info.clan.id : null);
-      if (!cancelled) await fullReload(null);
+      if (!cancelled) await fullReload({ channel: 'global' });
     })();
     return () => { cancelled = true; };
   }, [playerId, fullReload]);
@@ -71,8 +76,7 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
   useEffect(() => {
     if (pollRef.current) clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
-      const clanId = tab === 'clan' ? myClanId : null;
-      const msgs = await fetchMessages(playerId, clanId, lastIdRef.current);
+      const msgs = await fetchMessages(playerId, queryForTab, lastIdRef.current);
       if (msgs.length === 0) return;
       const fresh = msgs.filter((m) => !loadedIdsRef.current.has(m.id));
       if (fresh.length === 0) return;
@@ -81,12 +85,11 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
       lastIdRef.current = Math.max(lastIdRef.current, ...fresh.map((m) => m.id));
     }, 2500);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [tab, myClanId, playerId]);
+  }, [tab, myClanId, playerId, queryForTab]);
 
   // Переключение таба — полная перезагрузка
   useEffect(() => {
-    const clanId = tab === 'clan' ? myClanId : null;
-    fullReload(clanId);
+    fullReload(queryForTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, myClanId]);
 
@@ -113,14 +116,14 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
     impactOccurred('light');
     setSending(true);
     setError(null);
-    const result = await sendText(playerId, text, clanIdForTab);
+    const result = await sendText(playerId, text, queryForTab);
     setSending(false);
     if (!result.ok) {
       setError(result.error || 'Ошибка отправки');
       return;
     }
     setInput('');
-    await fullReload(clanIdForTab);
+    await fullReload(queryForTab);
   };
 
   const handleOpenPicker = async () => {
@@ -148,14 +151,14 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
       return;
     }
     onRemoveCard(saleCard.uid);
-    const result = await sendListing(playerId, listing.id, clanIdForTab);
+    const result = await sendListing(playerId, listing.id, queryForTab);
     setSaleBusy(false);
     if (!result.ok) {
       setError(result.error || 'Ошибка публикации в чат');
       return;
     }
     setPickerOpen(false);
-    await fullReload(clanIdForTab);
+    await fullReload(queryForTab);
   };
 
   const handleBuy = async () => {
@@ -190,12 +193,14 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
         <div className="flex-1">
           <div className="text-base font-black font-display" style={{ color: 'rgba(255,255,255,0.9)' }}>{t('chat.title')}</div>
         </div>
-        <button onClick={handleOpenPicker}
-          className="px-3 py-2 rounded-xl text-[11px] font-bold bg-white/[0.04] border border-white/[0.08] active:scale-90 transition-all flex items-center gap-1.5"
-          style={{ color: 'rgba(255,215,0,0.9)' }}>
-          <Icon name="gift" size={14} />
-          {t('chat.sellCard')}
-        </button>
+          {canSell && (
+          <button onClick={handleOpenPicker}
+            className="px-3 py-2 rounded-xl text-[11px] font-bold bg-white/[0.04] border border-white/[0.08] active:scale-90 transition-all flex items-center gap-1.5"
+            style={{ color: 'rgba(255,215,0,0.9)' }}>
+            <Icon name="gift" size={14} />
+            {t('chat.sellCard')}
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -204,6 +209,11 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
           className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.97] ${tab === 'global' ? 'bg-gradient-to-r from-neon-blue/30 to-neon-purple/25 border border-neon-blue/40' : 'bg-white/[0.03] border border-white/[0.06]'}`}
           style={{ color: tab === 'global' ? '#ffffff' : 'rgba(255,255,255,0.5)' }}>
           🌐 {t('chat.global')}
+        </button>
+        <button onClick={() => { selectionChanged(); setTab('trade'); }}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.97] ${tab === 'trade' ? 'bg-gradient-to-r from-emerald-500/25 to-teal-500/20 border border-emerald-400/40' : 'bg-white/[0.03] border border-white/[0.06]'}`}
+          style={{ color: tab === 'trade' ? '#ffffff' : 'rgba(255,255,255,0.5)' }}>
+          💰 {t('chat.trade')}
         </button>
         <button onClick={() => { selectionChanged(); setTab('clan'); }}
           className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.97] ${tab === 'clan' ? 'bg-gradient-to-r from-orange-500/25 to-amber-500/20 border border-orange-400/40' : 'bg-white/[0.03] border border-white/[0.06]'}`}
@@ -278,11 +288,13 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
 
       {/* Input */}
       <div className="flex items-center gap-2 mt-2">
-        <button onClick={handleOpenPicker}
-          className="shrink-0 p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] active:scale-90 transition-all"
-          style={{ color: 'rgba(255,215,0,0.8)' }}>
-          <Icon name="gift" size={18} />
-        </button>
+          {canSell && (
+          <button onClick={handleOpenPicker}
+            className="shrink-0 p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] active:scale-90 transition-all"
+            style={{ color: 'rgba(255,215,0,0.8)' }}>
+            <Icon name="gift" size={18} />
+          </button>
+        )}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}

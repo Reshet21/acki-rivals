@@ -20,6 +20,7 @@ export interface ChatMessage {
   player_name: string;
   text: string | null;
   clan_id: string | null;
+  channel: string;
   listing_id: string | null;
   card: any;
   price_nackl: string | null;
@@ -36,11 +37,12 @@ async function getPlayerName(supabase: any, player: string): Promise<string> {
 }
 
 // ─── POST /api/chat/list ────────────────────────────────
-// Body: { player, clanId?: string, afterId?: number }
+// Body: { player, channel?: "global" | "trade", clanId?: string, afterId?: number }
 export async function listChat(req: VercelRequest, res: VercelResponse) {
   const body = req.body || {};
   const player = String(body.player || '').trim();
   const clanId = String(body.clanId || '').trim() || null;
+  const channel = clanId ? 'clan' : (body.channel === 'trade' ? 'trade' : 'global');
   const afterId = Number(body.afterId) || 0;
 
   const supabase = getSupabase();
@@ -48,7 +50,7 @@ export async function listChat(req: VercelRequest, res: VercelResponse) {
   if (unauthorized(res, auth)) return;
 
   try {
-    if (clanId) {
+    if (channel === 'clan') {
       const { data: member } = await supabase!
         .from('clan_members')
         .select('clan_id')
@@ -61,7 +63,8 @@ export async function listChat(req: VercelRequest, res: VercelResponse) {
     }
 
     let query = supabase!.from('chat_messages').select('*');
-    query = clanId ? query.eq('clan_id', clanId) : query.is('clan_id', null);
+    query = query.eq('channel', channel);
+    if (channel === 'clan') query = query.eq('clan_id', clanId);
     query = afterId > 0 ? query.gt('id', afterId) : query.limit(100).order('id', { ascending: false });
 
     const { data: rows, error } = afterId > 0
@@ -103,6 +106,8 @@ export async function listChat(req: VercelRequest, res: VercelResponse) {
 
 // ─── POST /api/chat/post ────────────────────────────────
 // Body: { player, text?, clanId?, listingId? }
+// Канал определяется сервером: listingId -> trade, clanId -> clan,
+// текст -> global. Торговую позицию в глобальный чат отправить нельзя.
 export async function postChat(req: VercelRequest, res: VercelResponse) {
   const body = req.body || {};
   const player = String(body.player || '').trim();
@@ -117,12 +122,14 @@ export async function postChat(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: `text: максимум ${MAX_TEXT} символов` });
   }
 
+  const channel = listingId ? (clanId ? 'clan' : 'trade') : (clanId ? 'clan' : 'global');
+
   const supabase = getSupabase();
   const auth = await requireAuth(req, supabase, player);
   if (unauthorized(res, auth)) return;
 
   try {
-    if (clanId) {
+    if (channel === 'clan') {
       const { data: member } = await supabase!
         .from('clan_members')
         .select('clan_id')
@@ -172,6 +179,7 @@ export async function postChat(req: VercelRequest, res: VercelResponse) {
         player_name: playerName,
         text: text || null,
         clan_id: clanId,
+        channel,
         listing_id: listingId,
         card,
         price_nackl: priceNackl,

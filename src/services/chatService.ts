@@ -15,6 +15,7 @@ export interface ChatMessage {
   player_name: string;
   text: string | null;
   clan_id: string | null;
+  channel: 'global' | 'trade' | 'clan';
   listing_id: string | null;
   card: any;
   price_nackl: string | null;
@@ -66,16 +67,25 @@ async function apiCall<T>(path: string, body: unknown): Promise<T> {
 
 // ─── Чат ────────────────────────────────────────────────
 
+// Канал чата: глобальный, торговый или клановый.
+export type ChatChannel = 'global' | 'trade' | 'clan';
+
+export interface ChatQuery {
+  channel: ChatChannel;
+  clanId?: string | null;
+}
+
 export async function fetchMessages(
   playerId: string,
-  clanId: string | null,
+  query: ChatQuery,
   afterId = 0,
 ): Promise<ChatMessage[]> {
   try {
     await ensureSession(playerId);
     const json = await apiCall<{ success: boolean; messages: ChatMessage[] }>('/api/chat/list', {
       player: playerId,
-      clanId: clanId || undefined,
+      channel: query.channel === 'clan' ? undefined : query.channel,
+      clanId: query.channel === 'clan' ? query.clanId || undefined : undefined,
       afterId: afterId > 0 ? afterId : undefined,
     });
     return json.messages || [];
@@ -88,11 +98,15 @@ export async function fetchMessages(
 export async function sendText(
   playerId: string,
   text: string,
-  clanId: string | null,
+  query: ChatQuery,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     await ensureSession(playerId);
-    await apiCall<{ success: boolean }>('/api/chat/post', { player: playerId, text, clanId: clanId || undefined });
+    await apiCall<{ success: boolean }>('/api/chat/post', {
+      player: playerId,
+      text,
+      clanId: query.channel === 'clan' ? query.clanId || undefined : undefined,
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
@@ -102,14 +116,14 @@ export async function sendText(
 export async function sendListing(
   playerId: string,
   listingId: string,
-  clanId: string | null,
+  query: ChatQuery,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     await ensureSession(playerId);
     await apiCall<{ success: boolean }>('/api/chat/post', {
       player: playerId,
       listingId,
-      clanId: clanId || undefined,
+      clanId: query.channel === 'clan' ? query.clanId || undefined : undefined,
     });
     return { ok: true };
   } catch (e) {

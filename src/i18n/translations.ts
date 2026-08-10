@@ -550,6 +550,7 @@ const translations: Record<string, Record<string, string>> = {
     // Chat
     'chat.title': '💬 Чат',
     'chat.global': 'Глобальный',
+    'chat.trade': 'Торговля',
     'chat.clan': 'Клан',
     'chat.placeholder': 'Сообщение...',
     'chat.empty': 'Пока пусто. Напиши первым!',
@@ -1132,6 +1133,7 @@ const translations: Record<string, Record<string, string>> = {
     // Chat
     'chat.title': '💬 Chat',
     'chat.global': 'Global',
+    'chat.trade': 'Trade',
     'chat.clan': 'Clan',
     'chat.placeholder': 'Message...',
     'chat.empty': 'Nothing here yet. Be the first!',
