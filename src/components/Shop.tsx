@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Card, Rarity } from '../types';
 import { PACKS, getPackById } from '../data/packs';
+import { cards } from '../data/cards';
 import { useI18n } from '../i18n';
 import CardComponent from './CardComponent';
 import { getRarityLabel, getPackName } from '../i18n/cardTranslations';
@@ -55,7 +56,7 @@ const packVisuals: Record<string, { gradient: string; icon: import('./Icon').Ico
 
 export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack, onReconnectWallet, onZkLogin, hasEpkKey }: Props) {
   const { t, lang } = useI18n();
-  const { impactOccurred } = useHaptic();
+  const { impactOccurred, selectionChanged } = useHaptic();
   const [phase, setPhase] = useState<Phase>('shop');
   const [openedCards, setOpenedCards] = useState<Card[]>([]);
   const [revealIndex, setRevealIndex] = useState(-1);
@@ -70,6 +71,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number>(10);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [infoPackId, setInfoPackId] = useState<string | null>(null);
 
   // Игровой баланс (депозиты NACKL на казначейство)
   useEffect(() => {
@@ -808,6 +810,13 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                   })()}
 
                   <button
+                    onClick={() => { impactOccurred('light'); setInfoPackId(pack.id); }}
+                    className="w-full mb-2 py-2 rounded-xl text-[10px] font-bold bg-white/[0.04] border border-white/[0.08] text-white/50 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Icon name="info" size={12} /> {t('shop.packInfo')}
+                  </button>
+
+                  <button
                     onClick={() => handleBuy(pack.id)}
                     disabled={!canBuy || isBuying}
                     className={`w-full py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden ${
@@ -845,6 +854,92 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
           {t('deck.back')}
         </button>
       </div>
+
+      {/* Pack contents modal */}
+      {infoPackId && (() => {
+        const pack = getPackById(infoPackId);
+        if (!pack) return null;
+        const rarities = Object.entries(pack.rarityWeights).filter(([r]) =>
+          !pack.allowedRarities || pack.allowedRarities.includes(r as Rarity)
+        ) as [Rarity, number][];
+        const total = rarities.reduce((s, [, w]) => s + w, 0);
+        const rarityOrder: Rarity[] = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+        const possibleCards = cards
+          .filter((c) => rarities.some(([r]) => r === c.rarity))
+          .sort((a, b) => rarityOrder.indexOf(a.rarity) - rarityOrder.indexOf(b.rarity) || a.id - b.id);
+        const grouped = rarityOrder
+          .map((r) => ({ rarity: r, list: possibleCards.filter((c) => c.rarity === r) }))
+          .filter((g) => g.list.length > 0);
+
+        return (
+          <div className="absolute inset-0 z-40 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.65)' }}>
+            <div className="w-full max-w-md max-h-[85%] flex flex-col rounded-t-3xl border border-white/[0.08] p-4 pb-6 animate-slide-up" style={{ background: '#0b0b12' }}>
+              <div className="flex items-center justify-between mb-3 shrink-0">
+                <div className="text-base font-black text-white flex items-center gap-2">
+                  <Icon name="info" size={16} style={{ color: 'rgba(255,255,255,0.6)' }} />
+                  {getPackName(lang, pack.id)} — {t('shop.packInfo')}
+                </div>
+                <button onClick={() => { selectionChanged(); setInfoPackId(null); }} className="p-1.5 rounded-lg bg-white/[0.05] active:scale-90 transition-all">
+                  <Icon name="close" size={14} style={{ color: 'rgba(255,255,255,0.6)' }} />
+                </button>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
+                {/* Drop rates with bars */}
+                <div className="text-[10px] uppercase tracking-wider text-white/25 mb-1.5">{t('shop.dropRates')}</div>
+                <div className="space-y-1.5 mb-3">
+                  {rarities.map(([rarity, weight]) => {
+                    const style = rarityStyles[rarity];
+                    const pct = (weight / total) * 100;
+                    return (
+                      <div key={rarity} className="flex items-center gap-2">
+                        <span className={`w-20 shrink-0 text-[10px] font-bold ${style.text}`}>{getRarityLabel(lang, rarity)}</span>
+                        <div className="flex-1 h-2 rounded-full bg-white/[0.05] overflow-hidden">
+                          <div className={`h-full rounded-full ${style.gradient}`} style={{ width: `${Math.max(2, pct)}%` }} />
+                        </div>
+                        <span className="w-12 shrink-0 text-right text-[10px] text-white/50">{pct < 1 ? pct.toFixed(1) : Math.round(pct)}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pity note */}
+                {pack.pity && (
+                  <div className="mb-3 px-3 py-2 rounded-xl border border-yellow-400/20" style={{ background: 'rgba(255,215,0,0.05)' }}>
+                    <div className="text-[10px] font-bold text-yellow-300/90">
+                      {t('shop.pityGuarantee').replace('{rarity}', getRarityLabel(lang, pack.pity.rarity)).replace('{max}', String(pack.pity.max))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Possible cards */}
+                <div className="text-[10px] uppercase tracking-wider text-white/25 mb-1.5">{t('shop.possibleCards')}</div>
+                <div className="space-y-2.5">
+                  {grouped.map((g) => {
+                    const style = rarityStyles[g.rarity];
+                    return (
+                      <div key={g.rarity}>
+                        <div className={`text-[9px] font-black uppercase tracking-wider mb-1 ${style.text}`}>
+                          {getRarityLabel(lang, g.rarity)} · {g.list.length}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {g.list.map((card) => (
+                            <div key={card.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]" title={`${card.name} · ${card.power + (card.stars ?? 0)}⚔ ${card.damage + (card.stars ?? 0)}💥`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${style.bg}`} />
+                              <span className="text-[10px] font-bold text-white/85">{card.name}</span>
+                              <span className="text-[9px] text-white/35">{card.power + (card.stars ?? 0)}/{card.damage + (card.stars ?? 0)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
