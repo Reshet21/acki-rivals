@@ -23,9 +23,9 @@ import { debitSpend } from '../../api-lib/balance.js';
 
 /** Цены паков в NACKL (дублируются из src/data/packs.ts) */
 const PACK_PRICES: Record<string, number> = {
-  basic: 5,
-  standard: 7,
-  advanced: 10,
+  basic: 10,
+  standard: 25,
+  advanced: 50,
 };
 
 function nano(value: number): bigint {
