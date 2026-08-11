@@ -51,6 +51,12 @@ export function stateOf(game: GameRow): Record<string, any> {
  * Завершить матч: обновить status/state, расчитать ставку (если есть),
  * обновить лидерборд. Вызывается ТОЛЬКО сервером после честного исхода.
  * Возвращает ошибку, если расчёт ставки не удался (для логирования).
+ *
+ * АТОМИЧНОСТЬ: переход status -> 'finished' делается условным UPDATE
+ * (status != 'finished'). Гонка (оба игрока шлют последний ход / abandon
+ * одновременно) даёт ровно один выигравший UPDATE; проигравший гонку
+ * вызов пропускает расчёт ставки и лидерборд (иначе статы начислялись
+ * дважды). Возвращает { alreadyFinalized: true } для повторного вызова.
  */
 export async function finalizeMatch(
   client: SupabaseClient,
@@ -58,12 +64,19 @@ export async function finalizeMatch(
   state: Record<string, unknown>,
   winner: string,
   loser: string,
-): Promise<{ settleError?: string }> {
-  const { error: updateErr } = await client
+): Promise<{ settleError?: string; alreadyFinalized?: boolean }> {
+  const { data: updated, error: updateErr } = await client
     .from('games')
     .update({ status: 'finished', state })
-    .eq('id', game.id);
+    .eq('id', game.id)
+    .neq('status', 'finished')
+    .select('id')
+    .maybeSingle();
   if (updateErr) throw new Error(`finalize/games: ${updateErr.message}`);
+  if (!updated) {
+    // Другой вызов уже финализировал матч — ничего не делаем повторно
+    return { alreadyFinalized: true };
+  }
 
   let settleError: string | undefined;
 

@@ -38,9 +38,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(409).json({ error: 'Игра уже завершена' });
     }
 
+    if (game.status !== 'active') {
+      return res.status(409).json({ error: 'Игра ещё не началась' });
+    }
+
     const state = stateOf(game);
     const opp = opponentOf(game, player);
     if (!opp) return res.status(409).json({ error: 'У вас пока нет соперника' });
+
+    // Заявитель ОБЯЗАН сам сходить в текущем раунде, прежде чем объявить
+    // оппонента дезертиром. Иначе abandon сразу после ставок = мгновенная
+    // победа и кража банка у того, кто ещё не успел сходить.
+    const { data: myMoves } = await supabase!.from('moves')
+      .select('id').eq('game_id', gameId).eq('round', state.round).eq('player_id', player).limit(1);
+    if (!myMoves || myMoves.length === 0) {
+      return res.status(409).json({ error: 'Сначала отправьте свой ход в этом раунде' });
+    }
 
     // Оппонент не ходил в текущем раунде?
     const { data: oppMoves } = await supabase!.from('moves')

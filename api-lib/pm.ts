@@ -9,6 +9,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase, requireAuth, unauthorized } from './auth.js';
 
 const PM_TEXT_MAX = 500;
+const ANON_ID_RE = /^p_[a-z0-9]{1,16}$/;
 
 interface ConversationRow {
   sender: string;
@@ -82,6 +83,11 @@ export async function listPm(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (!withPlayer) return res.status(400).json({ error: 'with обязателен' });
+    // withPlayer подставляется в PostgREST-фильтр (.or()) — допускаем только
+    // валидные адреса, иначе строка фильтра может быть сломана (инъекция).
+    if (!ANON_ID_RE.test(withPlayer) && !/^0:[0-9a-f]{64}$/i.test(withPlayer)) {
+      return res.status(400).json({ error: 'with: ожидается "0:hex64" или "p_xxx"' });
+    }
 
     const { data: messages, error } = await supabase!
       .from('private_messages')

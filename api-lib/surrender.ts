@@ -37,6 +37,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (game.status === 'finished' || stateOf(game).phase === 'ended') {
       return res.status(409).json({ error: 'Игра уже завершена' });
     }
+    if (game.status !== 'active') {
+      // Комната в waiting: соперника ещё нет, сдаваться некому.
+      // Финализация с guest_id=null оставила бы ставку замороженной навсегда.
+      return res.status(409).json({ error: 'Игра ещё не началась — отмените комнату (refund)' });
+    }
 
     const state = stateOf(game);
     const isHost = game.host_id === player;
