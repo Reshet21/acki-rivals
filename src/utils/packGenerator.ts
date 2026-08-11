@@ -28,15 +28,46 @@ function getRandomCardByRarity(rarity: Rarity): Card {
   return pickRandom(pool);
 }
 
-export function openPack(packId: string): Card[] {
+export interface PackOpenResult {
+  cards: Card[];
+  /** Новый счётчик pity (паков без топ-редкости). 0 — гарантия сработала или выпала естественно. */
+  newPity: number;
+  /** Гарантия сработала (топ-редкость выдана принудительно). */
+  pityTriggered: boolean;
+}
+
+/**
+ * Открыть пак.
+ *
+ * Pity-система (как в продвинутых коллекционных играх):
+ * если у пака задан config.pity, каждый пак без топ-редкости увеличивает
+ * счётчик, а на `max`-м паке топ-редкость выпадает гарантированно
+ * (последняя карта пака). Счётчик сбрасывается при выпадении.
+ */
+export function openPack(packId: string, pity = 0): PackOpenResult {
   const config = getPackById(packId);
-  if (!config) return [];
+  if (!config) return { cards: [], newPity: 0, pityTriggered: false };
 
   const result: Card[] = [];
   for (let i = 0; i < config.cardCount; i++) {
-    const rarity = rollRarity(config);
-    const card = getRandomCardByRarity(rarity);
-    result.push({ ...card });
+    result.push({ ...getRandomCardByRarity(rollRarity(config)) });
   }
-  return result;
+
+  let newPity = pity;
+  let pityTriggered = false;
+  if (config.pity) {
+    const { rarity, max } = config.pity;
+    const hasTopRarity = result.some((c) => c.rarity === rarity);
+    if (hasTopRarity) {
+      newPity = 0;
+    } else if (pity + 1 >= max) {
+      result[result.length - 1] = getRandomCardByRarity(rarity);
+      newPity = 0;
+      pityTriggered = true;
+    } else {
+      newPity = pity + 1;
+    }
+  }
+
+  return { cards: result, newPity, pityTriggered };
 }

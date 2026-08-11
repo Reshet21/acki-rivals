@@ -230,10 +230,13 @@ function AppInner() {
   }, [recordWin, recordLoss, haptic]);
 
   const handleBuyPack = useCallback((packId: string): Card[] | void => {
-    const newCards = openPackCards(packId);
-    newCards.forEach((c) => addCard(c));
+    const key = `acki-pity-${packId}`;
+    const pity = Number(localStorage.getItem(key) || 0);
+    const result = openPackCards(packId, pity);
+    localStorage.setItem(key, String(result.newPity));
+    result.cards.forEach((c) => addCard(c));
     haptic.notificationOccurred('success');
-    return newCards;
+    return result.cards;
   }, [addCard, haptic]);
 
   const handleClaimStarterPack = useCallback(() => {

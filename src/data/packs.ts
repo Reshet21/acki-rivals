@@ -9,6 +9,8 @@ export interface PackConfig {
   cardCount: number;
   rarityWeights: Partial<Record<Rarity, number>>;
   allowedRarities?: Rarity[];
+  /** Pity: топ-редкость гарантирована каждые `max` паков (как в Hearthstone/Genshin). */
+  pity?: { rarity: Rarity; max: number };
 }
 
 export const PACKS: PackConfig[] = [
@@ -19,7 +21,7 @@ export const PACKS: PackConfig[] = [
     price: 0,
     nacklPrice: 0,
     cardCount: 10,
-    rarityWeights: { common: 80, uncommon: 20 },
+    rarityWeights: { common: 85, uncommon: 15 },
     allowedRarities: ['common', 'uncommon'],
   },
   {
@@ -29,8 +31,8 @@ export const PACKS: PackConfig[] = [
     price: 500,
     nacklPrice: 5,
     cardCount: 5,
-    rarityWeights: { common: 80, uncommon: 20 },
-    allowedRarities: ['common', 'uncommon'],
+    rarityWeights: { common: 74, uncommon: 22, rare: 4 },
+    allowedRarities: ['common', 'uncommon', 'rare'],
   },
   {
     id: 'standard',
@@ -39,8 +41,9 @@ export const PACKS: PackConfig[] = [
     price: 700,
     nacklPrice: 7,
     cardCount: 5,
-    rarityWeights: { common: 60, uncommon: 30, rare: 10 },
-    allowedRarities: ['common', 'uncommon', 'rare'],
+    rarityWeights: { common: 52, uncommon: 30, rare: 15, epic: 3 },
+    allowedRarities: ['common', 'uncommon', 'rare', 'epic'],
+    pity: { rarity: 'epic', max: 8 },
   },
   {
     id: 'advanced',
@@ -49,8 +52,9 @@ export const PACKS: PackConfig[] = [
     price: 1000,
     nacklPrice: 10,
     cardCount: 5,
-    rarityWeights: { uncommon: 50, rare: 25, epic: 15, legendary: 10 },
+    rarityWeights: { uncommon: 50, rare: 33, epic: 15, legendary: 2 },
     allowedRarities: ['uncommon', 'rare', 'epic', 'legendary'],
+    pity: { rarity: 'legendary', max: 8 },
   },
 ];
 

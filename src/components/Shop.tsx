@@ -203,7 +203,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
         setLastSpent(pack.nacklPrice);
         const cards = onBuyPack(packId);
         if (!cards || cards.length === 0) return;
-        setOpenedCards(cards);
+          setOpenedCards(cards);
         setRevealIndex(-1);
         setPhase('opening');
         setBuyingPackId(null);
@@ -784,6 +784,28 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                       );
                     })}
                   </div>
+
+                  {pack.pity && (() => {
+                    const current = Number(localStorage.getItem(`acki-pity-${pack.id}`) || 0);
+                    const { rarity, max } = pack.pity;
+                    const left = Math.max(0, max - current);
+                    const pct = Math.min(100, Math.round((current / max) * 100));
+                    const style = rarityStyles[rarity];
+                    return (
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-[9px] font-bold ${style.text}`}>
+                            {t('shop.pityGuarantee').replace('{rarity}', getRarityLabel(lang, rarity)).replace('{max}', String(max))}
+                          </span>
+                          <span className="text-[9px] text-white/40">{left === 0 ? '✓' : t('shop.pityLeft').replace('{left}', String(left))}</span>
+                        </div>
+                        <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                          <div className={`h-full rounded-full transition-all duration-500 ${left === 0 ? 'bg-yellow-400' : 'bg-white/25'}`}
+                            style={{ width: `${left === 0 ? 100 : pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <button
                     onClick={() => handleBuy(pack.id)}
