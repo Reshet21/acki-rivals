@@ -219,7 +219,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   if (room && !room.guest_id) return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto items-center justify-center p-4 gap-4 bg-battle relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-64 h-64 rounded-full bg-an-gold/5 animate-pulse-glow" style={{ top: '10%', left: '50%', transform: 'translateX(-50%)' }} />
+        <div className="absolute w-64 h-64 rounded-full bg-neon-blue/5 animate-pulse-glow" style={{ top: '10%', left: '50%', transform: 'translateX(-50%)' }} />
         <div className="absolute w-32 h-32 rounded-full bg-an-orange/5 animate-float" style={{ top: '60%', left: '20%' }} />
         <div className="absolute w-24 h-24 rounded-full bg-an-red/5 animate-float-alt" style={{ top: '70%', right: '20%' }} />
       </div>
@@ -245,14 +245,14 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
         {/* Waiting timer */}
         <div className="w-full p-4 rounded-xl bg-an-card/40 border border-white/10 flex flex-col items-center gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-an-gold rounded-full animate-pulse" />
+            <div className="w-2 h-2 bg-neon-blue rounded-full animate-pulse" />
             <span className="text-sm text-white/60">{t('pvp.waitingForOpponent')}</span>
           </div>
           <div className="text-3xl font-black text-white tabular-nums">
             {Math.floor(waitTime / 60).toString().padStart(2, '0')}:{(waitTime % 60).toString().padStart(2, '0')}
           </div>
           <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-an-gold to-an-orange rounded-full animate-pulse" style={{ width: `${Math.min(100, (waitTime / 60) * 100)}%` }} />
+            <div className="h-full bg-gradient-to-r from-neon-blue to-neon-purple rounded-full animate-pulse" style={{ width: `${Math.min(100, (waitTime / 60) * 100)}%` }} />
           </div>
         </div>
 
@@ -261,7 +261,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
           <div className="w-full px-4 py-3 rounded-xl bg-an-card/80 border border-an-gold/30 text-center font-mono text-sm text-an-gold break-all select-all backdrop-blur-sm shadow-[0_0_20px_rgba(255,215,0,0.15)]">{room.id}</div>
           {(room.stake_nano && Number(room.stake_nano) > 0) && (
             <div className="mt-2 w-full px-4 py-2 rounded-xl bg-an-gold/10 border border-an-gold/40 text-center text-sm font-bold text-an-gold">
-              🎯 {t('pvp.stake')}: {(Number(room.stake_nano) / 1e9).toFixed(room.stake_nano.length > 10 ? 2 : 0)} NACKL
+              <span className="inline-flex items-center gap-1"><Icon name="target" size={12} /> {t('pvp.stake')}: {(Number(room.stake_nano) / 1e9).toFixed(room.stake_nano.length > 10 ? 2 : 0)} NACKL</span>
             </div>
           )}
         </div>
@@ -293,7 +293,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   if (randomQueue) return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto items-center justify-center p-4 gap-6 bg-battle relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-80 h-80 rounded-full bg-an-gold/5 animate-pulse-glow" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+        <div className="absolute w-80 h-80 rounded-full bg-neon-blue/5 animate-pulse-glow" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
         <div className="absolute w-40 h-40 rounded-full bg-an-red/5 animate-float" style={{ top: '20%', right: '10%' }} />
         <div className="absolute w-32 h-32 rounded-full bg-neon-blue/5 animate-float-alt" style={{ bottom: '20%', left: '10%' }} />
         {[...Array(6)].map((_, i) => (
@@ -308,25 +308,24 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       </div>
       <div className="relative z-10 flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="flex justify-center animate-spin text-an-gold" style={{ animationDuration: '2s' }}><Icon name="dice" size={48} /></div>
-          <div className="absolute -top-2 -right-2 w-4 h-4 bg-an-gold rounded-full animate-ping" />
+          <div className="flex justify-center animate-spin text-neon-blue" style={{ animationDuration: '2s' }}><Icon name="dice" size={48} /></div>
+          <div className="absolute -top-2 -right-2 w-4 h-4 bg-neon-blue rounded-full animate-ping" />
         </div>
         <div className="text-center">
-          <div className="text-lg font-black text-an-gold mb-1">{t('pvp.findingOpponent')}</div>
+          <div className="text-lg font-black text-white mb-1">{t('pvp.findingOpponent')}</div>
           <div className="text-sm text-white/40">{t('pvp.lookingForOpenRoom')}</div>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
-          <div className="w-2 h-2 bg-an-gold rounded-full animate-pulse" />
+        <div className="flex items-baseline gap-1">
           <span className="text-lg font-black text-white tabular-nums">{searchTimer}</span>
           <span className="text-[10px] text-white/40">сек</span>
         </div>
         <div className="w-full max-w-[200px] h-1 bg-white/5 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-an-gold to-an-orange rounded-full animate-pulse" 
+          <div className="h-full bg-gradient-to-r from-neon-blue to-neon-purple rounded-full animate-pulse" 
             style={{ width: `${Math.min(100, (searchTimer / 10) * 100)}%` }} />
         </div>
         <button onClick={cancelRandom} 
-          className="mt-4 px-8 py-3 rounded-xl text-sm font-bold bg-an-red/10 border-2 border-an-red/30 text-an-red hover:border-an-red/50 active:bg-an-red/20 transition-all duration-200">
-          {t('pvp.exitSearch')}
+          className="mt-4 px-8 py-3 rounded-xl text-sm font-bold bg-an-red/10 border border-an-red/30 text-an-red hover:border-an-red/50 active:bg-an-red/20 transition-all">
+          <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="close" size={13} /> {t('pvp.exitSearch').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</span>
         </button>
       </div>
     </div>
@@ -335,27 +334,14 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
   // ═══ MAIN MENU ═══
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
-      {/* Background particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute w-72 h-72 rounded-full bg-an-gold/[0.04] animate-aurora-1" style={{ top: '-10%', left: '-20%' }} />
-        <div className="absolute w-56 h-56 rounded-full bg-an-red/[0.03] animate-aurora-2" style={{ bottom: '-10%', right: '-15%' }} />
-        <div className="absolute w-40 h-40 rounded-full bg-neon-blue/[0.03] animate-aurora-3" style={{ top: '40%', left: '50%', transform: 'translateX(-50%)' }} />
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="absolute animate-drift"
-            style={{
-              width: `${6 + Math.random() * 8}px`,
-              height: `${6 + Math.random() * 8}px`,
-              borderRadius: '50%',
-              background: ['rgba(255,215,0,0.08)', 'rgba(255,152,0,0.06)', 'rgba(255,61,0,0.05)', 'rgba(0,212,255,0.06)'][i],
-              top: `${15 + i * 20}%`,
-              left: `${10 + i * 25}%`,
-              animationDelay: `${i * 2}s`,
-            }} />
-        ))}
-      </div>
-
       {/* Header */}
       <div className="relative z-10 px-4 pt-4 pb-2 shrink-0">
+        <button
+          onClick={() => { impactOccurred('soft'); onBack(); }}
+          className="absolute left-4 top-4 w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-white/10 text-white/80 active:bg-white/20 active:scale-95 transition-all"
+        >
+          ←
+        </button>
         <div className="text-center">
           <div className="inline-flex items-center gap-1.5 text-lg font-black text-white"><Icon name="sword" size={16} /> PvP</div>
           <div className="text-[10px] text-white/30 uppercase tracking-[0.2em]">{t('pvp.gameRules')}</div>
@@ -363,7 +349,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
       </div>
 
       {/* Tab bar */}
-      <div className="relative z-10 flex mx-4 gap-1 rounded-xl bg-an-card/50 border border-an-border/50 p-1 shrink-0">
+      <div className="relative z-10 flex mx-4 gap-1 rounded-xl bg-white/[0.03] border border-white/[0.06] p-1 shrink-0">
         {(['menu', 'open', 'join'] as const).map((tabKey) => {
           const active = tab === tabKey;
           const icon = tabKey === 'menu' ? 'gamepad' : tabKey === 'open' ? 'search' : 'link';
@@ -396,12 +382,12 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
             {/* Stake input */}
             <div className="w-full px-3 py-2.5" style={{ borderRadius: 9, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-white/60">🎯 {t('pvp.stake')}</span>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-white/60"><Icon name="target" size={12} /> {t('pvp.stake')}</span>
                 <div className="flex items-center gap-1.5">
                   {[0, 5, 10, 25].map((v) => (
                     <button key={v} onClick={() => setStake(v)}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${stake === v ? 'text-black' : 'text-white/50'}`}
-                      style={stake === v ? { background: '#ffd700' } : { background: 'rgba(255,255,255,0.08)' }}>
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${stake === v ? 'text-white' : 'text-white/50'}`}
+                      style={stake === v ? { background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.2)' } : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                       {v === 0 ? t('pvp.noStake') : v}
                     </button>
                   ))}
@@ -422,8 +408,8 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
 
             {/* Random Battle */}
             <button onClick={() => { impactOccurred('medium'); handleRandom(); }} disabled={waiting}
-              className={`w-full py-3 font-bold text-base flex items-center justify-center gap-3 active:scale-[0.97] disabled:opacity-50 transition-all ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-              style={{ borderRadius: 9, background: 'linear-gradient(135deg, rgba(255,61,0,0.22) 0%, rgba(255,109,0,0.16) 50%, rgba(255,145,0,0.12) 100%)', border: '1px solid rgba(255,100,0,0.35)', color: '#ffd9c2' }}>
+              className={`w-full py-3 font-bold text-base flex items-center justify-center gap-3 active:scale-[0.97] disabled:opacity-50 transition-all ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} ${!waiting ? 'snake-border' : ''}`}
+              style={{ borderRadius: 14, background: 'transparent', border: !waiting ? 'none' : '2px solid rgba(255,255,255,0.1)', color: '#e6ebef', boxShadow: 'none' }}>
               <Icon name="dice" size={22} />
               <div className="flex flex-col items-center text-center">
                 <span className="font-bold">{t('pvp.randomBattle')}</span>
@@ -434,7 +420,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
             {/* Create Room */}
             <button onClick={() => { impactOccurred('medium'); handleCreate(); }} disabled={waiting}
               className={`w-full py-3 font-bold text-base flex items-center justify-center gap-3 active:scale-[0.97] disabled:opacity-50 transition-all ${menuItemsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-              style={{ borderRadius: 9, background: 'linear-gradient(135deg, rgba(255,215,0,0.18) 0%, rgba(255,180,0,0.12) 50%, rgba(255,145,0,0.10) 100%)', border: '1px solid rgba(255,200,0,0.32)', color: '#ffe9b8' }}>
+              style={{ borderRadius: 9, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(230,235,239,0.85)' }}>
               <Icon name="castle" size={22} />
               <div className="flex flex-col items-center text-center">
                 <span className="font-bold">{t('pvp.createRoom')}</span>
@@ -459,9 +445,9 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
           <div className="flex flex-col gap-2 animate-fade-in">
             <div className="flex justify-between items-center mb-2">
               <div className="text-xs text-white/50 uppercase tracking-wider font-bold">{t('pvp.availableRooms')}</div>
-              <button onClick={loadRooms} 
-                className="text-[10px] px-3 py-1 rounded-lg bg-an-gold/10 border border-an-gold/20 text-an-gold hover:bg-an-gold/20 transition-all active:scale-95">
-                <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="arrowRight" size={13} /> {t('pvp.refresh')}</span>
+              <button onClick={loadRooms}
+                className="text-[10px] px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-white/70 hover:bg-white/10 transition-all active:scale-95">
+                <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="arrowRight" size={13} /> {t('pvp.refresh').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</span>
               </button>
             </div>
             
@@ -493,7 +479,7 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                       <span>10/10 {t('deck.cards')}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />
                       {g.stake_nano && Number(g.stake_nano) > 0 && (
-                        <span className="text-an-gold font-bold">🎯 {(Number(g.stake_nano) / 1e9).toFixed(g.stake_nano.length > 10 ? 2 : 0)} NACKL</span>
+                        <span className="inline-flex items-center gap-1 text-an-gold font-bold"><Icon name="target" size={12} /> {(Number(g.stake_nano) / 1e9).toFixed(g.stake_nano.length > 10 ? 2 : 0)} NACKL</span>
                       )}
                     </div>
                   </div>
@@ -515,14 +501,15 @@ export default function PvpLobby({ playerId, playerName, deck, onStartBattle, on
                 type="text" 
                 value={joinCode} 
                 onChange={(e) => setJoinCode(e.target.value)} 
-                placeholder={t('pvp.enterCode')} 
-                className="w-full px-4 py-3 rounded-xl bg-an-card/80 border-2 border-an-border/50 text-sm text-white placeholder-white/20 focus:outline-none focus:border-an-gold/50 transition-all duration-200"
+                placeholder={t('pvp.enterCode')}
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.12] text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all duration-200"
               />
-              <button onClick={() => { impactOccurred('medium'); handleJoinCode(); }} disabled={!joinCode.trim() || waiting} 
-                className="w-full py-3.5 rounded-xl text-sm font-bold bg-gradient-to-r from-an-gold to-an-orange text-an-dark disabled:opacity-30 active:scale-[0.97] transition-all duration-200 shadow-[0_0_20px_rgba(255,215,0,0.2)]">
+              <button onClick={() => { impactOccurred('medium'); handleJoinCode(); }} disabled={!joinCode.trim() || waiting}
+                className={`w-full py-3.5 rounded-[14px] text-sm font-bold text-white disabled:opacity-30 active:scale-[0.97] transition-all duration-200 ${joinCode.trim() && !waiting ? 'snake-border' : ''}`}
+                style={{ background: 'transparent', border: joinCode.trim() && !waiting ? 'none' : '2px solid rgba(255,255,255,0.1)', boxShadow: 'none' }}>
                 {waiting ? (
                   <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-an-dark/30 border-t-an-dark rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     {t('pvp.connecting')}
                   </span>
                 ) : (

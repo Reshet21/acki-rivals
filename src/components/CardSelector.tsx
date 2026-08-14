@@ -4,8 +4,6 @@ import { abilityIcons, abilityColors, abilityNames } from '../data/abilityVisual
 import type { IconName } from './Icon';
 import { cardArt } from '../data/cardArt';
 import CardArt from './CardArt';
-import { RarityChips, SearchField } from './CardFilters';
-import type { Rarity } from '../types';
 import { useHaptic } from '../hooks/useHaptic';
 import { useI18n } from '../i18n';
 import Icon from './Icon';
@@ -34,20 +32,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
   const { t } = useI18n();
   const [sel, setSel] = useState<Card | null>(null);
   const [pillz, setPillz] = useState(0);
-  const [search, setSearch] = useState('');
-  const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
   const preview = useMemo(() => sel ? estimateAttack(sel.power, pillz) : null, [sel, pillz]);
-
-  const filteredCards = useMemo(() => {
-    return cards.filter((card) => {
-      if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return card.name.toLowerCase().includes(q) || card.clan.toLowerCase().includes(q);
-      }
-      return true;
-    });
-  }, [cards, search, rarityFilter]);
 
   const go = () => {
     if (!sel) return;
@@ -65,7 +50,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px',
             background: 'rgba(255,255,255,0.05)', borderRadius: 10,
-            border: '1px solid rgba(251,191,36,0.4)',
+            border: `1px solid ${rarityColor[sel.rarity || 'common']}66`,
           }}>
             {/* Mini card with actual image */}
             <div style={{
@@ -77,7 +62,7 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
               {cardArt[sel.id] ? (
                 <img src={cardArt[sel.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, opacity: 0.3 }}>🃏</div>
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}><Icon name="cards" size={20} /></div>
               )}
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f0a05 0%, transparent 50%)' }} />
               {/* X button */}
@@ -121,59 +106,59 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
         )}
       </div>
 
-      {/* Card grid */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-1">
-        <div className="pt-1.5 pb-2 space-y-1.5">
-          <SearchField value={search} onChange={setSearch} placeholder={t('deck.search')} />
-          <RarityChips value={rarityFilter} onChange={(v) => { selectionChanged(); setRarityFilter(v); }} />
-        </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          {filteredCards.map((card) => {
-            const isSel = sel?.uid === card.uid;
-            const rc = rarityColor[card.rarity || 'common'];
-            return (
-              <button
-                key={card.uid || card.id}
-                onClick={() => { selectionChanged(); setSel(card); }}
-                style={{
-                  position: 'relative', borderRadius: 8, overflow: 'hidden',
-                  border: `2px solid ${isSel ? '#fbbf24' : rc + '40'}`,
-                  boxShadow: isSel ? '0 0 12px rgba(251,191,36,0.4)' : 'none',
-                  cursor: 'pointer', transition: 'all 0.15s',
-                  transform: isSel ? 'scale(1.05)' : 'scale(1)',
-                  background: 'linear-gradient(160deg, #0f0a05, #1a120a)',
-                }}
-              >
-                {/* Image — full-bleed like Urban Rivals */}
-                <div style={{ width: '100%', aspectRatio: '3/4', overflow: 'hidden', background: '#080503', position: 'relative' }}>
-                  {cardArt[card.id] ? (
-                    <CardArt src={cardArt[card.id]} mode="fixed" boxRatio={3 / 4} />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, opacity: 0.2 }}>🃏</div>
-                  )}
-                  {/* Dark gradient overlay at bottom for readability */}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 40%)' }} />
-                  {/* Rarity gem */}
-                  <div style={{ position: 'absolute', top: 4, left: 4, width: 10, height: 10, borderRadius: 3, background: rc, boxShadow: `0 0 6px ${rc}80` }} />
-                  {/* Card name overlay */}
-                  <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                    padding: '4px 6px',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)',
-                  }}>
-                    <div style={{ fontSize: 8, fontWeight: 800, color: '#e5d5b0', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                      {card.name}
+      {/* Рука веером — как «стол» в макете 3a */}
+      <div className="flex-1 min-h-0 flex items-end justify-center overflow-visible px-1 pb-12">
+        <div className="flex items-end justify-center" style={{ paddingTop: 48 }}>
+          {(() => {
+            const n = cards.length;
+            const mid = (n - 1) / 2;
+            const step = n > 1 ? Math.min(15, 44 / (n - 1)) : 0; // градус между картами
+            return cards.map((card, i) => {
+              const isSel = sel?.uid === card.uid;
+              const angle = (i - mid) * step;
+              const arc = Math.abs(i - mid) * 9;           // дуга: крайние ниже
+              const lift = isSel ? -40 : arc;
+              const rc = rarityColor[card.rarity || 'common'];
+              const overlap = n > 5 ? -18 : n > 3 ? -12 : -8;
+              return (
+                <button
+                  key={card.uid || card.id}
+                  onClick={() => { selectionChanged(); setSel(isSel ? null : card); }}
+                  style={{
+                    width: 92, height: 136, margin: `0 ${overlap}px`, flexShrink: 0,
+                    position: 'relative', borderRadius: 13, overflow: 'hidden',
+                    transformOrigin: '50% 100%',
+                    transform: `rotate(${isSel ? 0 : angle}deg) translateY(${lift}px)${isSel ? ' scale(1.22)' : ''}`,
+                    transition: 'transform .22s cubic-bezier(0.16,1,0.3,1), box-shadow .22s',
+                    zIndex: isSel ? 40 : 10 + i,
+                    border: `${isSel ? '1.5px' : '2px'} solid ${isSel ? rc : rc + '66'}`,
+                    boxShadow: isSel ? `0 12px 34px ${rc}88` : '0 6px 14px rgba(0,0,0,0.5)',
+                    background: 'linear-gradient(160deg, #0f0a05, #1a120a)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ width: '100%', height: '100%', overflow: 'hidden', background: '#080503', position: 'relative' }}>
+                    {cardArt[card.id] ? (
+                      <CardArt src={cardArt[card.id]} mode="fixed" boxRatio={92 / 136} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.2 }}><Icon name="cards" size={26} /></div>
+                    )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 48%)' }} />
+                    <div style={{ position: 'absolute', top: 5, left: 5, width: 10, height: 10, borderRadius: 3, background: rc, boxShadow: `0 0 6px ${rc}80` }} />
+                    <div style={{ position: 'absolute', bottom: 3, left: 0, right: 0, padding: '0 5px' }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, color: '#e5d5b0', lineHeight: 1.1, textAlign: 'center', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
+                        {card.name}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 7, marginTop: 2 }}>
+                        <span style={{ fontSize: 9, fontWeight: 900, color: '#e2e8f0', display: 'inline-flex', alignItems: 'center', gap: 1 }}><Icon name="sword" size={9} />{card.power}</span>
+                        <span style={{ fontSize: 9, fontWeight: 900, color: '#fca5a5', display: 'inline-flex', alignItems: 'center', gap: 1 }}><Icon name="boom" size={9} />{card.damage}</span>
+                      </div>
                     </div>
                   </div>
-                  {/* Stats overlayed */}
-                  <div style={{ position: 'absolute', bottom: 14, right: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                    <span style={{ fontSize: 8, fontWeight: 900, color: '#e2e8f0', textShadow: '0 1px 4px rgba(0,0,0,0.9)', display: 'inline-flex', alignItems: 'center', gap: 1 }}><Icon name="sword" size={8} />{card.power}</span>
-                    <span style={{ fontSize: 8, fontWeight: 900, color: '#fca5a5', textShadow: '0 1px 4px rgba(0,0,0,0.9)', display: 'inline-flex', alignItems: 'center', gap: 1 }}><Icon name="boom" size={8} />{card.damage}</span>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            });
+          })()}
         </div>
       </div>
 
@@ -206,15 +191,16 @@ export default function CardSelector({ cards, onSelect, maxPillz }: Props) {
         <button
           onClick={go}
           disabled={!sel}
-          className="flex-1 py-2.5 rounded-lg font-bold text-sm transition-all duration-150"
+          className={`flex-1 py-2.5 rounded-[14px] font-bold text-sm transition-all ${sel ? 'snake-border' : ''}`}
           style={{
-            background: sel ? 'linear-gradient(135deg, #00d4ff, #8b5cf6)' : 'rgba(255,255,255,0.05)',
-            color: sel ? 'white' : 'rgba(255,255,255,0.2)',
-            boxShadow: sel ? '0 4px 20px rgba(0,212,255,0.3), inset 0 1px 0 rgba(255,255,255,0.15)' : 'none',
+            background: 'transparent',
+            border: sel ? 'none' : '2px solid rgba(255,255,255,0.06)',
+            color: sel ? '#e6ebef' : 'rgba(255,255,255,0.25)',
+            boxShadow: 'none',
             cursor: sel ? 'pointer' : 'not-allowed',
           }}
         >
-          {t('battle.attackButton')}
+          <span className="inline-flex items-center justify-center gap-1.5"><Icon name="sword" size={15} /> {t('battle.attackButton').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</span>
         </button>
       </div>
     </div>

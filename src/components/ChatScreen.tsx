@@ -233,42 +233,37 @@ export default function ChatScreen({ playerId, playerName, collection, onAddCard
   };
 
   return (
-    <div className="flex flex-col h-full max-w-md mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="relative flex items-center mb-3 h-9">
         <button onClick={onBack} className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] active:scale-90 transition-all">
           <Icon name="back" size={16} style={{ color: 'rgba(255,255,255,0.7)' }} />
         </button>
-        <div className="flex-1">
-          <div className="text-base font-black font-display" style={{ color: 'rgba(255,255,255,0.9)' }}>{t('chat.title')}</div>
-        </div>
+        <div className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 text-base font-black text-white whitespace-nowrap"><Icon name="chat" size={16} /> {t('chat.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</div>
+        <div className="ml-auto">
           {canSell && (
           <button onClick={handleOpenPicker}
-            className="px-3 py-2 rounded-xl text-[11px] font-bold bg-white/[0.04] border border-white/[0.08] active:scale-90 transition-all flex items-center gap-1.5"
-            style={{ color: 'rgba(255,215,0,0.9)' }}>
+            className="px-3 py-2 text-[11px] font-bold bg-white/[0.06] border border-white/[0.12] text-white active:scale-90 transition-all flex items-center gap-1.5"
+            style={{ borderRadius: 9 }}>
             <Icon name="gift" size={14} />
             {t('chat.sellCard')}
           </button>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1.5 mb-2">
-        <button onClick={() => { selectionChanged(); setTab('global'); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.97] ${tab === 'global' ? 'bg-gradient-to-r from-neon-blue/30 to-neon-purple/25 border border-neon-blue/40' : 'bg-white/[0.03] border border-white/[0.06]'}`}
-          style={{ color: tab === 'global' ? '#ffffff' : 'rgba(255,255,255,0.5)' }}>
-          🌐 {t('chat.global')}
-        </button>
-        <button onClick={() => { selectionChanged(); setTab('trade'); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.97] ${tab === 'trade' ? 'bg-gradient-to-r from-emerald-500/25 to-teal-500/20 border border-emerald-400/40' : 'bg-white/[0.03] border border-white/[0.06]'}`}
-          style={{ color: tab === 'trade' ? '#ffffff' : 'rgba(255,255,255,0.5)' }}>
-          💰 {t('chat.trade')}
-        </button>
-        <button onClick={() => { selectionChanged(); setTab('clan'); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.97] ${tab === 'clan' ? 'bg-gradient-to-r from-orange-500/25 to-amber-500/20 border border-orange-400/40' : 'bg-white/[0.03] border border-white/[0.06]'}`}
-          style={{ color: tab === 'clan' ? '#ffffff' : 'rgba(255,255,255,0.5)' }}>
-          🏰 {t('chat.clan')}
-        </button>
+      {/* Tabs — сегментные, как в маркетплейсе */}
+      <div className="flex gap-1 rounded-xl bg-white/[0.03] border border-white/[0.06] p-1 mb-2">
+        {([['global','globe',t('chat.global')],['trade','moneybag',t('chat.trade')],['clan','castle',t('chat.clan')]] as const).map(([key, icon, label]) => {
+          const active = tab === key;
+          return (
+            <button key={key} onClick={() => { selectionChanged(); setTab(key as Tab); }}
+              className="flex-1 basis-0 min-w-0 py-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+              style={{ background: active ? 'rgba(255,255,255,0.12)' : 'transparent', color: active ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+              <Icon name={icon as import('./Icon').IconName} size={13} /> {label}
+            </button>
+          );
+        })}
       </div>
 
       {error && (

@@ -79,9 +79,9 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
   const activeClans = Object.entries(clanCount).filter(([, n]) => n >= 2);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden relative" style={{ background: 'transparent' }}>
       {/* Header */}
-      <div className="shrink-0 px-4 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)', background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+      <div className="shrink-0 px-4 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="relative flex justify-between items-center mb-3">
           <button onClick={() => { impactOccurred('soft'); onBack(); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
             ←
@@ -105,12 +105,12 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
 
       {/* ⚔️ Боевая колода — выбранные карты, тап = убрать */}
       {deck.length > 0 && (
-        <div className="shrink-0 px-4 py-3" style={{ background: 'rgba(251,191,36,0.04)', borderBottom: '1px solid rgba(255,215,0,0.12)' }}>
+        <div className="shrink-0 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-bold text-white">
               <span className="inline-flex items-center gap-1"><Icon name="sword" size={12} /> {tf('deck.battleDeck', 'Боевая колода')}</span> <span style={{ color: 'rgba(255,255,255,0.4)' }}>· тап — убрать</span>
             </div>
-            <div className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
+            <div className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff' }}>
               {deck.length}/10
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
                   style={{ width: 64, position: 'relative' }}
                   title={getCardName(lang, card.id)}
                 >
-                  <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(251,191,36,0.7)', boxShadow: '0 0 12px rgba(251,191,36,0.3)' }}>
+                  <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(0,212,255,0.7)', boxShadow: '0 0 12px rgba(0,212,255,0.3)' }}>
                     {art ? <CardArt src={art} boxRatio={3 / 4} mode="fixed" minH={76} maxH={76} /> : <div style={{ width: 64, height: 76, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.2, background: '#080503' }}><Icon name="cards" size={22} /></div>}
                   </div>
                   <div style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: '50%', background: '#ef4444', border: '2px solid #7f1d1d', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, boxShadow: '0 0 10px rgba(239,68,68,0.7)' }}>×</div>
@@ -141,7 +141,7 @@ export default function DeckBuilder({ collection, deck, onToggleDeck, onBack }: 
 
       {/* ✨ Активные комбо + клановые бонусы */}
       {(activeCombos.length > 0 || activeClans.length > 0) && (
-        <div className="shrink-0 px-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(168,85,247,0.03)' }}>
+        <div className="shrink-0 px-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {activeCombos.length > 0 && (
             <div className="mb-2">
               <div className="text-xs font-bold mb-1.5 text-center" style={{ color: '#e5d5b0' }}>

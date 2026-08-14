@@ -104,7 +104,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
           g.isMax
             ? 'bg-black text-yellow-400 border-yellow-400/50'
             : g.canUpgrade
-            ? 'bg-neon-green text-black border-neon-green shadow-neon-green/40'
+            ? 'bg-black/90 text-white border-neon-green shadow-neon-green/40'
             : 'bg-black/90 text-white/50 border-white/20'
         }`}
       >
@@ -181,10 +181,17 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
 
       {/* Upgrade Modal */}
       {selGroup && (
-        <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col overflow-y-auto animate-fade-in">
+        <div className="absolute inset-0 z-50 backdrop-blur-2xl flex flex-col overflow-y-auto animate-fade-in" style={{ background: 'rgba(3,4,6,0.86)' }}>
+          {/* Duplicate back arrow — top-left, like everywhere */}
+          <button
+            onClick={() => setSelectedUid(null)}
+            className="absolute left-4 top-4 z-10 w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-white/10 text-white/80 active:bg-white/20 active:scale-95 transition-all safe-top"
+          >
+            ←
+          </button>
           <div className="flex flex-col items-center justify-start px-4 pt-6 pb-8 min-h-full">
-          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-4 tracking-wider text-center">
-            {selGroup.isMax ? t('upgrade.max') : t('upgrade.title')}
+          <h2 className="inline-flex items-center justify-center gap-2 text-2xl font-black text-white mb-4 tracking-wider text-center">
+            <Icon name="anvil" size={20} /> {(selGroup.isMax ? t('upgrade.max') : t('upgrade.title')).replace(/^[^\p{L}\p{N}]+/u, '').trim()}
           </h2>
 
           <div className="w-40 mb-4 transform hover:scale-105 transition-all duration-300 shrink-0">
@@ -195,7 +202,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
             <div className="w-full max-w-xs bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 mb-4 shadow-2xl">
               <div className="flex items-center justify-between text-center">
                 <div className="flex-1">
-                  <div className="text-[10px] uppercase text-white/40 font-bold mb-1">{t('card.power')}</div>
+                  <div className="text-[10px] text-white/40 font-bold mb-1">{t('card.power')}</div>
                   <div className="text-2xl font-black text-white">
                     {selGroup.base.power + selGroup.stars}{' '}
                     <span className="text-neon-green text-lg ml-1">→ {selGroup.base.power + selGroup.stars + 1}</span>
@@ -203,7 +210,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
                 </div>
                 <div className="w-px h-10 bg-white/10 mx-4" />
                 <div className="flex-1">
-                  <div className="text-[10px] uppercase text-white/40 font-bold mb-1">{t('card.damage')}</div>
+                  <div className="text-[10px] text-white/40 font-bold mb-1">{t('card.damage')}</div>
                   <div className="text-2xl font-black text-white">
                     {selGroup.base.damage + selGroup.stars}{' '}
                     <span className="text-neon-green text-lg ml-1">→ {selGroup.base.damage + selGroup.stars + 1}</span>
@@ -215,10 +222,10 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
 
           <div className="w-full max-w-xs mb-4 bg-black/40 p-4 rounded-xl border border-white/5">
             <div className="flex justify-between text-xs font-bold mb-1">
-              <span className="text-yellow-400">{NEEDED_PER_MERGE} × ★{selGroup.stars} → ★{selGroup.stars + 1}</span>
+              <span className="text-white/70">{NEEDED_PER_MERGE} × ★{selGroup.stars} → ★{selGroup.stars + 1}</span>
               <span
                 className={
-                  selGroup.isMax ? 'text-yellow-400' : selGroup.canUpgrade ? 'text-neon-green' : 'text-red-400'
+                  selGroup.isMax ? 'text-neon-blue' : selGroup.canUpgrade ? 'text-neon-green' : 'text-red-400'
                 }
               >
                 {selGroup.isMax ? 'MAX' : `${selGroup.sameLevel} / ${NEEDED_PER_MERGE}`}
@@ -246,9 +253,9 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
           {selGroup.canUpgrade ? (
             <button
               onClick={handleUpgrade}
-              className="w-full max-w-xs py-4 rounded-xl font-black text-black bg-gradient-to-r from-yellow-400 to-orange-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] active:scale-95 transition-all outline-none relative overflow-hidden"
+              className="w-full max-w-xs py-3 font-bold text-sm bg-white/10 border border-white/15 text-white active:scale-[0.98] transition-all outline-none"
+              style={{ borderRadius: 9 }}
             >
-              <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
               ★ {t('upgrade.upgradeTo')} {selGroup.stars + 1}
             </button>
           ) : (
@@ -262,7 +269,7 @@ export default function UpgradeScreen({ collection, onUpgrade, onBack }: Props) 
 
           <button
             onClick={() => setSelectedUid(null)}
-            className="mt-4 mb-2 text-sm font-bold text-white/40 active:text-white pb-1 border-b border-transparent active:border-white transition-all uppercase tracking-widest"
+            className="mt-auto w-full max-w-xs py-2.5 rounded-xl font-bold text-sm bg-white/5 border border-white/10 text-white/60 active:bg-white/10 active:scale-[0.98] transition-all"
           >
             {t('deck.back')}
           </button>

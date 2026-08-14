@@ -126,15 +126,15 @@ export default function PmScreen({ playerId, initialWith, onBack }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-md mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="relative flex items-center mb-3 min-h-[36px]">
         <button onClick={handleBack} className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] active:scale-90 transition-all">
           <Icon name="back" size={16} style={{ color: 'rgba(255,255,255,0.7)' }} />
         </button>
-        <div className="flex-1 min-w-0">
-          <div className="text-base font-black font-display truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
-            {view === 'chat' && with_ ? with_.name : t('pm.title')}
+        <div className="absolute left-1/2 -translate-x-1/2 text-center max-w-[70%]">
+          <div className="inline-flex items-center justify-center gap-1.5 text-base font-black text-white truncate">
+            {view === 'chat' && with_ ? with_.name : <><Icon name="user" size={15} /> {t('pm.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</>}
           </div>
           {view === 'chat' && with_ && (
             <div className="text-[9px] text-white/30 truncate font-mono">{with_.player}</div>

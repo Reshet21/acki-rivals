@@ -8,7 +8,6 @@ import { useI18n } from '../i18n';
 import CardSelector from './CardSelector';
 import { useTelegram } from '../telegram';
 import { abilityInfo, abilityNames, abilityDescriptions } from '../data/abilityVisuals';
-import StarfieldCanvas from './StarfieldCanvas';
 import Icon from './Icon';
 
 interface Props {
@@ -323,32 +322,11 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
     'text-neon-red';
 
   return (
-    <div className={`flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden relative ${screenShake ? 'animate-damage-shake' : ''}`} style={{ background: '#050508' }}>
-      {/* Starfield battle background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <StarfieldCanvas speed={1.5} />
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse at 30% 30%, rgba(255,61,0,0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 70%, rgba(0,100,255,0.06) 0%, transparent 50%), rgba(5,5,8,0.7)',
-        }} />
-      </div>
-
+    <div className={`flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden relative ${screenShake ? 'animate-damage-shake' : ''}`}>
       {/* Damage Flash Overlay */}
       {damageFlash !== 'none' && (
         <div className={`absolute inset-0 pointer-events-none z-50 ${damageFlash === 'player' ? 'animate-red-flash' : 'animate-green-flash'}`} />
       )}
-
-      {/* Ambient particles — battle sparks */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="absolute w-1 h-1 rounded-full animate-drift" style={{
-            background: ['rgba(255,180,0,0.3)', 'rgba(255,61,0,0.2)', 'rgba(0,150,255,0.2)'][i % 3],
-            top: `${10 + (i * 15) % 80}%`,
-            left: `${5 + (i * 17) % 90}%`,
-            animationDelay: `${i * 1.2}s`,
-            boxShadow: `0 0 4px ${['rgba(255,180,0,0.4)', 'rgba(255,61,0,0.3)', 'rgba(0,150,255,0.3)'][i % 3]}`,
-          }} />
-        ))}
-      </div>
 
       {/* Header */}
       <div className="flex justify-between items-center px-3 py-2 shrink-0 relative z-10" style={{
@@ -393,10 +371,14 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             boxShadow: damageFlash === 'player' ? '0 0 16px rgba(255,61,0,0.4), inset 0 0 8px rgba(255,61,0,0.2)' : '0 0 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
           }}>
             <div
-              className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'player' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-emerald-400 via-neon-green to-green-300'}`}
+              className="h-full rounded-full transition-all duration-1000 ease-out"
               style={{
                 width: `${Math.max(0, (playerHP / TOTAL_HP) * 100)}%`,
-                boxShadow: damageFlash === 'player' ? '0 0 16px rgba(255,61,0,0.6)' : '0 0 12px rgba(0,230,118,0.4)',
+                background: 'transparent',
+                border: `2px solid ${damageFlash === 'player' ? 'rgba(244,63,94,1)' : 'rgba(0,230,118,1)'}`,
+                boxShadow: damageFlash === 'player'
+                  ? '0 0 20px rgba(244,63,94,0.9), 0 0 8px rgba(244,63,94,0.8), inset 0 0 10px rgba(244,63,94,0.45)'
+                  : '0 0 20px rgba(0,230,118,0.85), 0 0 8px rgba(0,230,118,0.8), inset 0 0 10px rgba(0,230,118,0.4)',
               }}
             />
             {/* Damage number animation */}
@@ -424,10 +406,14 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             boxShadow: damageFlash === 'ai' ? '0 0 16px rgba(0,230,118,0.4), inset 0 0 8px rgba(0,230,118,0.2)' : '0 0 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
           }}>
             <div
-              className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'ai' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-red-500 via-neon-red to-orange-400'}`}
+              className="h-full rounded-full transition-all duration-1000 ease-out"
               style={{
                 width: `${Math.max(0, (aiHP / TOTAL_HP) * 100)}%`,
-                boxShadow: damageFlash === 'ai' ? '0 0 16px rgba(0,230,118,0.6)' : '0 0 12px rgba(255,61,0,0.4)',
+                background: 'transparent',
+                border: `2px solid ${damageFlash === 'ai' ? 'rgba(0,230,118,1)' : 'rgba(244,63,94,1)'}`,
+                boxShadow: damageFlash === 'ai'
+                  ? '0 0 20px rgba(0,230,118,0.9), 0 0 8px rgba(0,230,118,0.8), inset 0 0 10px rgba(0,230,118,0.45)'
+                  : '0 0 20px rgba(244,63,94,0.85), 0 0 8px rgba(244,63,94,0.8), inset 0 0 10px rgba(244,63,94,0.4)',
               }}
             />
             {currentResult?.winner === 'player' && battlePhase === 'damage' && (
@@ -445,17 +431,34 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
         </div>
       </div>
 
-      {/* AI remaining cards (face down) */}
+      {/* AI remaining cards (face down) — веер */}
       {battlePhase === 'select' && (
-        <div className="flex justify-center gap-1 pb-1 shrink-0">
-          {aiCardsRemaining.map((c) => (
-            <div
-              key={c.uid}
-              className="w-8 h-11 rounded bg-gradient-to-b from-gray-700 to-gray-900 border border-gray-600 flex items-center justify-center text-[8px] text-white/30"
-            >
-              ???
-            </div>
-          ))}
+        <div className="flex justify-center items-end pb-1 shrink-0" style={{ height: 54 }}>
+          {(() => {
+            const n = aiCardsRemaining.length;
+            const mid = (n - 1) / 2;
+            const step = n > 1 ? Math.min(12, 40 / (n - 1)) : 0;
+            const overlap = n > 5 ? -11 : n > 3 ? -8 : -5;
+            return aiCardsRemaining.map((c, i) => {
+              const angle = (i - mid) * step;
+              const arc = Math.abs(i - mid) * 3;
+              return (
+                <div
+                  key={c.uid}
+                  style={{
+                    width: 30, height: 42, margin: `0 ${overlap}px`, flexShrink: 0,
+                    transformOrigin: '50% 100%',
+                    transform: `rotate(${angle}deg) translateY(${arc}px)`,
+                    background: '#0a0a0d',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    borderRadius: 6,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'rgba(255,255,255,0.35)', fontSize: 14, fontWeight: 700, lineHeight: 1,
+                  }}
+                >?</div>
+              );
+            });
+          })()}
         </div>
       )}
 
@@ -472,7 +475,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="absolute w-0.5 h-8 animate-sparkle" style={{
-                  background: 'linear-gradient(to bottom, transparent, rgba(255,215,0,0.8), transparent)',
+                  background: 'linear-gradient(to bottom, transparent, rgba(0,212,255,0.8), transparent)',
                   left: `${10 + (i * 11) % 80}%`,
                   top: `${20 + (i * 7) % 60}%`,
                   animationDelay: `${i * 0.15}s`,
@@ -482,12 +485,9 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
             </div>
             {/* VS Banner */}
             <div className="text-6xl font-black animate-battle-vs relative z-10 font-display" style={{
-              background: 'linear-gradient(90deg, #FF3D00, #FFD700, #FF3D00)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              color: '#6fb0d6',
               letterSpacing: '0.3em',
-              filter: 'drop-shadow(0 0 30px rgba(255,61,0,0.7)) drop-shadow(0 0 60px rgba(255,215,0,0.4))',
+              filter: 'drop-shadow(0 0 12px rgba(0,180,255,0.35)) drop-shadow(0 0 24px rgba(0,150,255,0.18))',
             }}>
               VS
             </div>
@@ -594,7 +594,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                 </span>
               )}
               {currentResult.poisonAmount > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-bold">
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-lime-500/20 text-lime-300 border border-lime-500/30 font-bold">
                   <Icon name="skull" size={12} /> {currentResult.poisonAmount}
                 </span>
               )}
@@ -649,7 +649,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                 <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full"><Icon name="drop" size={11} /> +{currentResult.lifeStealAmount}</span>
               )}
               {currentResult.poisonAmount > 0 && (
-                <span className="inline-flex items-center gap-1 text-yellow-300 bg-yellow-500/10 px-2 py-0.5 rounded-full"><Icon name="skull" size={11} /> {currentResult.poisonAmount}</span>
+                <span className="inline-flex items-center gap-1 text-lime-300 bg-lime-500/10 px-2 py-0.5 rounded-full"><Icon name="skull" size={11} /> {currentResult.poisonAmount}</span>
               )}
             </div>
           </div>
@@ -666,7 +666,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                 }} />
                 {[...Array(12)].map((_, i) => (
                   <div key={i} className="absolute animate-sparkle" style={{
-                    color: ['#FFD700', '#4ADE80', '#00E676', '#FFA500'][i % 4],
+                    color: ['#00d4ff', '#a855f7', '#00E676', '#7ac7de'][i % 4],
                     top: `${15 + (i * 7) % 70}%`,
                     left: `${5 + (i * 8) % 90}%`,
                     animationDelay: `${i * 0.2}s`,
@@ -789,7 +789,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
                         <span className="inline-flex items-center gap-0.5 text-purple-300"><Icon name="drop" size={10} />+{entry.lifeStealAmount}</span>
                       )}
                       {entry.poisonAmount > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-yellow-300"><Icon name="skull" size={10} />{entry.poisonAmount}</span>
+                        <span className="inline-flex items-center gap-0.5 text-lime-300"><Icon name="skull" size={10} />{entry.poisonAmount}</span>
                       )}
                       {entry.damageDealt === 0 && entry.healAmount === 0 && entry.lifeStealAmount === 0 && entry.poisonAmount === 0 && (
                         <span className="text-white/20">—</span>
@@ -802,12 +802,7 @@ export default function BattleScreen({ playerDeck, onBattleEnd }: Props) {
 
             <button
               onClick={() => onBattleEnd(battleResult)}
-              className="w-full max-w-xs py-2.5 rounded-lg font-bold text-base
-                bg-gradient-to-r from-neon-purple to-neon-blue
-                active:scale-95
-                transition-all duration-150
-                shadow-[0_0_16px_rgba(183,66,255,0.3)]
-                text-white"
+              className="w-full max-w-xs py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/70 active:bg-white/10 active:scale-[0.98] transition-all"
             >
               {t('deck.back')}
             </button>

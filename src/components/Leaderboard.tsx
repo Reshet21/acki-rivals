@@ -50,7 +50,7 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
   const winRate = (w: number, l: number) => w + l > 0 ? Math.round((w / (w + l)) * 100) : 0;
 
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden relative" style={{ background: 'transparent' }}>
       <div className="shrink-0 px-3 pt-3 pb-2 relative" style={{ background: 'rgba(5,5,8,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <button onClick={() => { impactOccurred('soft'); onBack(); }} className="absolute left-3 top-3 w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>
           ←
@@ -104,7 +104,7 @@ export default function Leaderboard({ playerId, playerName, wins, losses, onBack
                       {isPlayer && <span className="text-[8px] text-neon-blue">{t('leaderboard.you')}</span>}
                       {entry.streak >= 3 && (
                         <span className="text-[8px] px-1 py-0.5 rounded bg-an-red/15 text-an-red border border-an-red/20 inline-flex items-center gap-0.5">
-                          🔥{entry.streak}
+                          <span className="inline-flex items-center gap-0.5"><Icon name="fire" size={10} />{entry.streak}</span>
                         </span>
                       )}
                     </div>

@@ -9,7 +9,7 @@ export const abilityInfo: Record<string, { icon: IconName; color: string }> = {
   '-1 opponent power': { icon: 'shield', color: '#fb923c' }, '-2 opponent power': { icon: 'shield', color: '#fdba74' },
   '-2 opponent damage': { icon: 'shield', color: '#fb923c' },
   'heal 1': { icon: 'heart', color: '#4ade80' }, 'heal 2': { icon: 'heart', color: '#86efac' }, 'heal 3': { icon: 'heart', color: '#bbf7d0' },
-  'poison 1': { icon: 'skull', color: '#facc15' }, 'poison 2': { icon: 'skull', color: '#fde047' }, 'poison 3': { icon: 'skull', color: '#fef08a' },
+  'poison 1': { icon: 'skull', color: '#a3e635' }, 'poison 2': { icon: 'skull', color: '#bef264' }, 'poison 3': { icon: 'skull', color: '#d9f99d' },
   'life steal 1': { icon: 'drop', color: '#c084fc' }, 'life steal 2': { icon: 'drop', color: '#d8b4fe' }, 'life steal 3': { icon: 'drop', color: '#e9d5ff' },
   'stop opponent ability': { icon: 'ban', color: '#f87171' }, 'double damage': { icon: 'bolt', color: '#fde047' },
 };
@@ -31,7 +31,7 @@ export const abilityColors: Record<string, string> = {
   '+1 damage': '#f87171', '+2 damage': '#fca5a5', '+3 damage': '#fca5a5',
   '-1 opponent power': '#fb923c', '-2 opponent power': '#fdba74', '-2 opponent damage': '#fb923c',
   'heal 1': '#4ade80', 'heal 2': '#86efac', 'heal 3': '#bbf7d0',
-  'poison 1': '#facc15', 'poison 2': '#fde047', 'poison 3': '#fef08a',
+  'poison 1': '#a3e635', 'poison 2': '#bef264', 'poison 3': '#d9f99d',
   'life steal 1': '#c084fc', 'life steal 2': '#d8b4fe', 'life steal 3': '#e9d5ff',
   'stop opponent ability': '#f87171', 'double damage': '#fde047',
 };

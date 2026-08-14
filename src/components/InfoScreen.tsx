@@ -28,7 +28,7 @@ export default function InfoScreen({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('about');
 
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden relative" style={{ background: 'transparent' }}>
       {/* Header */}
       <div className="shrink-0 px-4 pt-4 pb-0">
         <div className="relative flex items-center mb-3 h-8">
@@ -39,23 +39,22 @@ export default function InfoScreen({ onBack }: Props) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto shrink-0 px-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        {tabMeta.map(({ id, icon, color }) => (
-          <button
-            key={id}
-            onClick={() => { selectionChanged(); setTab(id); }}
-            className="shrink-0 px-3 py-2 rounded-xl text-[10px] font-bold transition-all whitespace-nowrap active:scale-95 flex items-center gap-1.5"
-            style={{
-              background: tab === id ? `${color}15` : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${tab === id ? `${color}30` : 'rgba(255,255,255,0.05)'}`,
-              color: tab === id ? color : 'rgba(255,255,255,0.4)',
-            }}
-          >
-            <Icon name={icon} size={14} />
-            {ct(`info.${id}Tab`)}
-          </button>
-        ))}
+      {/* Tabs — сегментные, как в маркетплейсе */}
+      <div className="flex gap-1 overflow-x-auto shrink-0 mx-4 mb-3 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+        {tabMeta.map(({ id, icon }) => {
+          const active = tab === id;
+          return (
+            <button
+              key={id}
+              onClick={() => { selectionChanged(); setTab(id); }}
+              className="shrink-0 px-3 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap flex items-center gap-1.5"
+              style={{ background: active ? 'rgba(255,255,255,0.12)' : 'transparent', color: active ? '#fff' : 'rgba(255,255,255,0.4)' }}
+            >
+              <Icon name={icon} size={14} />
+              {ct(`info.${id}Tab`)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}

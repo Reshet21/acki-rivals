@@ -204,12 +204,6 @@ export default function Marketplace({ walletConnection, collection, onAddCard, o
 
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative">
-      {/* Background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute w-72 h-72 rounded-full bg-an-gold/[0.03] animate-aurora-1" style={{ top: '-10%', left: '-20%' }} />
-        <div className="absolute w-56 h-56 rounded-full bg-neon-blue/[0.03] animate-aurora-2" style={{ bottom: '-10%', right: '-15%' }} />
-      </div>
-
       {/* Header */}
       <div className="relative z-10 px-4 pt-4 pb-2 shrink-0">
         <div className="relative flex items-center justify-between mb-3">
@@ -411,8 +405,9 @@ export default function Marketplace({ walletConnection, collection, onAddCard, o
                 </div>
                 <button
                   onClick={() => { impactOccurred('medium'); setPickerOpen(true); }}
-                  className="mt-4 px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-an-gold to-an-orange text-an-dark active:scale-95 transition-all shadow-[0_0_16px_rgba(255,215,0,0.25)]">
-                  + {t('marketplace.pickCard') || 'Выбрать карту'}
+                  className="mt-4 px-5 py-2 text-sm font-bold bg-white/[0.06] border border-white/[0.12] text-white active:scale-[0.98] transition-all"
+                  style={{ borderRadius: 9 }}>
+                  <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="plus" size={15} /> {t('marketplace.selectCard')}</span>
                 </button>
               </div>
             )}

@@ -130,24 +130,21 @@ export default function ClansScreen({ playerId, onBack }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-md mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="relative flex items-center mb-3 h-9">
         <button onClick={onBack} className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] active:scale-90 transition-all">
           <Icon name="back" size={16} style={{ color: 'rgba(255,255,255,0.7)' }} />
         </button>
-        <div className="flex-1">
-          <div className="text-base font-black font-display" style={{ color: 'rgba(255,255,255,0.9)' }}>{t('clan.title')}</div>
-        </div>
-        {!myClan.clan && (
-          <button onClick={() => { impactOccurred('light'); setCreateOpen(true); setClanName(''); setClanTag(''); }}
-            className="px-3 py-2 rounded-xl text-[11px] font-bold bg-white/[0.04] border border-white/[0.08] active:scale-90 transition-all flex items-center gap-1.5"
-            style={{ color: 'rgba(255,215,0,0.9)' }}>
-            <Icon name="plus" size={14} />
-            {t('clan.create')}
-          </button>
-        )}
+        <div className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 text-base font-black text-white whitespace-nowrap"><Icon name="castle" size={16} /> {t('clan.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</div>
       </div>
+      {!myClan.clan && (
+        <button onClick={() => { impactOccurred('light'); setCreateOpen(true); setClanName(''); setClanTag(''); }}
+          className="w-full mb-3 py-2 text-sm font-bold bg-white/[0.06] border border-white/[0.12] text-white active:scale-[0.98] transition-all"
+          style={{ borderRadius: 9 }}>
+          <span className="inline-flex items-center gap-1.5 justify-center"><Icon name="plus" size={15} /> {t('clan.create')}</span>
+        </button>
+      )}
 
       {error && (
         <div className="mb-2 px-3 py-2 rounded-xl text-[11px] font-medium" style={{ background: 'rgba(255,80,80,0.12)', border: '1px solid rgba(255,80,80,0.25)', color: '#ff9b9b' }}>
@@ -205,8 +202,9 @@ export default function ClansScreen({ playerId, onBack }: Props) {
                 <div className="text-[11px] text-white/40 mt-0.5">
                   {t('clan.members')}: {myClan.members.length} · {t('clan.rating')}: {myClan.clan.rating}
                 </div>
-                <div className="text-[10px] text-white/30 mt-1">
-                  {myClan.myRole === 'owner' ? '👑 ' + t('clan.roleOwner') : myClan.myRole === 'admin' ? '🛡️ ' + t('clan.roleAdmin') : '⚔️ ' + t('clan.roleMember')}
+                <div className="inline-flex items-center gap-1 text-[10px] text-white/30 mt-1">
+                  <Icon name={myClan.myRole === 'owner' ? 'crown' : myClan.myRole === 'admin' ? 'shield' : 'sword'} size={11} />
+                  {myClan.myRole === 'owner' ? t('clan.roleOwner') : myClan.myRole === 'admin' ? t('clan.roleAdmin') : t('clan.roleMember')}
                 </div>
               </div>
               <button onClick={handleLeave}
@@ -314,21 +312,21 @@ export default function ClansScreen({ playerId, onBack }: Props) {
       {/* Create clan modal */}
       {createOpen && (
         <div className="absolute inset-0 z-30 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.6)' }}>
-          <div className="w-full max-w-xs rounded-3xl border border-white/[0.08] p-5 animate-slide-up" style={{ background: '#0b0b12' }}>
+          <div className="w-full max-w-xs rounded-2xl border border-white/[0.1] p-5 animate-slide-up" style={{ background: '#101013' }}>
             <div className="text-base font-black text-white mb-3">{t('clan.create')}</div>
             <input
               value={clanName}
               onChange={(e) => setClanName(e.target.value)}
               placeholder={t('clan.namePlaceholder')}
               maxLength={24}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[13px] text-white placeholder-white/25 outline-none focus:border-an-gold/50 mb-2"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[13px] text-white placeholder-white/25 outline-none focus:border-white/30 mb-2"
             />
             <input
               value={clanTag}
               onChange={(e) => setClanTag(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5))}
               placeholder={t('clan.tagPlaceholder')}
               maxLength={5}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[13px] text-white placeholder-white/25 outline-none focus:border-an-gold/50 mb-4"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[13px] text-white placeholder-white/25 outline-none focus:border-white/30 mb-4"
             />
             <div className="flex gap-2">
               <button onClick={() => setCreateOpen(false)}
@@ -336,8 +334,7 @@ export default function ClansScreen({ playerId, onBack }: Props) {
                 {t('settings.cancel')}
               </button>
               <button onClick={handleCreate} disabled={busy || clanName.trim().length < 2 || clanTag.length < 2}
-                className="flex-1 py-2.5 rounded-xl text-xs font-black text-black active:scale-95 transition-all disabled:opacity-30"
-                style={{ background: 'linear-gradient(135deg, #ffd700, #ffaa00)' }}>
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-white/[0.1] border border-white/[0.15] active:scale-95 transition-all disabled:opacity-30">
                 {busy ? t('pvp.loading') : t('clan.create')}
               </button>
             </div>

@@ -47,11 +47,11 @@ const rarityStyles: Record<Rarity, { border: string; bg: string; glow: string; t
 
 type Phase = 'shop' | 'opening' | 'result';
 
-const packVisuals: Record<string, { gradient: string; icon: import('./Icon').IconName }> = {
-  starter: { gradient: 'from-green-600 via-emerald-500 to-teal-600', icon: 'party' },
-  basic: { gradient: 'from-gray-600 via-gray-500 to-gray-700', icon: 'gift' },
-  standard: { gradient: 'from-blue-600 via-blue-500 to-purple-600', icon: 'gift' },
-  advanced: { gradient: 'from-purple-600 via-pink-500 to-yellow-500', icon: 'sparkle' },
+const packVisuals: Record<string, { color: string; icon: import('./Icon').IconName }> = {
+  starter: { color: 'bg-emerald-600', icon: 'party' },
+  basic: { color: 'bg-gray-600', icon: 'gift' },
+  standard: { color: 'bg-blue-600', icon: 'gift' },
+  advanced: { color: 'bg-purple-600', icon: 'sparkle' },
 };
 
 export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack, starterPackClaimed, onClaimStarterPack, onReconnectWallet, onZkLogin, hasEpkKey }: Props) {
@@ -535,7 +535,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
           <div className="shrink-0 px-5 pb-5 relative z-10 animate-slide-up">
             <button
               onClick={handleCollect}
-              className="w-full py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-an-gold via-yellow-500 to-an-orange text-an-dark active:scale-95 transition-all duration-200 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
+              className="w-full py-3.5 rounded-xl font-bold text-sm active:scale-95 transition-all duration-200"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', color: '#ffffff' }}
             >
               {t('shop.collect')}
             </button>
@@ -548,24 +549,17 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
   // ═══ Shop ═══
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-shop relative">
-      {/* Background effects */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute w-48 h-48 rounded-full animate-aurora-1 opacity-15"
-          style={{ top: '-20%', left: '-10%', background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)' }} />
-        <div className="absolute w-40 h-40 rounded-full animate-aurora-2 opacity-10"
-          style={{ bottom: '10%', right: '-10%', background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%)', animationDelay: '4s' }} />
-      </div>
-
       {/* Header */}
       <div className="px-4 py-3 shrink-0 relative z-10">
-        {/* Top row: back arrow (left) + balances stacked (right) */}
-        <div className="flex justify-between items-start">
+        {/* Одна строка: назад (слева) + заголовок (центр) + балансы (справа) на одном уровне */}
+        <div className="relative flex items-center min-h-[36px]">
           <button onClick={() => { impactOccurred('soft'); onBack(); }}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all active:scale-95"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>
             ←
           </button>
-          <div className="flex flex-col items-end gap-0.5">
+          <div className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 text-lg font-bold text-white whitespace-nowrap"><Icon name="bag" size={16} /> {t('shop.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</div>
+          <div className="ml-auto flex flex-col items-end gap-0.5">
             {gameBalance !== null && (
               <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: 'rgba(255,215,0,0.95)' }}>
                 <span className="inline-flex items-center gap-1"><Icon name="gamepad" size={11} /> {gameBalance.toFixed(2)} NACKL</span>
@@ -576,8 +570,6 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
             </span>
           </div>
         </div>
-        {/* Title — centered */}
-        <div className="inline-flex items-center justify-center gap-1.5 w-full text-lg font-bold text-white text-center mt-1"><Icon name="bag" size={16} /> {t('shop.title').replace(/^[^\p{L}\p{N}]+/u, '').trim()}</div>
         {/* Пополнить — centered, full width */}
         {walletConnection && (
           <button
@@ -749,8 +741,8 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                 }`}
                 style={canBuy ? { backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' } : undefined}
               >
-                {/* Pack header with gradient */}
-                <div className={`bg-gradient-to-r ${visual.gradient} p-4 relative overflow-hidden`}>
+                {/* Pack header — solid color */}
+                <div className={`${visual.color} p-4 relative overflow-hidden`}>
                   <div className="absolute inset-0 opacity-20">
                     <div className="absolute w-24 h-24 rounded-full bg-white/10 -top-8 -right-8" />
                     <div className="absolute w-16 h-16 rounded-full bg-white/5 bottom-2 left-4" />
@@ -799,7 +791,7 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                           <span className={`text-[9px] font-bold ${style.text}`}>
                             {t('shop.pityGuarantee').replace('{rarity}', getRarityLabel(lang, rarity)).replace('{max}', String(max))}
                           </span>
-                          <span className="text-[9px] text-white/40">{left === 0 ? '✓' : t('shop.pityLeft').replace('{left}', String(left))}</span>
+                          <span className="text-[9px] text-white/40">{left === 0 ? <Icon name="check" size={11} stroke={2.4} /> : t('shop.pityLeft').replace('{left}', String(left))}</span>
                         </div>
                         <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
                           <div className={`h-full rounded-full transition-all duration-500 ${left === 0 ? 'bg-yellow-400' : 'bg-white/25'}`}
@@ -821,11 +813,12 @@ export default function Shop({ walletConnection, nacklBalance, onBuyPack, onBack
                     disabled={!canBuy || isBuying}
                     className={`w-full py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden ${
                       canBuy && !isBuying
-                        ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white active:scale-95 shadow-[0_0_12px_rgba(0,212,255,0.2)]'
+                        ? 'active:scale-95'
                         : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
                     }`}
+                    style={canBuy && !isBuying ? { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', color: '#ffffff' } : undefined}
                   >
-                    {canBuy && !isBuying && <span className="absolute inset-0 animate-shimmer pointer-events-none" />}
+                    {canBuy && !isBuying && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
                     {isBuying
                       ? t('shop.sendingTransaction')
                       : canBuy

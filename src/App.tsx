@@ -25,7 +25,6 @@ import ChatScreen from './components/ChatScreen';
 import ClansScreen from './components/ClansScreen';
 import PmScreen from './components/PmScreen';
 import AnimatedBackground from './components/AnimatedBackground';
-import StarfieldCanvas from './components/StarfieldCanvas';
 import Icon from './components/Icon';
 import type { Game } from './services/pvpService';
 import { getPlayerBalance } from './services/treasuryService';
@@ -274,280 +273,148 @@ function AppInner() {
 
   return (
     <div className="h-full w-full overflow-x-hidden overflow-y-auto text-white flex flex-col relative safe-top safe-bottom animate-page-enter" style={{ background: '#050508' }}>
-      {/* Global animated background for non-menu screens */}
-      {screen !== 'menu' && <AnimatedBackground variant={bgVariant} />}
+      {/* Global animated background — one shared living background on every screen */}
+      <AnimatedBackground variant={bgVariant} />
 
-      {screen === 'menu' && (
-        <div className="relative flex flex-col items-center h-full w-full overflow-hidden">
-          {/* Premium background — Canvas Starfield */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <StarfieldCanvas speed={0.6} />
-            <img src="/cards/acki-nacki-hero.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 mix-blend-screen" style={{ filter: 'blur(3px)' }} />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,8,0.1) 0%, rgba(5,5,8,0.6) 40%, rgba(5,5,8,0.92) 70%, #050508 100%)' }} />
-            {/* Animated grid */}
-            <div className="absolute inset-0 bg-starfield-grid opacity-40" />
-            {/* Premium glow effects */}
-            <div className="absolute animate-aurora-1 rounded-full" style={{ width: 400, height: 400, top: '-150px', left: '-100px', background: 'radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%)' }} />
-            <div className="absolute animate-aurora-2 rounded-full" style={{ width: 350, height: 350, bottom: '5%', right: '-80px', background: 'radial-gradient(circle, rgba(255,100,0,0.08) 0%, transparent 70%)', animationDelay: '4s' }} />
-            <div className="absolute animate-aurora-3 rounded-full" style={{ width: 300, height: 300, top: '30%', left: '30%', background: 'radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%)', animationDelay: '8s' }} />
-            {/* Animated particles */}
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="absolute animate-particle" style={{
-                width: `${2 + Math.random() * 4}px`,
-                height: `${2 + Math.random() * 4}px`,
-                borderRadius: '50%',
-                background: ['rgba(255,215,0,0.4)', 'rgba(255,61,0,0.3)', 'rgba(0,212,255,0.3)'][i % 3],
-                left: `${10 + Math.random() * 80}%`,
-                bottom: '-10px',
-                '--duration': `${8 + Math.random() * 12}s`,
-                '--delay': `${Math.random() * 10}s`,
-              } as React.CSSProperties} />
-            ))}
-            {/* Sparkles */}
-            {[{ top: '12%', left: '8%', delay: '0s', size: 'sm' }, { top: '25%', right: '5%', delay: '1s', size: 'md' }, { top: '45%', left: '3%', delay: '2s', size: 'sm' }, { top: '65%', right: '8%', delay: '0.5s', size: 'lg' }, { top: '80%', left: '15%', delay: '1.5s', size: 'sm' }].map((pos, i) => (
-              <div key={i} className="absolute animate-sparkle" style={{ ...pos, animationDelay: pos.delay, color: 'rgba(255,215,0,0.4)' }}>
-                {pos.size === 'lg' ? '✦' : pos.size === 'md' ? '✧' : '·'}
-              </div>
-            ))}
-            {/* Floating card previews - Urban Rivals style */}
-            <div className="absolute animate-card-float-1 pointer-events-none" style={{ top: '15%', right: '5%', opacity: 0.1, transform: 'rotate(12deg)' }}>
-              <div className="w-12 h-16 rounded-lg menu-card-preview">
-                <div className="w-full h-8 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #4b5563, #6b7280)' }} />
-              </div>
-            </div>
-            <div className="absolute animate-card-float-2 pointer-events-none" style={{ bottom: '20%', left: '3%', opacity: 0.08, transform: 'rotate(-8deg)' }}>
-              <div className="w-14 h-16 rounded-lg menu-card-preview">
-                <div className="w-full h-9 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #581c87, #a855f7)' }} />
-              </div>
-            </div>
-            <div className="absolute animate-card-float-3 pointer-events-none" style={{ top: '50%', right: '2%', opacity: 0.06, transform: 'rotate(18deg)' }}>
-              <div className="w-10 h-14 rounded-lg menu-card-preview">
-                <div className="w-full h-7 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #78350f, #f59e0b)' }} />
-              </div>
-            </div>
+      {screen === 'menu' && (() => {
+        const CYAN = '#7ac7de';
+        const ready = deck.length === 10;
+        const tiles: { icon: import('./components/Icon').IconName; label: string; on: () => void; badge?: number; pulse?: boolean }[] = [
+          { icon: 'cards', label: t('menu.deck'), on: () => setScreen('deck'), pulse: !ready },
+          { icon: 'bag', label: t('menu.shop'), on: () => setScreen('shop') },
+          { icon: 'store', label: 'Marketplace', on: () => setScreen('marketplace') },
+          { icon: 'anvil', label: t('menu.upgrade'), on: () => setScreen('upgrade') },
+          { icon: 'wallet', label: t('menu.wallet'), on: () => setScreen('wallet') },
+          { icon: 'pickaxe', label: t('menu.mining'), on: () => setScreen('mining') },
+          { icon: 'chat', label: t('menu.chat'), on: () => setScreen('chat') },
+          { icon: 'castle', label: t('menu.clans'), on: () => setScreen('clans') },
+          { icon: 'user', label: t('menu.pm'), on: () => { setScreen('pm'); setPmUnread(0); setPmBackScreen(null); }, badge: pmUnread },
+        ];
+        return (
+        <div className="relative flex flex-col h-full w-full mx-auto overflow-hidden" style={{ maxWidth: 448, background: 'transparent' }}>
+          {/* Hero card art — edges dissolved into the shared background */}
+          <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '56%', overflow: 'hidden' }}>
+            <img src="/cards/card-patrol.png" alt="" className="w-full h-full object-cover" style={{
+              objectPosition: '50% 20%',
+              filter: 'grayscale(0.5) brightness(0.6) contrast(1.05)',
+              opacity: 0.85,
+              WebkitMaskImage: 'radial-gradient(78% 66% at 50% 40%, #000 42%, rgba(0,0,0,0.35) 78%, transparent 100%)',
+              maskImage: 'radial-gradient(78% 66% at 50% 40%, #000 42%, rgba(0,0,0,0.35) 78%, transparent 100%)',
+            }} />
+            {/* bottom fade into content */}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 0%, transparent 52%, rgba(5,5,8,0.55) 78%, rgba(5,5,8,0.9) 92%, #050508 100%)' }} />
+            {/* soft cyan ambient glow */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(80% 42% at 50% 16%, rgba(74,168,196,0.14), transparent 70%)' }} />
           </div>
 
-          {/* Content */}
-          <div className="relative z-10 flex flex-col h-full w-full">
-            <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-10 pb-4 flex flex-col items-center gap-4">
-              {/* Premium Logo Section */}
-              <div className="flex flex-col items-center animate-slide-down" style={{ animationDelay: '0.05s' }}>
-                {/* Original NACKL Logo - Now Spinning */}
-                <div className="relative mb-2">
-                  <div className="absolute -inset-4 rounded-full opacity-30 animate-coin-pulse" style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-                  <div className="animate-coin-spin w-16 h-16 relative">
-                    <img src="/cards/an-smiley-yellow.jpg" alt="" className="w-16 h-16 rounded-full border-2 relative z-10" style={{ borderColor: 'rgba(255,215,0,0.4)', boxShadow: '0 0 30px rgba(255,215,0,0.3)' }} />
-                  </div>
+          <div className="relative z-10 flex flex-col h-full w-full overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-10 shrink-0 animate-slide-down">
+              <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: '0.16em' }}>ACKI RIVALS</div>
+              {walletConnection ? (
+                <div className="flex items-center gap-2">
+                  <span className="truncate max-w-[110px]" style={{ fontSize: 11, color: 'rgba(230,235,239,0.6)' }}>{walletConnection.walletName}</span>
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ border: '1px solid rgba(255,255,255,0.22)', fontSize: 10, fontWeight: 700, color: 'rgba(230,235,239,0.7)' }}>{walletConnection.walletName.charAt(0).toUpperCase()}</span>
                 </div>
-                <h1 className="text-4xl font-black tracking-wider text-hero-gradient font-display" style={{ letterSpacing: '0.08em' }}>
-                  ACKI RIVALS
-                </h1>
-                <p className="text-[10px] tracking-[0.5em] uppercase mt-1 font-display" style={{ color: 'rgba(255,215,0,0.3)' }}>BLOCKCHAIN CARD BATTLE</p>
-              </div>
+              ) : (
+                <button onClick={() => { impactOccurred('medium'); setScreen('wallet'); }} className="px-3 py-1.5 rounded-full transition-all active:scale-95" style={{ border: `1px solid ${CYAN}66`, fontSize: 11, fontWeight: 600, color: CYAN }}>
+                  {t('menu.connectWallet')}
+                </button>
+              )}
+            </div>
 
-              {/* Wallet / Stats Card */}
-              <div className="w-full max-w-xs animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                {walletConnection ? (
-                  /* Connected wallet — show wallet info + balances */
-                  <div className="p-4 relative">
-                    {/* Wallet name — centered, no frame */}
-                    <div className="flex items-center justify-center gap-2 pb-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black" style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.3)', color: '#FFD700' }}>
-                        {walletConnection.walletName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="text-sm font-bold text-white truncate">{walletConnection.walletName}</div>
-                    </div>
-                    {/* divider */}
-                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
-                    {/* Balances grid — compact, formatted */}
-                    <div className="grid grid-cols-3 gap-2 pt-3">
-                      {[
-                        { value: fmtBal(nacklBalance), color: '#FFD700', label: 'NACKL' },
-                        { value: fmtBal(shellBalance), color: '#00d4ff', label: 'SHELL' },
-                        { value: fmtBal(gameBalance !== null ? gameBalance.toFixed(4) : null), color: '#4ADE80', label: t('menu.gameBalance') },
-                      ].map((b) => (
-                        <div key={b.label} className="text-center min-w-0">
-                          <div className="text-sm font-bold tabular-nums leading-tight truncate" style={{ color: b.color }}>{b.value}</div>
-                          <div className="text-[9px] uppercase tracking-wider mt-0.5 leading-tight break-words" style={{ color: `${b.color}66` }}>{b.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                    {/* divider */}
-                    <div className="mt-3" style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
-                    {/* Battle stats */}
-                    <div className="grid grid-cols-2 gap-3 pt-3">
-                      <div className="text-center">
-                        <div className="text-lg font-black" style={{ color: '#4ADE80' }}>{battlesWon}</div>
-                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.wins')}</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-black" style={{ color: '#FF6B6B' }}>{battlesLost}</div>
-                        <div className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.losses')}</div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* No wallet — prompt to connect */
-                  <button onClick={() => { impactOccurred('medium'); setScreen('wallet'); }}
-                    className="w-full p-4 text-center transition-all active:scale-[0.98]"
-                    style={{ borderRadius: 9, background: 'linear-gradient(135deg, rgba(0,212,255,0.06) 0%, rgba(139,92,246,0.04) 100%)', border: '1px solid rgba(0,212,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                    <div className="flex justify-center mb-2" style={{ color: '#00d4ff' }}><Icon name="wallet" size={26} /></div>
-                    <div className="text-sm font-bold" style={{ color: '#00d4ff' }}>{t('menu.connectWallet')}</div>
-                    <div className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('menu.connectWalletDesc') || 'Подключите AN Wallet для игры'}</div>
-                  </button>
-                )}
+            {/* Bottom content */}
+            <div className="mt-auto flex flex-col px-6 pb-[max(16px,env(safe-area-inset-bottom))] pt-6">
+              {/* Stats */}
+              <div className="flex gap-3 pb-4 animate-slide-up" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex flex-col items-center gap-1.5">
+                  <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 700, lineHeight: 1 }}>{fmtBal(nacklBalance)}</span>
+                  <span style={{ fontSize: 9, letterSpacing: '0.04em', color: 'rgba(230,235,239,0.32)' }}>Nackl</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 700, lineHeight: 1, color: CYAN }}>{fmtBal(shellBalance)}</span>
+                  <span style={{ fontSize: 9, letterSpacing: '0.04em', color: 'rgba(230,235,239,0.32)' }}>Shell</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 700, lineHeight: 1, color: '#4ADE80' }}>{fmtBal(gameBalance !== null ? gameBalance.toFixed(4) : null)}</span>
+                  <span style={{ fontSize: 9, letterSpacing: '0.04em', color: 'rgba(230,235,239,0.32)' }}>{t('menu.gameBalance')}</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 ml-auto">
+                  <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 700, lineHeight: 1, color: 'rgba(230,235,239,0.75)' }}>{battlesWon}/{battlesLost}</span>
+                  <span style={{ fontSize: 9, letterSpacing: '0.04em', color: 'rgba(230,235,239,0.32)' }}>W/L</span>
+                </div>
               </div>
 
               {/* Deck warning */}
-              {deck.length !== 10 && (
-                <div className="w-full max-w-xs px-4 py-2.5 text-center animate-fade-in" style={{ borderRadius: 9, background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,215,0,0.8)' }}>{t('menu.deckHint')}</span>
+              {!ready && (
+                <div className="flex items-center justify-center gap-1.5 text-center mt-3 text-[11px] text-white animate-fade-in">
+                  <Icon name="cards" size={13} /> {t('menu.deckHint').replace(/^[^\p{L}\p{N}]+/u, '').trim()}
                 </div>
               )}
 
-              {/* Rules — always visible */}
+              {/* Rules */}
               <button onClick={() => { selectionChanged(); setScreen('info'); }}
-                className="w-full max-w-xs px-4 py-2.5 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                style={{ borderRadius: 9, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <Icon name="book" size={16} style={{ color: 'rgba(255,215,0,0.8)' }} />
-                <span className="text-xs font-semibold" style={{ color: 'rgba(255,215,0,0.8)' }}>{t('menu.rules')}</span>
+                className="w-full mt-4 py-3 rounded-[14px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(230,235,239,0.8)', fontWeight: 600, fontSize: 13 }}>
+                <Icon name="book" size={15} /> {t('menu.rules')}
               </button>
 
-              {/* Premium Battle Buttons */}
-              <div className="w-full max-w-xs space-y-2.5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
-                {/* PvP Button - Hero */}
-                <button onClick={() => { impactOccurred('medium'); setScreen('pvp'); }} disabled={deck.length !== 10}
-                  className="w-full py-3 font-bold text-base flex items-center justify-center transition-all relative overflow-hidden active:scale-[0.97] font-display"
-                  style={{
-                    borderRadius: 9,
-                    background: deck.length === 10 ? 'linear-gradient(135deg, rgba(255,61,0,0.22) 0%, rgba(255,109,0,0.16) 50%, rgba(255,145,0,0.12) 100%)' : 'rgba(255,255,255,0.03)',
-                    border: deck.length === 10 ? '1px solid rgba(255,100,0,0.35)' : '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: 'none',
-                    color: deck.length === 10 ? '#ffd9c2' : 'rgba(255,255,255,0.15)',
-                  }}>
-                  {deck.length === 10 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
-                  <div className="flex items-center justify-center gap-3">
-                    <Icon name="globe" size={22} />
-                    <div className="flex flex-col items-center text-center">
-                      <span className="font-bold">{t('menu.pvpBattle')}</span>
-                      <span className="text-[10px] font-normal opacity-70">{t('menu.pvpDesc')}</span>
-                    </div>
+              {/* PvP + AI */}
+              <div className="flex flex-col gap-2.5 mt-2.5">
+                <button onClick={() => { impactOccurred('medium'); setScreen('pvp'); }} disabled={!ready}
+                  className={`w-full py-4 rounded-[14px] flex items-center justify-center gap-3 transition-all active:scale-[0.97] ${ready ? 'snake-border' : ''}`}
+                  style={{ background: ready ? 'transparent' : 'rgba(255,255,255,0.03)', border: ready ? 'none' : '2px solid rgba(255,255,255,0.06)', color: ready ? '#e6ebef' : 'rgba(255,255,255,0.2)', boxShadow: 'none' }}>
+                  <Icon name="globe" size={22} />
+                  <div className="flex flex-col items-center text-center leading-tight">
+                    <span style={{ fontWeight: 700, fontSize: 15 }}>{t('menu.pvpBattle')}</span>
+                    <span className="text-[10px] font-normal opacity-70">{t('menu.pvpDesc')}</span>
                   </div>
                 </button>
-
-                {/* AI Battle Button */}
-                <button onClick={() => { impactOccurred('medium'); setScreen('battle'); }} disabled={deck.length !== 10}
-                  className="w-full py-3 font-bold text-base flex items-center justify-center transition-all relative overflow-hidden active:scale-[0.97] font-display"
-                  style={{
-                    borderRadius: 9,
-                    background: deck.length === 10 ? 'linear-gradient(135deg, rgba(22,58,95,0.35) 0%, rgba(15,40,71,0.28) 50%, rgba(10,22,40,0.22) 100%)' : 'rgba(255,255,255,0.03)',
-                    border: deck.length === 10 ? '1px solid rgba(0,180,255,0.28)' : '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: 'none',
-                    color: deck.length === 10 ? '#d6ecff' : 'rgba(255,255,255,0.15)',
-                  }}>
-                  {deck.length === 10 && <span className="absolute inset-0 animate-shimmer pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(0,180,255,0.06) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />}
-                  <div className="flex items-center justify-center gap-3">
-                    <Icon name="cpu" size={22} />
-                    <div className="flex flex-col items-center text-center">
-                      <span className="font-bold">{t('menu.aiBattle')}</span>
-                      <span className="text-[10px] font-normal opacity-70">{t('menu.aiDesc')}</span>
-                    </div>
+                <button onClick={() => { impactOccurred('medium'); setScreen('battle'); }} disabled={!ready}
+                  className="w-[78%] mx-auto py-2.5 rounded-[12px] flex items-center justify-center gap-2.5 transition-all active:scale-[0.97]"
+                  style={{ background: 'transparent', border: `1px solid ${ready ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)'}`, color: ready ? 'rgba(230,235,239,0.78)' : 'rgba(255,255,255,0.2)' }}>
+                  <Icon name="cpu" size={18} />
+                  <div className="flex flex-col items-center text-center leading-tight">
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>{t('menu.aiBattle')}</span>
+                    <span className="text-[9px] font-normal opacity-70">{t('menu.aiDesc')}</span>
                   </div>
                 </button>
               </div>
 
-              {/* Secondary Actions - Premium Cards */}
-              <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <button onClick={() => { selectionChanged(); setScreen('deck'); }}
-                  className="py-3.5 font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95]"
-                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <Icon name="deck" size={22} style={{ color: 'rgba(255,255,255,0.7)' }} />
-                  <span className="font-display" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>{t('menu.deck')}</span>
-                </button>
-                <button onClick={() => { selectionChanged(); setScreen('shop'); }}
-                  className="py-3.5 font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95]"
-                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <Icon name="bag" size={22} style={{ color: 'rgba(255,255,255,0.7)' }} />
-                  <span className="font-display" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>{t('menu.shop')}</span>
-                </button>
-                <button onClick={() => { selectionChanged(); setScreen('marketplace'); }}
-                  className="py-3.5 font-bold text-sm flex flex-col items-center gap-1 transition-all active:scale-[0.95]"
-                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <Icon name="store" size={22} style={{ color: 'rgba(255,255,255,0.7)' }} />
-                  <span className="font-display" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>Marketplace</span>
-                </button>
+              {/* Tiles — отдельный блок, наши иконки и названия */}
+              <div className="mt-6 w-full p-2.5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="grid grid-cols-3 gap-2">
+                  {tiles.map((tl, i) => (
+                    <button key={i} onClick={() => { selectionChanged(); tl.on(); }}
+                      className={`relative py-2 rounded-[11px] flex flex-col items-center gap-1 transition-all active:scale-[0.95] ${tl.pulse ? 'deck-pulse' : ''}`}
+                      style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(230,235,239,0.7)', fontSize: 10.5, fontWeight: 600 }}>
+                      <Icon name={tl.icon} size={18} />
+                      {tl.label}
+                      {tl.badge != null && tl.badge > 0 && (
+                        <span className="absolute top-1 right-1.5 px-1.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full text-[9px] font-black text-black" style={{ background: CYAN, boxShadow: `0 0 8px ${CYAN}99` }}>{tl.badge}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Tertiary Actions - Minimal */}
-              <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-                <button onClick={() => { selectionChanged(); setScreen('upgrade'); }}
-                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <Icon name="anvil" size={22} style={{ color: 'rgba(255,255,255,0.6)' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.upgrade')}</span>
+              {/* Bottom nav — одинаковая ширина кнопок => «Звук» строго по центру */}
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="w-20 flex flex-col items-center gap-1 transition-all active:scale-95" style={{ color: 'rgba(230,235,239,0.4)' }}>
+                  <Icon name="trophy" size={17} /><span style={{ fontSize: 9, letterSpacing: '0.12em' }}>{t('menu.leaderboard')}</span>
                 </button>
-                <button onClick={() => { selectionChanged(); setScreen('wallet'); }}
-                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <Icon name="wallet" size={22} style={{ color: 'rgba(255,255,255,0.6)' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.wallet')}</span>
+                <button onClick={() => { toggleMusic(); selectionChanged(); }} className="w-20 flex flex-col items-center gap-1 transition-all active:scale-95" style={{ color: musicEnabled ? `${CYAN}cc` : 'rgba(230,235,239,0.4)' }}>
+                  <Icon name={musicEnabled ? 'music' : 'musicOff'} size={17} /><span style={{ fontSize: 9, letterSpacing: '0.12em' }}>{musicEnabled ? 'Музыка' : 'Тихо'}</span>
                 </button>
-                <button onClick={() => { selectionChanged(); setScreen('mining'); }}
-                  className="py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <Icon name="pickaxe" size={22} style={{ color: 'rgba(255,255,255,0.6)' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('menu.mining')}</span>
-                </button>
-              </div>
-
-              {/* Chat & Clans & PM - Social */}
-              <div className="w-full max-w-xs grid grid-cols-3 gap-2 animate-slide-up" style={{ animationDelay: '0.28s' }}>
-                <button onClick={() => { selectionChanged(); setScreen('chat'); }}
-                  className="relative py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ borderRadius: 9, background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.12)' }}>
-                  <Icon name="cards" size={22} style={{ color: 'rgba(0,212,255,0.8)' }} />
-                  <span style={{ color: 'rgba(0,212,255,0.8)' }}>{t('menu.chat')}</span>
-                </button>
-                <button onClick={() => { selectionChanged(); setScreen('clans'); }}
-                  className="relative py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ borderRadius: 9, background: 'rgba(255,100,0,0.04)', border: '1px solid rgba(255,100,0,0.12)' }}>
-                  <Icon name="castle" size={22} style={{ color: 'rgba(255,140,60,0.8)' }} />
-                  <span style={{ color: 'rgba(255,140,60,0.8)' }}>{t('menu.clans')}</span>
-                </button>
-                <button onClick={() => { selectionChanged(); setScreen('pm'); setPmUnread(0); setPmBackScreen(null); }}
-                  className="relative py-3.5 text-[11px] font-medium flex flex-col items-center gap-1 transition-all active:scale-[0.97]"
-                  style={{ borderRadius: 9, background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
-                  <div className="relative">
-                    <Icon name="user" size={22} style={{ color: 'rgba(167,139,250,0.9)' }} />
-                    {pmUnread > 0 && (
-                      <span className="absolute -top-1.5 -right-2 px-1.5 min-w-[17px] h-[17px] flex items-center justify-center rounded-full text-[10px] font-black text-black"
-                        style={{ background: '#00d4ff', boxShadow: '0 0 8px rgba(0,212,255,0.6)' }}>{pmUnread}</span>
-                    )}
-                  </div>
-                  <span style={{ color: 'rgba(167,139,250,0.9)' }}>{t('menu.pm')}</span>
-                </button>
-              </div>
-            </div>
-            {/* Bottom Navigation - Premium Tab Bar (sticky at the bottom) */}
-            <div className="shrink-0 px-5 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <div className="w-full max-w-xs mx-auto flex items-center justify-around py-3 frost" style={{ borderRadius: 9 }}>
-                <button onClick={() => { selectionChanged(); setScreen('leaderboard'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  <Icon name="trophy" size={19} />
-                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.leaderboard')}</span>
-                </button>
-                <button onClick={() => { toggleMusic(); selectionChanged(); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95" style={{ color: musicEnabled ? 'rgba(255,215,0,0.7)' : 'rgba(255,255,255,0.4)' }}>
-                  <Icon name={musicEnabled ? 'music' : 'musicOff'} size={19} />
-                  <span className="text-[9px]" style={{ color: musicEnabled ? 'rgba(255,215,0,0.6)' : 'rgba(255,255,255,0.3)' }}>{musicEnabled ? 'Музыка' : 'Тихо'}</span>
-                </button>
-                <button onClick={() => { selectionChanged(); setScreen('settings'); }} className="flex flex-col items-center gap-1 px-3 transition-all active:scale-95" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  <Icon name="gear" size={19} />
-                  <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('menu.settings')}</span>
+                <button onClick={() => { selectionChanged(); setScreen('settings'); }} className="w-20 flex flex-col items-center gap-1 transition-all active:scale-95" style={{ color: 'rgba(230,235,239,0.4)' }}>
+                  <Icon name="gear" size={17} /><span style={{ fontSize: 9, letterSpacing: '0.12em' }}>{t('menu.settings')}</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {screen === 'battle' && (
         <div key="battle" className="relative z-10 h-full animate-page-enter">

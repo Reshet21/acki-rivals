@@ -416,17 +416,11 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
     : (game.host_name || t('pvp.opponent'));
 
   return (
-    <div className={`flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden bg-battle relative ${screenShake ? 'animate-damage-shake' : ''}`}>
+    <div className={`flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden relative ${screenShake ? 'animate-damage-shake' : ''}`}>
       {/* Damage Flash Overlay */}
       {damageFlash !== 'none' && (
         <div className={`absolute inset-0 pointer-events-none z-50 ${damageFlash === 'player' ? 'animate-red-flash' : 'animate-green-flash'}`} />
       )}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute w-1 h-1 bg-neon-blue/20 rounded-full animate-drift" style={{ top: '10%', left: '20%' }} />
-        <div className="absolute w-1.5 h-1.5 bg-neon-purple/15 rounded-full animate-drift" style={{ top: '30%', right: '15%', animationDelay: '2s' }} />
-        <div className="absolute w-1 h-1 bg-neon-pink/10 rounded-full animate-drift" style={{ top: '60%', left: '10%', animationDelay: '4s' }} />
-        <div className="absolute w-1.5 h-1.5 bg-neon-green/10 rounded-full animate-drift" style={{ top: '80%', right: '25%', animationDelay: '6s' }} />
-      </div>
 
       <div className="flex justify-between items-center px-3 py-2 bg-dark-card/80 border-b border-dark-border shrink-0">
         <span className="text-xs text-white/60">{t('pvp.roundShort')} {round}/{TOTAL_ROUNDS}</span>
@@ -461,9 +455,16 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
       <div className="grid grid-cols-2 gap-2 px-3 py-1.5 shrink-0">
         <div className="flex flex-col gap-0.5">
           <div className="text-[9px] text-neon-green font-bold truncate">{youLabel}</div>
-          <div className="h-2.5 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
-            <div className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'player' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-neon-green to-emerald-400'}`}
-              style={{ width: `${Math.min(100, (playerHP / TOTAL_HP) * 100)}%`, boxShadow: damageFlash === 'player' ? 'none' : '0 0 8px rgba(0,230,118,0.3)' }} />
+          <div className="h-4 rounded-full relative" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="h-full rounded-full transition-all duration-1000 ease-out"
+              style={{
+                width: `${Math.min(100, (playerHP / TOTAL_HP) * 100)}%`,
+                background: 'transparent',
+                border: `2px solid ${damageFlash === 'player' ? 'rgba(244,63,94,1)' : 'rgba(0,230,118,1)'}`,
+                boxShadow: damageFlash === 'player'
+                  ? '0 0 20px rgba(244,63,94,0.9), 0 0 8px rgba(244,63,94,0.8), inset 0 0 10px rgba(244,63,94,0.45)'
+                  : '0 0 20px rgba(0,230,118,0.85), 0 0 8px rgba(0,230,118,0.8), inset 0 0 10px rgba(0,230,118,0.4)',
+              }} />
             {currentResult?.winner === 'opponent' && battlePhase === 'damage' && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-[10px] font-bold text-red-400 animate-damage-float">-{currentResult.damageDealt}</span>
@@ -482,9 +483,16 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
         </div>
         <div className="flex flex-col gap-0.5">
           <div className="text-[9px] text-neon-red font-bold text-right truncate">{opponentLabel}</div>
-          <div className="h-2.5 bg-gray-900 rounded-full overflow-hidden border border-gray-800 relative">
-            <div className={`h-full rounded-full transition-all duration-1000 ease-out ${damageFlash === 'opponent' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-neon-red to-orange-400'}`}
-              style={{ width: `${Math.min(100, (opponentHP / TOTAL_HP) * 100)}%`, boxShadow: damageFlash === 'opponent' ? 'none' : '0 0 8px rgba(255,61,0,0.3)' }} />
+          <div className="h-4 rounded-full relative" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="h-full rounded-full transition-all duration-1000 ease-out"
+              style={{
+                width: `${Math.min(100, (opponentHP / TOTAL_HP) * 100)}%`,
+                background: 'transparent',
+                border: `2px solid ${damageFlash === 'opponent' ? 'rgba(0,230,118,1)' : 'rgba(244,63,94,1)'}`,
+                boxShadow: damageFlash === 'opponent'
+                  ? '0 0 20px rgba(0,230,118,0.9), 0 0 8px rgba(0,230,118,0.8), inset 0 0 10px rgba(0,230,118,0.45)'
+                  : '0 0 20px rgba(244,63,94,0.85), 0 0 8px rgba(244,63,94,0.8), inset 0 0 10px rgba(244,63,94,0.4)',
+              }} />
             {currentResult?.winner === 'player' && battlePhase === 'damage' && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-[10px] font-bold text-green-400 animate-damage-float">-{currentResult.damageDealt}</span>
@@ -667,7 +675,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
 
             {(battleResult === 'win' && game.stake_nano && Number(game.stake_nano) > 0) && (
               <div className="text-sm font-black text-neon-green bg-neon-green/10 border border-neon-green/30 rounded-xl px-4 py-2">
-                +{(Number(game.stake_nano) * 2 / 1e9).toFixed(2)} NACKL 🎯
+                <span className="inline-flex items-center gap-1">+{(Number(game.stake_nano) * 2 / 1e9).toFixed(2)} NACKL <Icon name="target" size={12} /></span>
               </div>
             )}
 
@@ -731,10 +739,7 @@ export default function PvpBattleScreen({ game, playerId, playerName, isHost, my
 
             <button
               onClick={() => { impactOccurred('soft'); onBattleEnd(battleResult); }}
-              className="w-full max-w-xs py-2.5 rounded-lg font-bold text-base
-                bg-gradient-to-r from-neon-purple to-neon-blue
-                active:scale-95 transition-all duration-150
-                shadow-[0_0_16px_rgba(183,66,255,0.3)] text-white"
+              className="w-full max-w-xs py-2.5 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white/70 active:bg-white/10 active:scale-[0.98] transition-all"
             >
               {t('deck.back')}
             </button>

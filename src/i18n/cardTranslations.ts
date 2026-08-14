@@ -387,14 +387,14 @@ export const clanNames: Record<string, Record<string, string>> = {
 
 // Stat label translations
 export const statLabels: Record<string, Record<string, string>> = {
-  ru: { power: 'СИЛА', damage: 'УРОН', pillz: 'ПИЛЛЗ' },
+  ru: { power: 'Сила', damage: 'Урон', pillz: 'Пиллз' },
   en: { power: 'POWER', damage: 'DAMAGE', pillz: 'PILLZ' },
   es: { power: 'FUERZA', damage: 'DAÑO', pillz: 'PILLZ' },
   pt: { power: 'PODER', damage: 'DANO', pillz: 'PILLZ' },
   ar: { power: 'القوة', damage: 'الضرر', pillz: 'بيلز' },
   zh: { power: '力量', damage: '伤害', pillz: '药丸' },
   tr: { power: 'GÜÇ', damage: 'HASAR', pillz: 'PİLLZ' },
-  uk: { power: 'СИЛА', damage: 'УРОН', pillz: 'ПІЛЛЗ' },
+  uk: { power: 'Сила', damage: 'Урон', pillz: 'Піллз' },
   de: { power: 'KRAFT', damage: 'SCHADEN', pillz: 'PILLZ' },
   fr: { power: 'FORCE', damage: 'DÉGÂT', pillz: 'PILLZ' },
   hi: { power: 'शक्ति', damage: 'क्षति', pillz: 'पिल्ज़' },

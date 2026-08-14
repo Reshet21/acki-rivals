@@ -27,19 +27,17 @@ const stripEmoji = (s: string) => s.replace(/^[^\p{L}\p{N}]+/u, '').trim();
 export function RarityChips({ value, onChange, onHaptic }: RarityChipsProps) {
   const { t } = useI18n();
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+    <div className="flex gap-1 overflow-x-auto p-1 rounded-xl bg-white/[0.03] border border-white/[0.06]">
       {RARITY_FILTERS.map((f) => {
         const active = value === f.value;
         return (
           <button
             key={f.value}
             onClick={() => { onHaptic?.(); onChange(f.value); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold whitespace-nowrap transition-all active:scale-95"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all"
             style={{
-              borderRadius: 9,
-              background: active ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${active ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.06)'}`,
-              color: active ? '#fff' : 'rgba(255,255,255,0.5)',
+              background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+              color: active ? '#fff' : 'rgba(255,255,255,0.4)',
             }}
           >
             {f.value !== 'all' && (

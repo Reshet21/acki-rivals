@@ -8,7 +8,7 @@ export type IconName =
   | 'coin' | 'gas' | 'link' | 'globe' | 'sparkle' | 'castle' | 'key'
   | 'boom' | 'heart' | 'skull' | 'bolt' | 'drop' | 'shield' | 'pill' | 'ban'
   | 'fire' | 'target' | 'gamepad' | 'moneybag' | 'party' | 'plug' | 'star'
-  | 'arrowRight' | 'hourglass' | 'cards' | 'phone' | 'zen' | 'info';
+  | 'arrowRight' | 'hourglass' | 'cards' | 'phone' | 'zen' | 'info' | 'chat' | 'crown';
 
 const P: Record<IconName, string> = {
   sword: '<path d="M14.5 4.5 20 3l-1.5 5.5-8 8L4 20l-1-4 4-1.5z"/><path d="m14.5 9.5-5 5M4 20l3-3"/>',
@@ -59,6 +59,8 @@ const P: Record<IconName, string> = {
   arrowRight: '<path d="M4 12h16M14 6l6 6-6 6"/>',
   hourglass: '<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 0M7 21c0-5 10-5 10 0"/>',
   cards: '<rect x="3" y="6" width="11" height="14" rx="2" transform="rotate(-8 8.5 13)"/><rect x="10" y="4" width="11" height="14" rx="2" transform="rotate(8 15.5 11)"/>',
+  chat: '<path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 4v-4H6a2 2 0 0 1-2-2z"/><path d="M8 9h8M8 12h5"/>',
+  crown: '<path d="M4 8l3.5 3L12 5l4.5 6L20 8l-1.5 10h-13z"/><path d="M6 21h12"/>',
   phone: '<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/>',
   zen: '<circle cx="12" cy="6.5" r="2"/><path d="M5 20c0-4 3-7 7-7s7 3 7 7M8 14l-3 6M16 14l3 6"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11.5V16"/>',

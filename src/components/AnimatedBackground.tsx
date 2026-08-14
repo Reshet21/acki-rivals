@@ -11,28 +11,28 @@ export default function AnimatedBackground({
 }) {
   const auroras = {
     default: [
-      { color: 'rgba(255,215,0,0.08)', top: '-150px', left: '-100px', size: 400, anim: 'animate-aurora-1' },
-      { color: 'rgba(255,100,0,0.06)', bottom: '5%', right: '-80px', size: 350, anim: 'animate-aurora-2', delay: '4s' },
-      { color: 'rgba(0,212,255,0.05)', top: '30%', left: '30%', size: 300, anim: 'animate-aurora-3', delay: '8s' },
+      { color: 'rgba(0,212,255,0.11)', top: '-150px', left: '-100px', size: 440, anim: 'animate-aurora-1' },
+      { color: 'rgba(168,85,247,0.10)', bottom: '5%', right: '-80px', size: 390, anim: 'animate-aurora-2', delay: '4s' },
+      { color: 'rgba(122,199,222,0.08)', top: '30%', left: '30%', size: 340, anim: 'animate-aurora-3', delay: '8s' },
     ],
     battle: [
-      { color: 'rgba(255,61,0,0.1)', top: '-100px', left: '-100px', size: 450, anim: 'animate-aurora-1' },
-      { color: 'rgba(255,140,0,0.08)', bottom: '10%', right: '-100px', size: 400, anim: 'animate-aurora-2', delay: '3s' },
-      { color: 'rgba(255,0,0,0.05)', top: '50%', left: '20%', size: 350, anim: 'animate-aurora-3', delay: '7s' },
+      { color: 'rgba(0,212,255,0.09)', top: '-100px', left: '-100px', size: 450, anim: 'animate-aurora-1' },
+      { color: 'rgba(139,92,246,0.07)', bottom: '10%', right: '-100px', size: 400, anim: 'animate-aurora-2', delay: '3s' },
+      { color: 'rgba(0,212,255,0.05)', top: '50%', left: '20%', size: 350, anim: 'animate-aurora-3', delay: '7s' },
     ],
     shop: [
       { color: 'rgba(168,85,247,0.08)', top: '-120px', left: '-80px', size: 400, anim: 'animate-aurora-1' },
-      { color: 'rgba(255,215,0,0.08)', bottom: '0%', right: '-60px', size: 350, anim: 'animate-aurora-2', delay: '5s' },
+      { color: 'rgba(0,212,255,0.07)', bottom: '0%', right: '-60px', size: 350, anim: 'animate-aurora-2', delay: '5s' },
       { color: 'rgba(139,92,246,0.06)', top: '40%', left: '40%', size: 300, anim: 'animate-aurora-3', delay: '10s' },
     ],
     pvp: [
-      { color: 'rgba(255,61,0,0.1)', top: '-100px', right: '-100px', size: 450, anim: 'animate-aurora-1' },
-      { color: 'rgba(255,152,0,0.07)', bottom: '10%', left: '-80px', size: 400, anim: 'animate-aurora-2', delay: '3s' },
+      { color: 'rgba(0,212,255,0.09)', top: '-100px', right: '-100px', size: 450, anim: 'animate-aurora-1' },
+      { color: 'rgba(139,92,246,0.06)', bottom: '10%', left: '-80px', size: 400, anim: 'animate-aurora-2', delay: '3s' },
       { color: 'rgba(0,212,255,0.05)', top: '30%', left: '30%', size: 300, anim: 'animate-aurora-3', delay: '8s' },
     ],
   };
 
-  const particleColors = ['rgba(255,215,0,0.4)', 'rgba(255,61,0,0.3)', 'rgba(0,212,255,0.3)', 'rgba(168,85,247,0.3)'];
+  const particleColors = ['rgba(0,212,255,0.4)', 'rgba(168,85,247,0.3)', 'rgba(122,199,222,0.3)', 'rgba(139,92,246,0.3)'];
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -85,7 +85,7 @@ export default function AnimatedBackground({
         <div
           key={i}
           className="absolute animate-sparkle"
-          style={{ ...p, color: 'rgba(255,215,0,0.35)' } as React.CSSProperties}
+          style={{ ...p, color: 'rgba(0,212,255,0.3)' } as React.CSSProperties}
         >
           {p.size === 'md' ? '✧' : '·'}
         </div>

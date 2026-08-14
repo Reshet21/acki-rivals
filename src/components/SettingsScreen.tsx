@@ -10,7 +10,7 @@ export default function SettingsScreen({ onBack }: Props) {
   const { selectionChanged, impactOccurred } = useHaptic();
 
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden" style={{ background: '#050508' }}>
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto overflow-hidden relative" style={{ background: 'transparent' }}>
       {/* Header */}
       <div className="shrink-0 px-4 py-4 border-b" style={{ borderColor: 'rgba(255,215,0,0.1)' }}>
         <div className="relative flex items-center h-8">
