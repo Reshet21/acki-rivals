@@ -6,6 +6,7 @@ import {
   createSession,
   waitWalletHello,
   disconnectSession,
+  storeSession,
   getNacklBalance,
 } from '../services/beeEngine';
 import { useHaptic } from '../hooks/useHaptic';
@@ -28,8 +29,9 @@ export default function WalletPanel({ connection: initialConnection, onConnected
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
-  const sessionRef = useRef<{ sessionId: string; description: string; clientDhSecret: string; createdAt: number } | null>(null);
   const waitTokenRef = useRef(0);
+
+  useEffect(() => () => { waitTokenRef.current++; }, []);
 
   // Poll balance when connected
   useEffect(() => {
@@ -48,16 +50,16 @@ export default function WalletPanel({ connection: initialConnection, onConnected
   }, [connection]);
 
   const handleConnect = async () => {
+    const token = ++waitTokenRef.current;
     try {
       setIsCreating(true);
       setError(null);
       setDeepLink(null);
 
       const session = await createSession();
-      sessionRef.current = session;
+      if (token !== waitTokenRef.current) return;
       setDeepLink(session.deepLink);
-
-      const token = ++waitTokenRef.current;
+      setIsCreating(false);
       setIsWaiting(true);
 
       const conn = await waitWalletHello(
@@ -68,13 +70,16 @@ export default function WalletPanel({ connection: initialConnection, onConnected
       );
 
       if (token !== waitTokenRef.current) return;
+      storeSession(conn);
       setConnection(conn);
       onConnected(conn);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (token === waitTokenRef.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setIsCreating(false);
-      setIsWaiting(false);
+      if (token === waitTokenRef.current) {
+        setIsCreating(false);
+        setIsWaiting(false);
+      }
     }
   };
 
@@ -97,6 +102,7 @@ export default function WalletPanel({ connection: initialConnection, onConnected
   const cancelWaiting = () => {
     waitTokenRef.current++;
     setIsWaiting(false);
+    setIsCreating(false);
     setDeepLink(null);
     setError(null);
   };
