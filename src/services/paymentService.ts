@@ -57,8 +57,13 @@ async function getSdk(): Promise<any> {
     sdkModule = mod;
   })();
 
-  await sdkInitPromise;
-  return sdkModule;
+  try {
+    await sdkInitPromise;
+    return sdkModule;
+  } catch (error) {
+    sdkInitPromise = null;
+    throw error;
+  }
 }
 
 /**

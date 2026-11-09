@@ -2,10 +2,7 @@
  * Bee Engine service layer for acki-nacki blockchain integration.
  *
  * Wraps @teamgosh/bee-sdk WASM module.
- * SDK must be built locally: cd bee_sdk && wasm-pack build --target web
- * Then install: npm install ../../../bee_sdk/pkg
- *
- * If SDK is not installed, all functions will throw on first call.
+ * Loads the published WASM package on demand.
  */
 
 const ENDPOINTS = ['https://mainnet.ackinacki.org'];
@@ -55,8 +52,13 @@ async function loadSdk(): Promise<any> {
     sdkModule = mod;
   })();
 
-  await sdkInitPromise;
-  return sdkModule;
+  try {
+    await sdkInitPromise;
+    return sdkModule;
+  } catch (error) {
+    sdkInitPromise = null;
+    throw error;
+  }
 }
 
 // ─── Storage helpers ────────────────────────────────────
@@ -111,7 +113,7 @@ export async function createSession(): Promise<{
   description: string;
   sessionStateJson: string;
   clientDhSecret: string;
-  createdAt: number;
+  createdAt: bigint;
 }> {
   const sdk = await loadSdk();
   const beeConnect = new sdk.BeeConnect();
@@ -131,7 +133,7 @@ export async function waitWalletHello(
   sessionId: string,
   description: string,
   clientDhSecret: string,
-  createdAt: number,
+  createdAt: bigint,
 ): Promise<WalletConnection> {
   const sdk = await loadSdk();
   const beeConnect = new sdk.BeeConnect();
@@ -155,8 +157,11 @@ export async function waitWalletHello(
     sessionStateJson: hello.session_state_json,
   };
 
-  writeSession(connection);
   return connection;
+}
+
+export function storeSession(conn: WalletConnection): void {
+  writeSession(conn);
 }
 
 export async function disconnectSession(conn: WalletConnection): Promise<void> {
